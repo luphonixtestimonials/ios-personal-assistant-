@@ -14,15 +14,25 @@
   const STORAGE_KEY_API_KEY = 'luphonix_api_key_v1';
   const STORAGE_KEY_AUTH_TOKEN = 'luphonix_auth_token_v1';
   const STORAGE_KEY_AUTH_USER = 'luphonix_auth_user_v1';
+  const STORAGE_KEY_FRIENDS = 'luphonix_friends_v1';
 
-  // Default sample data for instant wow effect on first open
-  const DEFAULT_TASKS = [
-    { id: '1', title: 'Review Luphonix project architecture', category: 'work', priority: 'high', is_completed: true, created_at: new Date().toISOString() },
-    { id: '2', title: 'Drink 500ml fresh water with electrolytes', category: 'health', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
-    { id: '3', title: 'Sync tasks with iPhone Siri shortcuts', category: 'study', priority: 'high', is_completed: false, created_at: new Date().toISOString() },
-    { id: '4', title: 'Evening meditation or 20-min brisk walk', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() }
+  // Default sample friends
+  const DEFAULT_FRIENDS = [
+    { id: 'usr_alex', username: 'alex', name: 'Alex Rivera' },
+    { id: 'usr_keval', username: 'keval', name: 'Keval Patel' },
+    { id: 'usr_sarah', username: 'sarah', name: 'Sarah Chen' }
   ];
-  const SAMPLE_TASK_IDS = new Set(['1', '2', '3', '4']);
+
+  // Default sample data for instant wow effect matching mockup
+  const DEFAULT_TASKS = [
+    { id: '1', title: 'Luphonix or...', category: 'work', priority: 'medium', is_completed: true, created_at: new Date().toISOString() },
+    { id: '2', title: 'Make Keval wish per', category: 'work', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
+    { id: '3', title: 'Complete project UI', category: 'work', priority: 'high', is_completed: false, created_at: new Date().toISOString() },
+    { id: '4', title: 'Read 10 pages', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() },
+    { id: '5', title: 'Gym Exercise', category: 'health', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
+    { id: '6', title: 'Plan tomorrow', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() }
+  ];
+  const SAMPLE_TASK_IDS = new Set(['1', '2', '3', '4', '5', '6']);
 
   const DEFAULT_WATER = [
     { id: 'w1', amount_ml: 250, timestamp: new Date(Date.now() - 4 * 3600000).toISOString() },
@@ -31,7 +41,9 @@
 
   const DEFAULT_REMINDERS = [
     { id: 'r1', title: 'Hydration Check-in', time: '14:00', recurrence: 'daily', is_enabled: true },
-    { id: 'r2', title: 'Plan Tomorrow Priorities', time: '20:30', recurrence: 'daily', is_enabled: true }
+    { id: 'r2', title: 'Plan Tomorrow Priorities', time: '20:30', recurrence: 'daily', is_enabled: true },
+    { id: 'r3', title: 'Take Medicine', time: '09:00', recurrence: 'health', is_enabled: false },
+    { id: 'r4', title: 'Study Session', time: '18:00', recurrence: 'study', is_enabled: true }
   ];
 
   const DEFAULT_PREFS = {
@@ -59,7 +71,9 @@
     prefs: loadStorage(STORAGE_KEY_PREFS, DEFAULT_PREFS),
     token: loadStorage(STORAGE_KEY_AUTH_TOKEN, null),
     user: loadStorage(STORAGE_KEY_AUTH_USER, null),
+    friends: loadStorage(STORAGE_KEY_FRIENDS, DEFAULT_FRIENDS),
     currentFilter: 'all',
+    currentRemFilter: 'all',
     currentReqFilter: 'all',
     searchQuery: '',
     activeView: 'dashboard',
@@ -176,7 +190,9 @@
     else if (hour >= 22 || hour < 5) timeText = 'Good Night';
 
     timeEl.textContent = timeText;
-    titleEl.textContent = hour < 12 ? 'Start Your Day Strong' : 'Today at a Glance';
+    const userName = (state.user && state.user.name) ? state.user.name.split(' ')[0] : 'Dhyey';
+    const emoji = hour < 12 ? '🌤️' : hour < 18 ? '☀️' : '🌙';
+    titleEl.innerHTML = `${escapeHTML(userName)} <span class="greeting-emoji">${emoji}</span>`;
   }
 
   // --- Hydration Calculation & Ring Animation ---
@@ -338,6 +354,8 @@
       filtered = filtered.filter((t) => t.is_completed);
     } else if (state.currentFilter === 'today') {
       filtered = filtered.filter((t) => !t.is_completed);
+    } else if (state.currentFilter === 'assigned') {
+      filtered = filtered.filter((t) => Boolean(t.assigned_to_user_id || t.assigned_by_user_id || t.assigned_to_username || t.assigned_by_username));
     } else if (state.currentFilter !== 'all') {
       filtered = filtered.filter((t) => t.category.toLowerCase() === state.currentFilter.toLowerCase());
     }
@@ -380,6 +398,24 @@
     const priorityClass = task.priority ? task.priority.toLowerCase() : 'medium';
     const categoryName = task.category ? task.category.toUpperCase() : 'GENERAL';
 
+    // Collaboration Assignment Badges
+    let assignmentBadge = '';
+    const myUsername = (state.user && state.user.username) ? state.user.username.toLowerCase() : 'dhyey';
+    const myUserId = state.user ? state.user.id : 'dhyey';
+
+    if (task.assigned_to_username || task.assigned_to_user_id) {
+      const isAssignedToMe = (task.assigned_to_username && task.assigned_to_username.toLowerCase() === myUsername) || 
+                             (task.assigned_to_user_id && task.assigned_to_user_id === myUserId);
+      const assigner = task.assigned_by_username || 'Friend';
+      const assignee = task.assigned_to_username || 'Friend';
+
+      if (isAssignedToMe && task.assigned_by_username && task.assigned_by_username.toLowerCase() !== myUsername) {
+        assignmentBadge = `<span class="task-badge assigned-to-me" title="Assigned to you by @${escapeHTML(assigner)}"><i class="fa-solid fa-arrow-down-left"></i> From @${escapeHTML(assigner)}</span>`;
+      } else {
+        assignmentBadge = `<span class="task-badge assigned-to-other" title="Assigned to @${escapeHTML(assignee)}"><i class="fa-solid fa-arrow-up-right-from-square"></i> To @${escapeHTML(assignee)}</span>`;
+      }
+    }
+
     return `
       <div class="task-item ${task.is_completed ? 'completed' : ''}" data-task-id="${task.id}">
         <button class="task-checkbox-btn" data-toggle-task="${task.id}" aria-label="Toggle task">
@@ -390,9 +426,10 @@
           <div class="task-meta">
             <span class="priority-tag ${priorityClass}">${priorityClass}</span>
             <span class="category-tag">${categoryName}</span>
+            ${assignmentBadge}
           </div>
         </div>
-        <button class="task-delete-btn" data-delete-task="${task.id}" title="Delete task"><i class="fa-solid fa-xmark" style="font-size: 12px;"></i></button>
+        <button class="task-delete-btn" data-delete-task="${task.id}" title="Task menu / delete"><i class="fa-solid fa-ellipsis-vertical" style="font-size: 14px;"></i></button>
       </div>
     `;
   }
@@ -450,13 +487,20 @@
     deleteTaskFromCloud(id);
   }
 
-  function addTask(title, category, priority) {
+  function addTask(title, category, priority, assignedToUserId, assignedToUsername) {
+    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
+    const myUserId = (state.user && state.user.id) ? state.user.id : 'dhyey';
+
     const newTask = {
       id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 't_' + Date.now(),
       title: title.trim(),
       category: category || 'work',
       priority: priority || 'medium',
       is_completed: false,
+      assigned_to_user_id: assignedToUserId || null,
+      assigned_to_username: assignedToUsername || null,
+      assigned_by_user_id: myUserId,
+      assigned_by_username: myUsername,
       due_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
       _needsCloudSync: true
@@ -464,7 +508,11 @@
     state.tasks.unshift(newTask);
     saveStorage(STORAGE_KEY_TASKS, state.tasks);
     renderTasks();
-    showToast('New task added!', 'success');
+    if (assignedToUsername) {
+      showToast(`Task assigned to @${assignedToUsername}! 🤝`, 'success');
+    } else {
+      showToast('New task added!', 'success');
+    }
 
     syncTaskToCloud(newTask);
   }
@@ -474,29 +522,54 @@
     const container = document.getElementById('reminders-full-list');
     if (!container) return;
 
-    if (state.reminders.length === 0) {
+    let filtered = [...state.reminders];
+    if (state.currentRemFilter === 'today') {
+      filtered = filtered.filter((r) => r.is_enabled);
+    } else if (state.currentRemFilter === 'upcoming') {
+      filtered = filtered.filter((r) => r.is_enabled);
+    } else if (state.currentRemFilter === 'completed') {
+      filtered = filtered.filter((r) => !r.is_enabled);
+    }
+
+    if (filtered.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">🔔</div>
-          <p>No reminders scheduled. Tap + to set one!</p>
+          <p>No reminders found. Tap + to set one!</p>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = state.reminders
+    container.innerHTML = filtered
       .map((r) => {
+        let icon = '<i class="fa-solid fa-bell"></i>';
+        const tLower = r.title.toLowerCase();
+        if (tLower.includes('water') || tLower.includes('hydrat')) {
+          icon = '<i class="fa-solid fa-droplet" style="color: #00D2FF;"></i>';
+        } else if (tLower.includes('medicine') || tLower.includes('pill') || tLower.includes('health')) {
+          icon = '<i class="fa-solid fa-capsules" style="color: #F43F5E;"></i>';
+        } else if (tLower.includes('study') || tLower.includes('read') || tLower.includes('book')) {
+          icon = '<i class="fa-solid fa-book-open" style="color: #38BDF8;"></i>';
+        } else if (tLower.includes('priority') || tLower.includes('plan')) {
+          icon = '<i class="fa-regular fa-clock" style="color: #F59E0B;"></i>';
+        }
+
         return `
-        <div class="task-item">
-          <span style="font-size: 22px;">⏰</span>
+        <div class="reminder-item" data-reminder-id="${r.id}">
+          <div class="reminder-icon-box">${icon}</div>
           <div class="task-content">
             <div class="task-title" style="text-decoration: none; color: #FFFFFF;">${escapeHTML(r.title)}</div>
             <div class="task-meta">
               <span class="priority-tag low">${r.time}</span>
-              <span class="category-tag">${(r.recurrence || 'ONCE').toUpperCase()}</span>
+              <span class="category-tag">${(r.recurrence || 'DAILY').toUpperCase()}</span>
             </div>
           </div>
-          <button class="task-delete-btn" data-delete-reminder="${r.id}" title="Delete reminder">✕</button>
+          <label class="ios-switch" title="Toggle reminder on/off">
+            <input type="checkbox" class="reminder-toggle-switch" data-reminder-id="${r.id}" ${r.is_enabled ? 'checked' : ''}>
+            <span class="ios-slider"></span>
+          </label>
+          <button class="task-delete-btn" data-delete-reminder="${r.id}" title="Delete reminder" style="margin-left: 6px;"><i class="fa-solid fa-xmark" style="font-size: 13px;"></i></button>
         </div>
       `;
       })
@@ -678,6 +751,8 @@
         category: task.category || 'work',
         priority: task.priority || 'medium',
         is_completed: Boolean(task.is_completed),
+        assigned_to_user_id: task.assigned_to_user_id || undefined,
+        assigned_to_username: task.assigned_to_username || undefined,
         due_at: task.due_at || new Date().toISOString()
       };
 
@@ -764,6 +839,9 @@
       for (const t of pendingPush) {
         syncTaskToCloud(t).catch(() => {});
       }
+
+      // 3. Fetch friends list
+      fetchFriendsFromCloud().catch(() => {});
     } catch (e) {
       console.warn('Cloud sync error:', e);
     }
@@ -778,6 +856,12 @@
     const accountEmail = document.getElementById('account-email-val');
     const accountId = document.getElementById('account-id-val');
     const accountAvatarChar = document.getElementById('account-avatar-char');
+    const myHandleEl = document.getElementById('my-unique-handle');
+    const accountHandleEl = document.getElementById('account-handle-val');
+    const username = (state.user && state.user.username) ? state.user.username : 'dhyey';
+
+    if (myHandleEl) myHandleEl.textContent = `@${username}`;
+    if (accountHandleEl) accountHandleEl.textContent = `@${username}`;
 
     if (state.user && state.token) {
       if (userAuthPill) userAuthPill.classList.add('logged-in');
@@ -855,7 +939,7 @@
     }
   }
 
-  async function registerUser(name, email, password) {
+  async function registerUser(name, email, password, username) {
     const base = getBackendBaseUrl();
     const errorDiv = document.getElementById('auth-error-msg');
     const errorText = document.getElementById('auth-error-text');
@@ -877,7 +961,7 @@
       const res = await fetch(`${base}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, timezone }),
+        body: JSON.stringify({ name, email, password, username: username || undefined, timezone }),
         signal: controller.signal,
       });
       clearTimeout(timeoutTimer);
@@ -1168,6 +1252,7 @@
     const modal = document.getElementById(id);
     if (modal) {
       modal.classList.add('active');
+      document.body.classList.add('modal-open');
       const input = modal.querySelector('input');
       if (input) setTimeout(() => input.focus(), 150);
     }
@@ -1176,10 +1261,14 @@
   function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.classList.remove('active');
+    if (!document.querySelector('.modal-overlay.active')) {
+      document.body.classList.remove('modal-open');
+    }
   }
 
   function closeAllModals() {
     document.querySelectorAll('.modal-overlay').forEach((m) => m.classList.remove('active'));
+    document.body.classList.remove('modal-open');
   }
 
   // --- Tab Navigation Controller ---
@@ -1194,13 +1283,28 @@
     const targetSection = document.getElementById(`view-${viewName}`);
     if (targetSection) targetSection.classList.add('active');
 
-    // Toggle Nav Icons
+    // Toggle Nav Icons & Circular Orbit Icons
     document.querySelectorAll('.nav-item').forEach((item) => {
       item.classList.remove('active');
       if (item.dataset.view === viewName) {
         item.classList.add('active');
       }
     });
+    document.querySelectorAll('.circular-orbit-item').forEach((item) => {
+      item.classList.remove('active');
+      if (item.dataset.view === viewName) {
+        item.classList.add('active');
+      }
+    });
+
+    const headerSettingsBtn = document.getElementById('btn-header-settings');
+    if (headerSettingsBtn) {
+      if (viewName === 'settings') {
+        headerSettingsBtn.classList.add('active');
+      } else {
+        headerSettingsBtn.classList.remove('active');
+      }
+    }
 
     if (viewName === 'devices') {
       fetchDevicesAndRequests();
@@ -1226,6 +1330,170 @@
       .replace(/'/g, '&#039;');
   }
 
+  // --- Friends & Task Collaboration Engine ---
+  async function fetchFriendsFromCloud() {
+    const base = getBackendBaseUrl();
+    try {
+      let key = await ensureApiKey();
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+      let res = await fetch(`${base}/api/friends`, {
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      }).catch(() => null);
+      clearTimeout(timer);
+
+      if (res && res.status === 401) {
+        key = await ensureApiKey(true);
+        res = await fetch(`${base}/api/friends`, {
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Accept': 'application/json'
+          }
+        }).catch(() => null);
+      }
+
+      if (res && res.ok) {
+        const body = await res.json().catch(() => null);
+        if (body && Array.isArray(body.data)) {
+          state.friends = body.data;
+          saveStorage(STORAGE_KEY_FRIENDS, state.friends);
+          renderFriendsList();
+          populateAssignDropdown();
+        }
+      }
+    } catch (e) {
+      console.warn('Friends fetch error:', e);
+    }
+  }
+
+  function renderFriendsList() {
+    const container = document.getElementById('friends-list-container');
+    const countEl = document.getElementById('friends-count');
+    const myHandleEl = document.getElementById('my-unique-handle');
+    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
+
+    if (myHandleEl) {
+      myHandleEl.textContent = `@${myUsername}`;
+    }
+    if (countEl) {
+      countEl.textContent = state.friends ? state.friends.length : 0;
+    }
+    if (!container) return;
+
+    if (!state.friends || state.friends.length === 0) {
+      container.innerHTML = `
+        <div style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">
+          <div style="font-size: 24px; margin-bottom: 6px;">👥</div>
+          No friends connected yet.<br>Add a friend above using their unique username to share & assign tasks!
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = state.friends.map((f) => {
+      const initial = (f.name || f.username || 'F').charAt(0).toUpperCase();
+      return `
+        <div class="friend-item-card" data-friend-id="${f.id}">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(59, 130, 246, 0.25)); border: 1px solid rgba(0, 210, 255, 0.35); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #00D2FF; font-size: 14px;">
+              ${initial}
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #F8FAFC;">${escapeHTML(f.name || f.username)}</div>
+              <div style="font-size: 12px; color: var(--accent-cyan); font-family: monospace;">@${escapeHTML(f.username)}</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button type="button" class="btn-secondary" data-quick-assign-friend="${f.id}" data-friend-username="${f.username}" style="padding: 5px 10px; font-size: 11px; height: 28px; border-radius: 8px; cursor: pointer;" title="Assign task to ${f.username}">
+              <i class="fa-solid fa-plus"></i> Task
+            </button>
+            <button type="button" class="task-delete-btn" data-remove-friend="${f.id}" title="Remove friend" style="color: #FB7185; cursor: pointer;">
+              <i class="fa-solid fa-trash-can" style="font-size: 12px;"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function populateAssignDropdown() {
+    const select = document.getElementById('task-assign-select');
+    if (!select) return;
+
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">Myself (Personal Task)</option>';
+
+    if (state.friends && state.friends.length > 0) {
+      state.friends.forEach((f) => {
+        const opt = document.createElement('option');
+        opt.value = f.id;
+        opt.dataset.username = f.username;
+        opt.textContent = `${f.name || f.username} (@${f.username})`;
+        if (f.id === currentVal) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+  }
+
+  async function addFriendByUsername(username) {
+    if (!username || !username.trim()) return;
+    const cleanHandle = username.trim().replace(/^@/, '');
+    const base = getBackendBaseUrl();
+
+    try {
+      let key = await ensureApiKey();
+      const res = await fetch(`${base}/api/friends/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({ username: cleanHandle })
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.success) {
+        throw new Error(body.error || 'Could not add friend');
+      }
+
+      const newFriend = body.data;
+      state.friends = state.friends.filter(f => f.id !== newFriend.id);
+      state.friends.unshift(newFriend);
+      saveStorage(STORAGE_KEY_FRIENDS, state.friends);
+
+      renderFriendsList();
+      populateAssignDropdown();
+      showToast(`Added @${newFriend.username} as friend! 🎉`, 'success');
+      return newFriend;
+    } catch (err) {
+      showToast(err.message || 'Failed to add friend', 'error');
+    }
+  }
+
+  async function removeFriend(friendId) {
+    const friend = state.friends.find(f => f.id === friendId);
+    state.friends = state.friends.filter(f => f.id !== friendId);
+    saveStorage(STORAGE_KEY_FRIENDS, state.friends);
+    renderFriendsList();
+    populateAssignDropdown();
+    showToast(`Removed friend ${friend ? '@' + friend.username : ''}`, 'info');
+
+    const base = getBackendBaseUrl();
+    try {
+      const key = await ensureApiKey();
+      await fetch(`${base}/api/friends/${encodeURIComponent(friendId)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${key}` }
+      }).catch(() => {});
+    } catch (e) {
+      console.warn('Remove friend sync error:', e);
+    }
+  }
+
   // --- Event Bindings & Init ---
   function initEvents() {
     // Bottom Nav Tabs
@@ -1234,6 +1502,113 @@
         const view = btn.dataset.view;
         if (view) switchView(view);
       });
+    });
+
+    // --- Circular Radial Navigation Logic ---
+    const circularNavOverlay = document.getElementById('circular-nav-overlay');
+    const circularNavCloseBtn = document.getElementById('circular-nav-close-btn');
+
+    function updateCircularItemPositions() {
+      const portal = document.getElementById('circular-nav-portal');
+      if (!portal) return;
+      const portalWidth = portal.offsetWidth || 390;
+      const radius = Math.min(Math.round(portalWidth * 0.38), 150);
+      const items = document.querySelectorAll('.circular-orbit-item');
+      const total = items.length;
+      items.forEach((item, idx) => {
+        // 8 items spaced evenly, starting from top (angle = -90deg)
+        const angleDeg = (360 / total) * idx - 90;
+        const angleRad = (angleDeg * Math.PI) / 180;
+        const x = Math.round(radius * Math.cos(angleRad));
+        const y = Math.round(radius * Math.sin(angleRad));
+        item.style.setProperty('--orbit-x', `${x}px`);
+        item.style.setProperty('--orbit-y', `${y}px`);
+
+        // Highlight active view
+        const view = item.dataset.view;
+        if (view && state.currentView === view) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
+
+    function openCircularNav() {
+      if (!circularNavOverlay) return;
+      playSound('check');
+      updateCircularItemPositions();
+      circularNavOverlay.classList.add('open');
+      circularNavOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeCircularNav() {
+      if (!circularNavOverlay) return;
+      circularNavOverlay.classList.remove('open');
+      circularNavOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function toggleCircularNav() {
+      if (!circularNavOverlay) return;
+      if (circularNavOverlay.classList.contains('open')) {
+        closeCircularNav();
+      } else {
+        openCircularNav();
+      }
+    }
+
+    // Compact Central Luphonix Emblem - Opens Circular Radial Navigation Menu
+    const centerEmblem = document.getElementById('nav-btn-center-emblem');
+    if (centerEmblem) {
+      centerEmblem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCircularNav();
+      });
+    }
+
+    if (circularNavCloseBtn) {
+      circularNavCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playSound('click');
+        closeCircularNav();
+      });
+    }
+
+    if (circularNavOverlay) {
+      circularNavOverlay.addEventListener('click', (e) => {
+        if (e.target === circularNavOverlay) {
+          closeCircularNav();
+        }
+      });
+    }
+
+    // Radial Orbit Items
+    document.querySelectorAll('.circular-orbit-item').forEach((item) => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playSound('check');
+        const view = item.dataset.view;
+        const action = item.dataset.action;
+        closeCircularNav();
+        if (view) {
+          switchView(view);
+        } else if (action === 'quick-add') {
+          openModal('modal-task');
+        }
+      });
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && circularNavOverlay && circularNavOverlay.classList.contains('open')) {
+        closeCircularNav();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (circularNavOverlay && circularNavOverlay.classList.contains('open')) {
+        updateCircularItemPositions();
+      }
     });
 
     // Header Quick Add
@@ -1359,14 +1734,89 @@
         const titleInput = document.getElementById('task-title-input');
         const catSelect = document.getElementById('task-category-select');
         const prioSelect = document.getElementById('task-priority-select');
+        const assignSelect = document.getElementById('task-assign-select');
 
         if (titleInput && titleInput.value.trim().length > 0) {
-          addTask(titleInput.value, catSelect ? catSelect.value : 'work', prioSelect ? prioSelect.value : 'medium');
+          const assignedId = assignSelect ? assignSelect.value : '';
+          const selectedOpt = assignSelect ? assignSelect.options[assignSelect.selectedIndex] : null;
+          const assignedUsername = selectedOpt ? selectedOpt.dataset.username : null;
+
+          addTask(
+            titleInput.value,
+            catSelect ? catSelect.value : 'work',
+            prioSelect ? prioSelect.value : 'medium',
+            assignedId || null,
+            assignedUsername || null
+          );
           titleInput.value = '';
+          if (assignSelect) assignSelect.value = '';
           closeAllModals();
         }
       });
     }
+
+    // Friends Modal & Actions
+    const btnFriendsModal = document.getElementById('btn-friends-modal');
+    if (btnFriendsModal) {
+      btnFriendsModal.addEventListener('click', () => {
+        playSound('check');
+        renderFriendsList();
+        openModal('modal-friends');
+        fetchFriendsFromCloud();
+      });
+    }
+
+    const btnCopyHandle = document.getElementById('btn-copy-my-handle');
+    if (btnCopyHandle) {
+      btnCopyHandle.addEventListener('click', () => {
+        const username = (state.user && state.user.username) ? state.user.username : 'dhyey';
+        const handle = `@${username}`;
+        navigator.clipboard.writeText(handle).then(() => {
+          showToast(`Copied ${handle} to clipboard! 📋`, 'success');
+        }).catch(() => {
+          showToast(`Your handle: ${handle}`, 'info');
+        });
+      });
+    }
+
+    const formAddFriend = document.getElementById('form-add-friend');
+    if (formAddFriend) {
+      formAddFriend.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('friend-username-input');
+        if (input && input.value.trim().length > 0) {
+          await addFriendByUsername(input.value.trim());
+          input.value = '';
+        }
+      });
+    }
+
+    document.querySelectorAll('.quick-add-friend-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const username = chip.dataset.username;
+        if (username) {
+          addFriendByUsername(username);
+        }
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      const removeBtn = e.target.closest('[data-remove-friend]');
+      if (removeBtn) {
+        const friendId = removeBtn.dataset.removeFriend;
+        if (friendId) removeFriend(friendId);
+        return;
+      }
+
+      const quickAssignBtn = e.target.closest('[data-quick-assign-friend]');
+      if (quickAssignBtn) {
+        const friendId = quickAssignBtn.dataset.quickAssignFriend;
+        closeAllModals();
+        openModal('modal-task');
+        const assignSelect = document.getElementById('task-assign-select');
+        if (assignSelect) assignSelect.value = friendId;
+      }
+    });
 
     // Add Reminder Button & Form
     const addReminderBtn = document.getElementById('btn-add-reminder-modal');
@@ -1389,6 +1839,189 @@
         }
       });
     }
+
+    // Back Button on all sub-screens
+    document.querySelectorAll('.view-back-btn').forEach((btn) => {
+      btn.addEventListener('click', () => switchView('dashboard'));
+    });
+
+    // Motivational Quote Banner Rotator
+    const MOTIVATIONAL_QUOTES = [
+      'Stay consistent, your future self will thank you.',
+      'Small habits, big changes.',
+      'Stay consistent, progress takes time but it is always worth it.',
+      'Discipline is choosing between what you want now and what you want most.',
+      'Every healthy choice counts towards your highest potential.'
+    ];
+    let quoteIdx = 0;
+    const quoteBanner = document.getElementById('quote-banner');
+    const quoteTextEl = document.getElementById('quote-text');
+    if (quoteBanner && quoteTextEl) {
+      const cycleQuote = () => {
+        quoteIdx = (quoteIdx + 1) % MOTIVATIONAL_QUOTES.length;
+        quoteTextEl.style.opacity = '0';
+        setTimeout(() => {
+          quoteTextEl.textContent = MOTIVATIONAL_QUOTES[quoteIdx];
+          quoteTextEl.style.opacity = '1';
+        }, 220);
+      };
+      quoteBanner.addEventListener('click', cycleQuote);
+      setInterval(cycleQuote, 8500);
+    }
+
+    // Keep Going Button inside Today's Water card
+    const btnKeepGoing = document.getElementById('btn-keep-going');
+    if (btnKeepGoing) {
+      btnKeepGoing.addEventListener('click', () => {
+        logWater(250);
+      });
+    }
+
+    // 4 Squircle Quick Action Buttons (Dashboard Screen 1)
+    const qaWater = document.getElementById('btn-qa-water');
+    if (qaWater) qaWater.addEventListener('click', () => openModal('modal-water'));
+
+    const qaTask = document.getElementById('btn-qa-task');
+    if (qaTask) qaTask.addEventListener('click', () => openModal('modal-task'));
+
+    const qaSiri = document.getElementById('btn-qa-siri');
+    if (qaSiri) qaSiri.addEventListener('click', () => switchView('siri'));
+
+    const qaNote = document.getElementById('btn-qa-note');
+    if (qaNote) qaNote.addEventListener('click', () => openModal('modal-reminder'));
+
+    // Global Floating Action Button (FAB)
+    const globalFab = document.getElementById('btn-global-fab');
+    if (globalFab) {
+      globalFab.addEventListener('click', () => {
+        if (state.activeView === 'reminders') openModal('modal-reminder');
+        else if (state.activeView === 'hydration') openModal('modal-water');
+        else openModal('modal-task');
+      });
+    }
+
+    // Notification Bell Button
+    const headerBell = document.getElementById('btn-header-bell');
+    if (headerBell) {
+      headerBell.addEventListener('click', () => {
+        playSound('check');
+        showToast('All notifications & habit schedules are active! 🔔', 'info');
+      });
+    }
+
+    // Settings Button in Header (Next to Bell)
+    const headerSettings = document.getElementById('btn-header-settings');
+    if (headerSettings) {
+      headerSettings.addEventListener('click', () => {
+        playSound('check');
+        switchView('settings');
+      });
+    }
+
+    // Reminders Filter Pills Bar
+    const remFilterBar = document.getElementById('reminders-filter-bar');
+    if (remFilterBar) {
+      remFilterBar.querySelectorAll('.filter-pill').forEach((pill) => {
+        pill.addEventListener('click', () => {
+          remFilterBar.querySelectorAll('.filter-pill').forEach((p) => p.classList.remove('active'));
+          pill.classList.add('active');
+          state.currentRemFilter = pill.dataset.remFilter || 'all';
+          renderReminders();
+        });
+      });
+    }
+
+    // Interactive iOS Switch Toggle for Reminders
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.classList.contains('reminder-toggle-switch')) {
+        const remId = e.target.dataset.reminderId;
+        const rem = state.reminders.find((r) => r.id === remId);
+        if (rem) {
+          rem.is_enabled = e.target.checked;
+          saveStorage(STORAGE_KEY_REMINDERS, state.reminders);
+          playSound(rem.is_enabled ? 'check' : 'click');
+          showToast(rem.is_enabled ? `Reminder "${rem.title}" active` : `Reminder "${rem.title}" paused`, 'info');
+        }
+      }
+    });
+
+    // Siri 3 Action Buttons (Screen 5)
+    const btnSiriView = document.getElementById('btn-siri-action-view');
+    if (btnSiriView) {
+      btnSiriView.addEventListener('click', () => {
+        document.querySelector('.siri-shortcut-card')?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+
+    const btnSiriCopy = document.getElementById('btn-siri-action-copy');
+    if (btnSiriCopy) {
+      btnSiriCopy.addEventListener('click', async () => {
+        const base = getBackendBaseUrl();
+        const key = await ensureApiKey();
+        const url = `${base}/api/water/add?apiKey=${encodeURIComponent(key)}&amount=250`;
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Siri API Webhook URL copied! 📋', 'success');
+        }).catch(() => {
+          showToast('Webhook: ' + url, 'info');
+        });
+      });
+    }
+
+    const btnSiriTest = document.getElementById('btn-siri-action-test');
+    if (btnSiriTest) {
+      btnSiriTest.addEventListener('click', () => {
+        playSound('water');
+        showToast('🎙️ Siri Voice Simulation: "Logged 250ml water in Luphonix!"', 'water');
+        logWater(250);
+      });
+    }
+
+    const btnSiriHelp = document.getElementById('btn-siri-help');
+    if (btnSiriHelp) {
+      btnSiriHelp.addEventListener('click', () => openModal('modal-install'));
+    }
+
+    // Popular Voice Command Pills (Screen 5)
+    document.querySelectorAll('.popular-cmd-bubble').forEach((pill) => {
+      pill.addEventListener('click', () => {
+        const id = pill.id;
+        if (id === 'pill-cmd-water') {
+          logWater(250);
+        } else if (id === 'pill-cmd-tasks') {
+          switchView('tasks');
+          showToast('Siri: "Here are your tasks for today"', 'info');
+        } else if (id === 'pill-cmd-complete') {
+          const firstUncompleted = state.tasks.find((t) => !t.is_completed);
+          if (firstUncompleted) {
+            toggleTask(firstUncompleted.id);
+          } else {
+            showToast('All tasks are already completed!', 'success');
+          }
+        } else if (id === 'pill-cmd-progress') {
+          switchView('dashboard');
+          showToast('Siri: "Showing your today\'s progress"', 'info');
+        } else if (id === 'pill-cmd-add') {
+          openModal('modal-task');
+        }
+      });
+    });
+
+    // Settings iOS Grouped Menu Item Accordion
+    document.querySelectorAll('.ios-list-item[data-accordion]').forEach((item) => {
+      item.addEventListener('click', () => {
+        const targetId = item.dataset.accordion;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetEl.style.borderColor = 'rgba(0, 210, 255, 0.8)';
+          targetEl.style.boxShadow = '0 0 25px rgba(0, 210, 255, 0.4)';
+          setTimeout(() => {
+            targetEl.style.borderColor = '';
+            targetEl.style.boxShadow = '';
+          }, 1500);
+        }
+      });
+    });
 
     // Settings View Triggers
     const linkViewAllTasks = document.getElementById('link-view-all-tasks');
@@ -1592,10 +2225,11 @@
       formSignup.addEventListener('submit', (e) => {
         e.preventDefault();
         const name = document.getElementById('signup-name')?.value.trim();
+        const username = document.getElementById('signup-username')?.value.trim();
         const email = document.getElementById('signup-email')?.value.trim();
         const password = document.getElementById('signup-password')?.value;
         if (name && email && password) {
-          registerUser(name, email, password);
+          registerUser(name, email, password, username);
         }
       });
     }
@@ -1673,6 +2307,8 @@
     updateHydrationRings();
     renderTasks();
     renderReminders();
+    renderFriendsList();
+    populateAssignDropdown();
     initEvents();
     updateAuthUI();
     ensureApiKey();
@@ -1683,6 +2319,9 @@
 
     // Initial devices & requests pre-fetch
     setTimeout(fetchDevicesAndRequests, 400);
+
+    // Initial friends fetch
+    setTimeout(fetchFriendsFromCloud, 600);
 
     // Health ping test on load
     setTimeout(testBackendPing, 800);

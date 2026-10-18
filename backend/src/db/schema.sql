@@ -5,6 +5,7 @@ PRAGMA foreign_keys = ON;
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
+  username TEXT UNIQUE,
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   timezone TEXT NOT NULL DEFAULT 'UTC',
@@ -12,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 
 -- 2. Tasks Table
 CREATE TABLE IF NOT EXISTS tasks (
@@ -24,11 +26,15 @@ CREATE TABLE IF NOT EXISTS tasks (
   category TEXT NOT NULL DEFAULT 'other',
   is_completed INTEGER NOT NULL DEFAULT 0 CHECK(is_completed IN (0, 1)),
   recurrence_rule TEXT,
+  assigned_to_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  assigned_by_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_tasks_user_id ON tasks(user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to_user_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_by ON tasks(assigned_by_user_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_due_at ON tasks(due_at);
 CREATE INDEX IF NOT EXISTS idx_tasks_completed ON tasks(user_id, is_completed);
 
@@ -71,3 +77,16 @@ CREATE TABLE IF NOT EXISTS user_preferences (
   notification_preferences TEXT NOT NULL DEFAULT '{"reminders_sound":true,"water_sound":true,"vibration":true}',
   updated_at TEXT NOT NULL
 );
+
+-- 6. Friends Table
+CREATE TABLE IF NOT EXISTS friends (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  friend_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'accepted' CHECK(status IN ('pending', 'accepted', 'blocked')),
+  created_at TEXT NOT NULL,
+  UNIQUE(user_id, friend_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_friends_user_id ON friends(user_id);
+CREATE INDEX IF NOT EXISTS idx_friends_friend_id ON friends(friend_id);

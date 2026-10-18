@@ -20,6 +20,8 @@ const syncPayloadSchema = z.object({
         category: z.enum(['personal', 'work', 'study', 'health', 'other']),
         is_completed: z.boolean(),
         recurrence_rule: z.string().nullable().optional(),
+        assigned_to_user_id: z.string().nullable().optional(),
+        assigned_by_user_id: z.string().nullable().optional(),
         updated_at: z.string().datetime(),
       })
     )
@@ -70,8 +72,8 @@ syncApp.post('/', async (c) => {
     await db.execute({
       sql: `INSERT INTO tasks (
         id, user_id, title, description, due_at, priority, category,
-        is_completed, recurrence_rule, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        is_completed, recurrence_rule, assigned_to_user_id, assigned_by_user_id, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         title = excluded.title,
         description = excluded.description,
@@ -80,8 +82,10 @@ syncApp.post('/', async (c) => {
         category = excluded.category,
         is_completed = excluded.is_completed,
         recurrence_rule = excluded.recurrence_rule,
+        assigned_to_user_id = COALESCE(excluded.assigned_to_user_id, tasks.assigned_to_user_id),
+        assigned_by_user_id = COALESCE(excluded.assigned_by_user_id, tasks.assigned_by_user_id),
         updated_at = excluded.updated_at
-      WHERE tasks.user_id = excluded.user_id AND tasks.updated_at <= excluded.updated_at`,
+      WHERE (tasks.user_id = excluded.user_id OR tasks.assigned_to_user_id = excluded.user_id) AND tasks.updated_at <= excluded.updated_at`,
       args: [
         t.id,
         userId,
@@ -92,6 +96,8 @@ syncApp.post('/', async (c) => {
         t.category,
         t.is_completed ? 1 : 0,
         t.recurrence_rule ?? null,
+        t.assigned_to_user_id ?? null,
+        t.assigned_by_user_id ?? userId,
         t.updated_at,
         t.updated_at,
       ],
@@ -141,8 +147,16 @@ syncApp.post('/', async (c) => {
 
   const [dbTasks, dbReminders, dbHydration, dbPrefs] = await Promise.all([
     db.execute({
-      sql: 'SELECT * FROM tasks WHERE user_id = ? AND updated_at > ?',
-      args: [userId, cutoff],
+      sql: `SELECT t.*,
+                   u_by.name AS assigner_name,
+                   u_by.username AS assigner_username,
+                   u_to.name AS assignee_name,
+                   u_to.username AS assignee_username
+            FROM tasks t
+            LEFT JOIN users u_by ON t.assigned_by_user_id = u_by.id
+            LEFT JOIN users u_to ON t.assigned_to_user_id = u_to.id
+            WHERE (t.user_id = ? OR t.assigned_to_user_id = ?) AND t.updated_at > ?`,
+      args: [userId, userId, cutoff],
     }),
     db.execute({
       sql: 'SELECT * FROM reminders WHERE user_id = ? AND updated_at > ?',

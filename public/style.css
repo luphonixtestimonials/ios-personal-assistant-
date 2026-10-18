@@ -6,49 +6,122 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
 :root {
-  /* Color Palette */
-  --bg-dark: #07090E;
-  --bg-surface: #0E131F;
-  --bg-card: rgba(18, 24, 38, 0.72);
-  --bg-card-hover: rgba(26, 35, 54, 0.85);
-  --bg-input: rgba(12, 16, 26, 0.85);
-  
-  /* Glass Borders */
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-glass-light: rgba(255, 255, 255, 0.15);
-  --border-accent: rgba(6, 182, 212, 0.4);
+  /* 1. Main Color Palette (From Specification) */
+  --bg-primary: #05080F;
+  --bg-secondary: #080E19;
+  --bg-card: rgba(16, 24, 40, 0.62);
+  --bg-elevated: rgba(23, 34, 53, 0.72);
 
-  /* Accents & Gradients */
-  --accent-cyan: #06B6D4;
-  --accent-blue: #3B82F6;
-  --accent-purple: #8B5CF6;
-  --accent-emerald: #10B981;
-  --accent-amber: #F59E0B;
-  --accent-rose: #F43F5E;
-  
-  --grad-cyan-blue: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
-  --grad-water: linear-gradient(135deg, #00D2FF 0%, #0072FF 100%);
-  --grad-sunset: linear-gradient(135deg, #F43F5E 0%, #FB923C 100%);
-  --grad-card: linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
-  --grad-glass-border: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.02) 100%);
+  --blue-primary: #008CFF;
+  --cyan-accent: #00D9FF;
+  --blue-glow: #0066FF;
+  --border-blue: #17466B;
 
-  /* Typography */
-  --text-main: #FFFFFF;
-  --text-muted: #94A3B8;
-  --text-sub: #64748B;
+  --text-primary: #F5F8FF;
+  --text-secondary: #8997B2;
+
+  --success: #10D9A4;
+  --warning: #FFB547;
+  --danger: #FF5263;
+
+  --gradient-primary: linear-gradient(135deg, #0066FF, #00D9FF);
+  --radius-card: 20px;
+
+  /* 2. Page Specific Color Tokens (Section 2) */
+  /* 01. Home / Dashboard */
+  --dash-bg: #05080F;
+  --dash-header: #081522;
+  --dash-card: #101827;
+  --dash-ring-blue: #008CFF;
+  --dash-ring-cyan: #00D9FF;
+
+  /* 02. Tasks */
+  --tasks-bg: #070B13;
+  --tasks-card: #111827;
+  --tasks-selected: #008CFF;
+  --tasks-completed: #10D9A4;
+
+  /* 03. Hydration */
+  --hyd-bg: #061323;
+  --hyd-card: #0B1D38;
+  --hyd-track: #263B5B;
+  --hyd-cyan: #00D9FF;
+  --hyd-blue: #008CFF;
+
+  /* 04. Reminders */
+  --rem-bg: #080D17;
+  --rem-card: #121A29;
+  --rem-enabled: #008CFF;
+  --rem-alert: #FFB547;
+  --rem-inactive: #8997B2;
+
+  /* 05. Siri integration */
+  --siri-bg: #050914;
+  --siri-card: #0A1730;
+  --siri-blue: #0066FF;
+  --siri-cyan: #00D9FF;
+  --siri-violet: #8A7CFF;
+
+  /* 06. Devices */
+  --dev-bg: #070B13;
+  --dev-card: #111827;
+  --dev-online: #10D9A4;
+  --dev-idle: #FFB547;
+  --dev-blue: #008CFF;
+
+  /* 07. Settings & Cloud */
+  --settings-bg: #080D17;
+  --settings-card: #141E2E;
+  --settings-blue: #008CFF;
+  --settings-cyan: #00D9FF;
+  --settings-danger: #FF5263;
+
+  /* 4. Gradients (Section 4) */
+  --grad-primary-blue: linear-gradient(135deg, #0066FF, #00D9FF);
+  --grad-dark-bg-glow: linear-gradient(145deg, #05080F, #081A2D, #05080F);
+  --grad-glass-card: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(16, 24, 40, 0.62);
+  --grad-electric-accent: linear-gradient(90deg, #008CFF, #5145FF);
+
+  /* Legacy & Semantic Mapping */
+  --bg-dark: var(--bg-primary);
+  --bg-surface: var(--bg-secondary);
+  --bg-input: #08111E;
+  --bg-card-hover: var(--bg-elevated);
+
+  --border-glass: var(--border-blue);
+  --border-glass-light: rgba(23, 70, 107, 0.65);
+  --border-accent: rgba(0, 217, 255, 0.45);
+
+  --accent-cyan: var(--cyan-accent);
+  --accent-blue: var(--blue-primary);
+  --accent-purple: var(--siri-violet);
+  --accent-sapphire: var(--blue-glow);
+  --accent-royal: var(--blue-glow);
+  --accent-deep-blue: #081A2D;
+  --accent-emerald: var(--success);
+  --accent-amber: var(--warning);
+  --accent-rose: var(--danger);
+
+  --grad-cyan-blue: var(--grad-primary-blue);
+  --grad-water: linear-gradient(135deg, #0066FF 0%, #008CFF 50%, #00D9FF 100%);
+  --grad-sunset: linear-gradient(135deg, #FF5263 0%, #FFB547 100%);
+  --grad-card: var(--grad-glass-card);
+  --grad-glass-border: linear-gradient(135deg, rgba(23, 70, 107, 0.7) 0%, rgba(0, 217, 255, 0.25) 100%);
+
+  --text-main: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --text-sub: #637392;
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 
-  /* Shadows & Glows */
-  --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
-  --glow-cyan: 0 0 25px rgba(6, 182, 212, 0.35);
-  --glow-blue: 0 0 30px rgba(59, 130, 246, 0.3);
-  --glow-water: 0 0 35px rgba(0, 210, 255, 0.45);
+  --shadow-card: 0 14px 38px -10px rgba(0, 0, 0, 0.75);
+  --glow-cyan: 0 0 25px rgba(0, 217, 255, 0.45);
+  --glow-blue: 0 0 30px rgba(0, 102, 255, 0.45);
+  --glow-water: 0 0 35px rgba(0, 217, 255, 0.5);
 
-  /* Dimensions & Spacing */
   --safe-top: max(env(safe-area-inset-top, 20px), 16px);
   --safe-bottom: max(env(safe-area-inset-bottom, 24px), 20px);
-  --nav-height: 62px;
+  --nav-height: 64px;
 }
 
 /* Base Reset */
@@ -62,8 +135,8 @@
 html, body {
   width: 100%;
   min-height: 100%;
-  background-color: var(--bg-dark);
-  color: var(--text-main);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-body);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -73,11 +146,12 @@ html, body {
 body {
   display: flex;
   justify-content: center;
-  background: radial-gradient(circle at 50% 0%, #111A2E 0%, var(--bg-dark) 55%);
+  background-color: var(--bg-primary);
+  background: var(--grad-dark-bg-glow);
   background-attachment: fixed;
 }
 
-/* App Viewport Container (Native mobile shell on desktop, full screen on mobile) */
+/* App Viewport Container */
 #app-container {
   width: 100%;
   max-width: 480px;
@@ -87,8 +161,67 @@ body {
   display: flex;
   flex-direction: column;
   padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 80px);
-  background: transparent;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.7);
+  background: var(--bg-primary);
+  box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+/* Ambient Background System (Luminous 3D Ribbon & Holographic Logo Watermark) */
+.ambient-bg-layer {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0 !important;
+}
+
+.ambient-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.ambient-glow.glow-1 {
+  top: -80px;
+  right: -80px;
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(0, 210, 255, 0.22) 0%, rgba(14, 165, 233, 0.12) 50%, transparent 70%);
+}
+
+.ambient-glow.glow-2 {
+  top: 360px;
+  left: -90px;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.2) 0%, rgba(0, 210, 255, 0.08) 50%, transparent 70%);
+}
+
+.ambient-ribbon-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ambient-logo-watermark {
+  display: none !important;
+}
+
+/* Scoped content containers above ambient background layer */
+header.app-header,
+main.app-main {
+  position: relative;
+  z-index: 1;
 }
 
 /* Header Bar */
@@ -133,6 +266,47 @@ header.app-header {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   white-space: nowrap;
+}
+
+.header-left-user {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-greeting-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #9497B0;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+
+.user-greeting-name {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.notification-bell-btn {
+  position: relative;
+}
+
+.notification-indicator-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #00D2FF;
+  box-shadow: 0 0 8px #00D2FF;
 }
 
 .header-actions {
@@ -194,24 +368,43 @@ header.app-header {
   flex-shrink: 0;
 }
 
+.header-icon-btn:hover {
+  background: rgba(0, 140, 255, 0.15);
+  color: #00D9FF;
+  border-color: rgba(0, 217, 255, 0.45);
+  box-shadow: 0 0 12px rgba(0, 217, 255, 0.3);
+}
+
+.header-icon-btn.active {
+  background: linear-gradient(135deg, rgba(0, 140, 255, 0.35), rgba(0, 217, 255, 0.2));
+  color: #00D9FF;
+  border-color: rgba(0, 217, 255, 0.6);
+  box-shadow: 0 0 16px rgba(0, 217, 255, 0.5), inset 0 0 8px rgba(0, 217, 255, 0.2);
+}
+
 .header-icon-btn:active {
   transform: scale(0.92);
   background: rgba(255, 255, 255, 0.12);
 }
 
-/* Main Content Views */
+/* Main Content Views — Continuous Apple Glass Refraction */
 main.app-main {
   flex: 1;
   padding: 16px 18px calc(var(--nav-height) + var(--safe-bottom) + 50px) 18px;
+  background: transparent !important;
 }
 
 .view-section {
   display: none;
+  background: transparent !important;
+  min-height: calc(100vh - 180px);
+  min-height: calc(100dvh - 180px);
   animation: fadeInView 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .view-section.active {
   display: block;
+  background: transparent !important;
 }
 
 @keyframes fadeInView {
@@ -225,22 +418,28 @@ main.app-main {
   }
 }
 
-/* Glass Cards */
+/* Glass Cards — Apple iOS 18 Glassmorphism */
 .glass-card {
-  background: var(--bg-card);
-  background-image: var(--grad-card);
-  border: 1px solid var(--border-glass);
-  border-radius: 20px;
-  padding: 18px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(16, 24, 42, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 20px;
   margin-bottom: 16px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--shadow-card);
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  box-shadow: 
+    0 14px 40px -10px rgba(0, 0, 0, 0.55),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 0 15px 0 rgba(0, 140, 255, 0.06);
+  transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .glass-card:hover {
-  border-color: var(--border-glass-light);
+  border-color: rgba(0, 210, 255, 0.4);
+  box-shadow: 
+    0 18px 46px -8px rgba(0, 0, 0, 0.65), 
+    0 0 25px rgba(0, 210, 255, 0.25),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 /* Greeting Section */
@@ -251,7 +450,7 @@ main.app-main {
 .greeting-time {
   font-size: 13px;
   font-weight: 600;
-  color: var(--accent-cyan);
+  color: #00D2FF;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
@@ -264,13 +463,17 @@ main.app-main {
   margin-top: 4px;
 }
 
-/* Circular Hydration Widget (Dashboard & Hydration Page) */
+/* Circular Hydration Widget (Dashboard & Hydration Page — Matches Reference Hero Card) */
 .ring-widget-card {
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
   overflow: hidden;
+  background: linear-gradient(160deg, rgba(14, 38, 70, 0.75) 0%, rgba(10, 24, 48, 0.85) 55%, rgba(8, 14, 28, 0.94) 100%);
+  border: 1px solid rgba(0, 210, 255, 0.32);
+  border-radius: 26px;
+  box-shadow: 0 18px 48px -10px rgba(0, 0, 0, 0.75), 0 0 35px rgba(0, 210, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .ring-widget-card::before {
@@ -279,10 +482,10 @@ main.app-main {
   top: -50px;
   left: 50%;
   transform: translateX(-50%);
-  width: 180px;
-  height: 180px;
-  background: radial-gradient(circle, rgba(0, 210, 255, 0.22) 0%, transparent 70%);
-  filter: blur(25px);
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(0, 210, 255, 0.3) 0%, rgba(14, 165, 233, 0.15) 40%, transparent 70%);
+  filter: blur(35px);
   pointer-events: none;
 }
 
@@ -307,7 +510,7 @@ main.app-main {
   stroke: url(#waterGradient);
   stroke-linecap: round;
   transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.6));
+  filter: drop-shadow(0 0 14px rgba(0, 210, 255, 0.85));
 }
 
 .ring-content {
@@ -336,7 +539,7 @@ main.app-main {
 
 .ring-val-current {
   font-family: var(--font-heading);
-  font-size: 32px;
+  font-size: 34px;
   font-weight: 800;
   letter-spacing: -0.8px;
   color: #FFFFFF;
@@ -352,14 +555,14 @@ main.app-main {
   margin-top: 4px;
   font-size: 11px;
   font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 12px;
-  background: rgba(6, 182, 212, 0.15);
-  color: var(--accent-cyan);
-  border: 1px solid rgba(6, 182, 212, 0.3);
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(0, 210, 255, 0.16);
+  color: #00D2FF;
+  border: 1px solid rgba(0, 210, 255, 0.35);
 }
 
-/* Quick Water Buttons */
+/* Quick Water Buttons — Squircles from reference design */
 .quick-add-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr) auto;
@@ -369,9 +572,9 @@ main.app-main {
 }
 
 .quick-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border-glass);
-  border-radius: 14px;
+  background: rgba(23, 27, 44, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
   padding: 12px 8px;
   color: var(--text-main);
   font-family: var(--font-heading);
@@ -383,18 +586,21 @@ main.app-main {
   align-items: center;
   gap: 4px;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 .quick-btn span.label {
   font-size: 10px;
   font-family: var(--font-body);
-  color: var(--text-muted);
+  color: #9497B0;
   font-weight: 500;
 }
 
 .quick-btn:hover {
-  background: rgba(6, 182, 212, 0.15);
-  border-color: var(--border-accent);
+  background: rgba(45, 52, 82, 0.85);
+  border-color: rgba(0, 210, 255, 0.45);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45), 0 0 15px rgba(0, 210, 255, 0.3);
 }
 
 .quick-btn:active {
@@ -405,9 +611,9 @@ main.app-main {
 
 .quick-btn.custom-btn {
   padding: 12px 14px;
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.35);
-  color: #60A5FA;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.3) 0%, rgba(0, 210, 255, 0.25) 100%);
+  border-color: rgba(0, 210, 255, 0.45);
+  color: #00D2FF;
 }
 
 /* Stats Row */
@@ -419,12 +625,20 @@ main.app-main {
 }
 
 .stat-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
+  background: rgba(18, 21, 34, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
   padding: 14px 10px;
   text-align: center;
-  backdrop-filter: blur(15px);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 0.25s ease;
+}
+
+.stat-box:hover {
+  border-color: rgba(0, 210, 255, 0.35);
+  transform: translateY(-1px);
 }
 
 .stat-val {
@@ -462,9 +676,14 @@ main.app-main {
 .section-link {
   font-size: 13px;
   font-weight: 600;
-  color: var(--accent-cyan);
+  color: #00D2FF;
   text-decoration: none;
   cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.section-link:hover {
+  color: #38BDF8;
 }
 
 /* Tasks Filter Pills */
@@ -487,35 +706,40 @@ main.app-main {
   font-size: 13px;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-glass);
-  color: var(--text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #9497B0;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .filter-pill.active {
-  background: var(--grad-cyan-blue);
+  background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 50%, #00D2FF 100%);
   color: #FFFFFF;
   border-color: transparent;
-  box-shadow: var(--glow-cyan);
+  box-shadow: 0 4px 18px rgba(0, 210, 255, 0.45);
 }
 
-/* Task Item Card */
+/* Task Item Card — Apple Frosted Glass */
 .task-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-glass);
-  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(16, 24, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
   padding: 14px 16px;
   margin-bottom: 10px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .task-item:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--border-glass-light);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%), rgba(22, 34, 56, 0.72);
+  border-color: rgba(0, 217, 255, 0.45);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.55), 0 0 20px rgba(0, 217, 255, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
 }
 
 .task-checkbox-btn {
@@ -612,6 +836,64 @@ main.app-main {
   border-radius: 6px;
 }
 
+/* Collaborative Task Assignment Badges */
+.task-badge {
+  font-size: 10px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.task-badge.assigned-to-me {
+  background: rgba(14, 165, 233, 0.18);
+  color: #38BDF8;
+  border: 1px solid rgba(14, 165, 233, 0.4);
+}
+
+.task-badge.assigned-to-other {
+  background: rgba(168, 85, 247, 0.18);
+  color: #C084FC;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+/* Friend Collaboration Cards */
+.friend-item-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(18, 25, 42, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 10px 14px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.friend-item-card:hover {
+  border-color: rgba(0, 210, 255, 0.35);
+  background: rgba(23, 34, 56, 0.8);
+  transform: translateY(-1px);
+}
+
+.quick-add-friend-chip {
+  transition: all 0.2s ease;
+}
+
+.quick-add-friend-chip:hover {
+  background: rgba(0, 210, 255, 0.15) !important;
+  border-color: rgba(0, 210, 255, 0.4) !important;
+  transform: translateY(-1px);
+}
+
+.quick-add-friend-chip:active {
+  transform: scale(0.95);
+}
+
 .task-delete-btn {
   background: transparent;
   border: none;
@@ -683,8 +965,8 @@ main.app-main {
 
 /* Siri Voice Cards */
 .siri-hero-card {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.15) 100%);
-  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.18) 0%, rgba(0, 210, 255, 0.18) 100%);
+  border: 1px solid rgba(0, 210, 255, 0.35);
   position: relative;
   overflow: hidden;
 }
@@ -693,8 +975,8 @@ main.app-main {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #F43F5E, #8B5CF6, #06B6D4);
-  box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
+  background: radial-gradient(circle at 30% 30%, #38BDF8, #00D2FF, #0284C7);
+  box-shadow: 0 0 25px rgba(0, 210, 255, 0.65);
   margin-bottom: 12px;
   animation: orb-glow 3s infinite alternate;
 }
@@ -720,42 +1002,66 @@ main.app-main {
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 14px;
-  color: #A5B4FC;
+  color: #38BDF8;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* Modals */
+/* Modals (Dynamic Bottom Sheets & Overlays) */
+body.modal-open {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 100;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  background: rgba(0, 0, 0, 0.76) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  z-index: 9999 !important;
   display: none;
-  align-items: flex-end;
-  justify-content: center;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
 }
 
 .modal-overlay.active {
-  display: flex;
+  display: flex !important;
+  animation: fadeInModalBg 0.22s ease forwards;
+}
+
+@keyframes fadeInModalBg {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-sheet {
-  width: 100%;
-  max-width: 480px;
-  background: var(--bg-surface);
-  border-top-left-radius: 28px;
-  border-top-right-radius: 28px;
-  border-top: 1px solid var(--border-glass-light);
-  padding: 24px 20px calc(var(--safe-bottom) + 20px) 20px;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
-  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  width: 100% !important;
+  max-width: 440px !important;
+  background: var(--bg-surface) !important;
+  border-top-left-radius: 28px !important;
+  border-top-right-radius: 28px !important;
+  border-top: 1px solid var(--border-glass-light) !important;
+  border-left: 1px solid var(--border-glass) !important;
+  border-right: 1px solid var(--border-glass) !important;
+  padding: 20px 20px calc(var(--safe-bottom) + 20px) 20px !important;
+  box-shadow: 0 -14px 50px rgba(0, 0, 0, 0.88), 0 0 40px rgba(0, 210, 255, 0.12) !important;
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  max-height: 88vh !important;
+  max-height: 88dvh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  margin: 0 auto !important;
 }
 
 @keyframes slideUpModal {
@@ -849,33 +1155,74 @@ main.app-main {
   margin-top: 8px;
 }
 
-/* Floating Glass Bottom Navigation Bar (iOS 18 Liquid Glass — Translucent & Non-Blocking) */
-nav.app-navbar {
-  position: fixed;
-  bottom: calc(var(--safe-bottom) + 4px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(calc(100% - 16px), 440px);
-  height: var(--nav-height);
-  background: rgba(10, 16, 28, 0.65);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 32px;
+/* ==========================================================================
+   LIQUID GLASS EFFECT — BOTTOM NAVIGATION MENU (Apple iOS 18 Glassmorphism)
+   Multi-Layer Optical Refraction, Distortion Filter & Fluid Spring Dynamics
+   ========================================================================== */
+
+/* Multi-Layer Glass Positioning */
+.liquid-glass-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Layer 1: Optical Refraction & Backdrop Blur with SVG Distortion */
+.liquid-glass-refraction {
+  z-index: 0;
+  overflow: hidden;
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  filter: url(#glass-distortion);
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Layer 2: Obsidian Translucent Tint */
+.liquid-glass-tint {
+  z-index: 1;
+  background: linear-gradient(145deg, rgba(16, 26, 44, 0.78), rgba(8, 14, 25, 0.88));
+}
+
+/* Layer 3: Liquid Specular Light Rim (Subtle Inner Bevel & Glass Edge) */
+.liquid-glass-rim {
+  z-index: 2;
+  overflow: hidden;
   box-shadow: 
-    0 10px 32px rgba(0, 0, 0, 0.45),
-    0 1px 0 rgba(255, 255, 255, 0.16) inset,
-    0 -1px 0 rgba(0, 0, 0, 0.3) inset;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 0 4px;
-  z-index: 60;
-  box-sizing: border-box;
-  transition: all 0.25s ease;
+    inset 2px 2px 1.5px 0 rgba(255, 255, 255, 0.45),
+    inset -1px -1px 1.5px 1px rgba(0, 217, 255, 0.35),
+    inset 0 0 16px rgba(0, 140, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+nav.app-navbar {
+  position: fixed !important;
+  bottom: calc(var(--safe-bottom) + 8px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(calc(100% - 16px), 440px) !important;
+  height: var(--nav-height) !important;
+  border-radius: 36px !important;
+  box-shadow: 
+    0 16px 40px rgba(0, 0, 0, 0.75),
+    0 6px 16px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(0, 140, 255, 0.22) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-around !important;
+  padding: 0 4px !important;
+  z-index: 1000 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  transition: transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 2.2), box-shadow 0.7s cubic-bezier(0.175, 0.885, 0.32, 2.2) !important;
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 2.2) !important;
 }
 
 .nav-item {
+  position: relative;
+  z-index: 10;
   flex: 1 1 0;
   min-width: 0;
   height: 52px;
@@ -884,21 +1231,24 @@ nav.app-navbar {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  color: var(--text-sub);
+  color: var(--text-secondary);
   text-decoration: none;
   padding: 4px 1px;
-  border-radius: 16px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 2.2);
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   user-select: none;
   -webkit-user-select: none;
 }
 
 .nav-item:hover {
-  color: #E2E8F0;
-  background: rgba(255, 255, 255, 0.05);
+  color: #F5F8FF;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.25), 0 4px 12px rgba(0, 140, 255, 0.2);
+  transform: translateY(-2px) scale(1.08);
 }
 
 .nav-item:active {
@@ -907,7 +1257,7 @@ nav.app-navbar {
 
 .nav-item svg,
 .nav-item i {
-  font-size: 17px;
+  font-size: 16px;
   width: 20px;
   height: 20px;
   display: flex;
@@ -917,7 +1267,7 @@ nav.app-navbar {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform 0.2s ease, filter 0.2s ease, color 0.2s ease;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 2.2), filter 0.5s ease, color 0.3s ease;
   flex-shrink: 0;
 }
 
@@ -925,31 +1275,308 @@ nav.app-navbar {
   font-size: 8.5px;
   font-weight: 600;
   line-height: 1;
-  letter-spacing: -0.35px;
+  letter-spacing: -0.3px;
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
   max-width: 100%;
   display: block;
   text-align: center;
-  transition: color 0.2s ease;
+  transition: color 0.3s ease;
 }
 
+/* Active Liquid Capsule Pill */
 .nav-item.active {
-  color: var(--accent-cyan);
-  background: rgba(6, 182, 212, 0.12);
+  color: #00D9FF;
+  background: linear-gradient(135deg, rgba(0, 140, 255, 0.32), rgba(0, 217, 255, 0.16));
+  border-color: rgba(0, 217, 255, 0.45);
+  box-shadow: 
+    inset 1px 1px 1px 0 rgba(255, 255, 255, 0.6),
+    inset -1px -1px 1px 0 rgba(0, 217, 255, 0.4),
+    0 0 18px rgba(0, 217, 255, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transform: translateY(-1px) scale(1.05);
 }
 
 .nav-item.active svg,
 .nav-item.active i {
-  transform: translateY(-1px) scale(1.06);
-  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.7));
-  color: var(--accent-cyan);
+  transform: translateY(-1px) scale(1.12);
+  filter: drop-shadow(0 0 12px rgba(0, 217, 255, 0.95));
+  color: #00D9FF;
 }
 
 .nav-item.active span {
-  color: #38BDF8;
+  color: #F5F8FF;
   font-weight: 700;
+}
+
+/* Balanced Navbar Wings (Guaranteeing 50% Dead-Center Alignment for Luphonix) */
+.nav-side-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 100%;
+  position: relative;
+  z-index: 10;
+}
+
+.nav-center-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 52px;
+  position: relative;
+  z-index: 15;
+}
+
+/* Compact Central Luphonix Liquid Emblem Trigger */
+.nav-center-emblem {
+  position: relative;
+  z-index: 15;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0066FF, #00D9FF);
+  border: 2px solid #00D9FF;
+  box-shadow: 
+    0 0 24px rgba(0, 217, 255, 0.75), 
+    0 4px 14px rgba(0, 102, 255, 0.5),
+    inset 2px 2px 2px rgba(255, 255, 255, 0.65),
+    inset -1px -1px 2px rgba(0, 102, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 2.2), box-shadow 0.6s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 2.2);
+}
+
+.nav-center-emblem:hover {
+  transform: scale(1.18);
+  box-shadow: 
+    0 0 34px rgba(0, 217, 255, 0.95), 
+    0 8px 24px rgba(0, 102, 255, 0.7),
+    inset 2px 2px 2px rgba(255, 255, 255, 0.85);
+}
+
+.nav-center-emblem:active {
+  transform: scale(0.92);
+}
+
+.nav-center-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 217, 255, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  animation: emblemPulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes emblemPulse {
+  0% { transform: scale(0.95); opacity: 0.8; }
+  50% { transform: scale(1.22); opacity: 0; }
+  100% { transform: scale(1.22); opacity: 0; }
+}
+
+.nav-emblem-img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   CIRCULAR RADIAL NAVIGATION MENU (Framer-Motion inspired Glass Dial)
+   ========================================================================== */
+.circular-nav-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(4, 7, 15, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 0.38s ease, visibility 0.38s ease;
+}
+
+.circular-nav-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+
+.circular-nav-portal {
+  position: relative;
+  width: min(400px, 92vw);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, rgba(16, 26, 44, 0.9) 0%, rgba(6, 11, 20, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 
+    inset 2px 2px 2px rgba(255, 255, 255, 0.4),
+    inset -1px -1px 2px rgba(0, 217, 255, 0.3),
+    0 24px 60px rgba(0, 0, 0, 0.85),
+    0 0 50px rgba(0, 140, 255, 0.35);
+  transform: scale(0.2);
+  opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.35s ease;
+}
+
+.circular-nav-overlay.open .circular-nav-portal {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Ambient Outer Conic Halo */
+.circular-nav-halo {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(0, 140, 255, 0.4), rgba(0, 217, 255, 0.7), rgba(81, 69, 255, 0.5), rgba(0, 140, 255, 0.4));
+  filter: blur(22px);
+  opacity: 0.6;
+  pointer-events: none;
+  animation: rotateHalo 12s linear infinite;
+}
+
+@keyframes rotateHalo {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Center Close / Toggle Button */
+.circular-nav-center-btn {
+  position: absolute;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0066FF, #00D9FF);
+  border: 2px solid #FFFFFF;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 25;
+  box-shadow: 0 0 25px rgba(0, 217, 255, 0.8), inset 1px 1px 2px rgba(255, 255, 255, 0.7);
+  transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 2.2), background 0.3s ease;
+}
+
+.circular-nav-center-btn:hover {
+  transform: scale(1.15) rotate(90deg);
+  background: linear-gradient(135deg, #00D9FF, #0066FF);
+}
+
+.circular-nav-center-btn:active {
+  transform: scale(0.92);
+}
+
+/* Radial Orbit Items */
+.circular-nav-items-wrapper {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.circular-orbit-item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 68px;
+  height: 68px;
+  margin-top: -34px;
+  margin-left: -34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.35), 0 4px 15px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #F5F8FF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  text-decoration: none;
+  transform: translate(var(--orbit-x, 0px), var(--orbit-y, 0px));
+  transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.25), background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.circular-orbit-item .orbit-icon-circle {
+  font-size: 19px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00D9FF;
+  transition: transform 0.25s ease, color 0.25s ease;
+}
+
+.circular-orbit-item .orbit-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: #CBD5E1;
+  transition: color 0.25s ease;
+}
+
+.circular-orbit-item:hover {
+  background: #FFFFFF !important;
+  color: #05080F !important;
+  border-color: #FFFFFF !important;
+  transform: translate(var(--orbit-x, 0px), var(--orbit-y, 0px)) scale(1.15) !important;
+  box-shadow: 0 0 30px rgba(0, 217, 255, 0.9), inset 0 0 2px rgba(255, 255, 255, 0.8) !important;
+}
+
+.circular-orbit-item:hover .orbit-icon-circle {
+  color: #05080F !important;
+  transform: scale(1.12);
+}
+
+.circular-orbit-item:hover .orbit-label {
+  color: #05080F !important;
+  font-weight: 700;
+}
+
+.circular-orbit-item:active {
+  transform: translate(var(--orbit-x, 0px), var(--orbit-y, 0px)) scale(0.92) !important;
+}
+
+.circular-orbit-item.active {
+  background: linear-gradient(135deg, rgba(0, 140, 255, 0.4), rgba(0, 217, 255, 0.25));
+  border-color: #00D9FF;
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+}
+
+.circular-orbit-item.active .orbit-icon-circle {
+  color: #00D9FF;
+}
+
+.circular-orbit-item .orbit-special {
+  color: #38BDF8;
 }
 
 .bottom-nav-spacer {
@@ -1025,16 +1652,24 @@ nav.app-navbar {
   }
 }
 
-/* Empty State */
+/* Empty State — Apple Glass Panel */
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
-  color: var(--text-sub);
+  padding: 44px 20px;
+  color: var(--text-muted);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(14, 21, 38, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  margin: 14px 0 20px 0;
 }
 
 .empty-state-icon {
   font-size: 40px;
   margin-bottom: 12px;
+  filter: drop-shadow(0 0 16px rgba(0, 217, 255, 0.6));
 }
 
 /* Toast Notifications */
@@ -1302,9 +1937,9 @@ nav.app-navbar {
   font-size: 15px !important;
   font-weight: 700 !important;
   color: #FFFFFF !important;
-  background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 50%, #6366F1 100%) !important;
+  background: linear-gradient(135deg, #00D2FF 0%, #0EA5E9 50%, #0284C7 100%) !important;
   background-size: 200% 200% !important;
-  box-shadow: 0 4px 18px rgba(6, 182, 212, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 18px rgba(0, 210, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
@@ -1634,4 +2269,1014 @@ nav.app-navbar {
   border: 1px solid rgba(16, 185, 129, 0.35);
   color: #A7F3D0;
 }
+
+/* ==========================================================================
+   MOCKUP DESIGN SYSTEM COMPONENTS (7-SCREEN FIDELITY & BLUE PALETTE)
+   ========================================================================== */
+
+/* 1. Motivational Quote Banner */
+.quote-banner-card {
+  background: rgba(18, 22, 38, 0.65);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.quote-banner-card:hover {
+  border-color: rgba(0, 210, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.quote-quote-icon {
+  color: #00D2FF;
+  font-size: 15px;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.quote-text-p {
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 500;
+  color: #E2E8F0;
+  line-height: 1.4;
+  margin: 0;
+  flex: 1;
+}
+
+.quote-rotator-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, #0284C7, #00D2FF, #0EA5E9);
+  opacity: 0.8;
+}
+
+/* 2. Today's Water Hero Card with Mountain Silhouette */
+.today-water-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, #091326 0%, #060c1a 60%, #050811 100%) !important;
+  border: 1px solid rgba(0, 210, 255, 0.35) !important;
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 210, 255, 0.2) !important;
+}
+
+.card-ambient-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.mountain-silhouette-svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.65;
+}
+
+.today-water-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.card-water-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.water-header-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+}
+
+.btn-keep-going-pill {
+  background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 50%, #00D2FF 100%);
+  border: none;
+  border-radius: 20px;
+  color: #FFFFFF;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 210, 255, 0.45);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-keep-going-pill:hover {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 14px rgba(0, 210, 255, 0.65);
+}
+
+.btn-keep-going-pill:active {
+  transform: scale(0.96);
+}
+
+/* 3. 4-Button Quick Action Grid (Screen 1) */
+.quick-actions-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.qa-item-btn {
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.qa-icon-box {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.qa-icon-box.blue {
+  background: rgba(14, 165, 233, 0.16);
+  color: #38BDF8;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 16px rgba(14, 165, 233, 0.2);
+}
+
+.qa-icon-box.cyan {
+  background: rgba(0, 210, 255, 0.16);
+  color: #00D2FF;
+  border: 1px solid rgba(0, 210, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 16px rgba(0, 210, 255, 0.25);
+}
+
+.qa-icon-box.amber {
+  background: rgba(245, 158, 11, 0.16);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 16px rgba(245, 158, 11, 0.2);
+}
+
+.qa-item-btn:hover .qa-icon-box {
+  transform: translateY(-3px) scale(1.05);
+  filter: brightness(1.15);
+}
+
+.qa-item-btn:active .qa-icon-box {
+  transform: scale(0.93);
+}
+
+.qa-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #CBD5E1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 4. Screen Header Bar with Back Arrow */
+.view-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  min-height: 40px;
+}
+
+.view-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.view-back-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-glass);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+.view-back-btn:hover {
+  background: rgba(0, 210, 255, 0.15);
+  color: #00D2FF;
+  border-color: rgba(0, 210, 255, 0.35);
+}
+
+.view-back-btn:active {
+  transform: scale(0.92);
+}
+
+.view-screen-title {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #FFFFFF;
+}
+
+.view-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 5. Search Bar Wrapper */
+.search-input-wrapper {
+  position: relative;
+  margin-bottom: 14px;
+  width: 100%;
+}
+
+.search-leading-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748B;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.form-input.search-input {
+  padding-left: 40px !important;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+  font-size: 14px;
+  color: #FFFFFF;
+}
+
+/* 6. Interactive iOS Toggle Switch (Screen 4) */
+.ios-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.ios-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.ios-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.15);
+  transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ios-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #FFFFFF;
+  transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.ios-switch input:checked + .ios-slider {
+  background: linear-gradient(135deg, #0284C7 0%, #00D2FF 100%);
+  border-color: rgba(0, 210, 255, 0.5);
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.55);
+}
+
+.ios-switch input:checked + .ios-slider:before {
+  transform: translateX(18px);
+}
+
+/* 7. Siri Voice Assistant Screen 5 Styles */
+.siri-orb-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.siri-orb {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #00D2FF 0%, #0EA5E9 40%, #0284C7 80%, #08162e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 26px;
+  box-shadow: 0 0 35px rgba(0, 210, 255, 0.75), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  animation: siriPulse 3s ease-in-out infinite;
+}
+
+@keyframes siriPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(0, 210, 255, 0.65); }
+  50% { transform: scale(1.08); box-shadow: 0 0 45px rgba(0, 210, 255, 0.95); }
+}
+
+.siri-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.siri-action-row {
+  background: rgba(18, 22, 36, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #FFFFFF;
+  text-align: left;
+  width: 100%;
+}
+
+.siri-action-row:hover {
+  background: rgba(28, 34, 54, 0.92);
+  border-color: rgba(0, 210, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.siri-action-row:active {
+  transform: scale(0.98);
+}
+
+.siri-act-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.siri-act-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.siri-act-icon.blue {
+  background: rgba(14, 165, 233, 0.2);
+  color: #38BDF8;
+}
+
+.siri-act-icon.cyan {
+  background: rgba(0, 210, 255, 0.2);
+  color: #00D2FF;
+}
+
+.siri-act-icon.emerald {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+}
+
+.siri-act-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.siri-act-chevron {
+  color: #64748B;
+  font-size: 13px;
+}
+
+.popular-commands-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.popular-cmd-bubble {
+  background: rgba(15, 20, 32, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #BAE6FD;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.popular-cmd-bubble:hover {
+  border-color: rgba(0, 210, 255, 0.45);
+  background: rgba(22, 30, 48, 0.85);
+  transform: translateX(3px);
+}
+
+.popular-cmd-bubble:active {
+  transform: scale(0.98);
+}
+
+.cmd-quote-icon {
+  color: #00D2FF;
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.cmd-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.cmd-trailing-icon {
+  font-size: 15px;
+}
+
+/* 8. Screen 7 iOS Grouped Menu Layout */
+.ios-grouped-list {
+  background: rgba(18, 22, 36, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.ios-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ios-list-item:last-child {
+  border-bottom: none;
+}
+
+.ios-list-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ios-list-item:active {
+  background: rgba(0, 210, 255, 0.08);
+}
+
+.ios-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.ios-item-icon.blue {
+  background: rgba(14, 165, 233, 0.2);
+  color: #38BDF8;
+}
+
+.ios-item-icon.cyan {
+  background: rgba(0, 210, 255, 0.2);
+  color: #00D2FF;
+}
+
+.ios-item-icon.amber {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+}
+
+.ios-item-icon.emerald {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+}
+
+.ios-item-icon.rose {
+  background: rgba(244, 63, 94, 0.2);
+  color: #FB7185;
+}
+
+.ios-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ios-item-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.ios-item-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ios-item-arrow {
+  color: #64748B;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.setting-expand-card {
+  display: block;
+  margin-bottom: 12px;
+  animation: fadeInView 0.25s ease;
+}
+
+/* 9. Global Floating Action Button (FAB) */
+.global-fab-btn {
+  position: fixed !important;
+  bottom: calc(var(--safe-bottom) + 84px) !important;
+  right: max(calc((100vw - 480px) / 2 + 18px), 18px) !important;
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #00D2FF 0%, #0EA5E9 50%, #0284C7 100%) !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-size: 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 8px 25px rgba(0, 210, 255, 0.55), 0 0 15px rgba(0, 210, 255, 0.35) !important;
+  cursor: pointer !important;
+  z-index: 999 !important;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease !important;
+}
+
+.global-fab-btn:hover {
+  transform: scale(1.08) !important;
+  box-shadow: 0 12px 32px rgba(0, 210, 255, 0.75) !important;
+}
+
+.global-fab-btn:active {
+  transform: scale(0.92) !important;
+}
+
+/* 10. Reminder Item with Squircle Icon & iOS Switch — Apple Frosted Glass */
+.reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(16, 24, 40, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reminder-item:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%), rgba(22, 34, 56, 0.72);
+  border-color: rgba(0, 217, 255, 0.45);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.55), 0 0 20px rgba(0, 217, 255, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+.reminder-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: rgba(0, 210, 255, 0.12);
+  color: #00D2FF;
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   PAGE-SPECIFIC COLOR PALETTE & APPLE GLASS EFFECT
+   Frosted Translucent Glass System with Electric Blue Gradients & Glowing Specular Borders
+   ========================================================================== */
+
+/* 01. Home / Dashboard */
+#view-dashboard {
+  background: transparent !important;
+}
+#view-dashboard .today-water-card {
+  background: linear-gradient(160deg, rgba(14, 38, 70, 0.65) 0%, rgba(10, 24, 48, 0.75) 55%, rgba(8, 14, 28, 0.85) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px rgba(0, 140, 255, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2) !important;
+}
+#view-dashboard .quick-actions-bar .quick-action-btn {
+  background: rgba(16, 24, 39, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #00D9FF;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.22s ease;
+}
+#view-dashboard .quick-actions-bar .quick-action-btn:hover {
+  background: rgba(23, 34, 53, 0.75);
+  border-color: #00D9FF;
+  box-shadow: 0 0 18px rgba(0, 217, 255, 0.4);
+  transform: translateY(-2px);
+}
+#view-dashboard .quick-action-btn i,
+#view-dashboard .quick-action-btn svg,
+#view-dashboard .qa-icon-circle {
+  color: #00D9FF !important;
+}
+#view-dashboard .stat-box {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(16, 24, 39, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+#view-dashboard .stat-val {
+  color: #00D9FF !important;
+}
+#view-dashboard .quote-banner-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(14, 21, 38, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+#view-dashboard .quote-quote-icon {
+  color: #00D2FF;
+}
+
+/* 02. Tasks */
+#view-tasks {
+  background: transparent !important;
+}
+#view-tasks .task-item {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(16, 24, 40, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+#view-tasks .task-item:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%), rgba(22, 34, 56, 0.72) !important;
+  border-color: rgba(0, 217, 255, 0.45) !important;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.55), 0 0 20px rgba(0, 217, 255, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25) !important;
+  transform: translateY(-2px);
+}
+#view-tasks .filter-pill.active {
+  background: linear-gradient(135deg, #008CFF 0%, #00D9FF 100%) !important;
+  border-color: rgba(0, 217, 255, 0.6) !important;
+  color: #F5F8FF !important;
+  box-shadow: 0 0 18px rgba(0, 140, 255, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+#view-tasks .task-item.completed {
+  border-color: rgba(16, 217, 164, 0.4) !important;
+}
+#view-tasks .task-item.completed .task-checkbox {
+  background: #10D9A4 !important;
+  border-color: #10D9A4 !important;
+  color: #05080F !important;
+  box-shadow: 0 0 14px rgba(16, 217, 164, 0.6) !important;
+}
+#view-tasks .task-priority-badge.high,
+#view-tasks .badge-priority.high {
+  background: rgba(255, 82, 99, 0.2) !important;
+  color: #FF5263 !important;
+  border: 1px solid rgba(255, 82, 99, 0.45) !important;
+}
+#view-tasks .task-priority-badge.medium,
+#view-tasks .badge-priority.medium {
+  background: rgba(255, 181, 71, 0.2) !important;
+  color: #FFB547 !important;
+  border: 1px solid rgba(255, 181, 71, 0.45) !important;
+}
+#view-tasks .task-priority-badge.low,
+#view-tasks .badge-priority.low {
+  background: rgba(0, 217, 255, 0.18) !important;
+  color: #00D9FF !important;
+  border: 1px solid rgba(0, 217, 255, 0.4) !important;
+}
+
+/* 03. Hydration */
+#view-hydration {
+  background: transparent !important;
+}
+#view-hydration .glass-card,
+#view-hydration .ring-widget-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(11, 29, 56, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  box-shadow: 0 18px 48px -10px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 140, 255, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+#view-hydration .ring-bg-circle {
+  stroke: rgba(255, 255, 255, 0.08) !important;
+}
+#view-hydration .ring-progress-circle {
+  stroke: url(#waterGradient) !important;
+  filter: drop-shadow(0 0 16px rgba(0, 217, 255, 0.75)) !important;
+}
+#view-hydration .chart-bar-bg {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+#view-hydration .chart-bar-fill {
+  background: linear-gradient(180deg, #00D9FF 0%, #008CFF 100%) !important;
+  box-shadow: 0 0 12px rgba(0, 217, 255, 0.5) !important;
+}
+#view-hydration .quick-btn {
+  background: rgba(16, 27, 48, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #F5F8FF !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+}
+#view-hydration .quick-btn:hover {
+  background: rgba(23, 39, 68, 0.75) !important;
+  border-color: #00D9FF !important;
+  color: #00D9FF !important;
+  box-shadow: 0 0 18px rgba(0, 217, 255, 0.4) !important;
+}
+#view-hydration .ring-percentage-pill {
+  background: rgba(0, 217, 255, 0.18) !important;
+  color: #00D9FF !important;
+  border-color: rgba(0, 217, 255, 0.4) !important;
+}
+
+/* 04. Reminders */
+#view-reminders {
+  background: transparent !important;
+}
+#view-reminders .reminder-item {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(16, 24, 40, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.45), inset 0 1px 1px 0 rgba(255, 255, 255, 0.18) !important;
+}
+#view-reminders .reminder-item:hover {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 100%), rgba(22, 34, 56, 0.72) !important;
+  border-color: rgba(0, 217, 255, 0.45) !important;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.55), 0 0 20px rgba(0, 217, 255, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25) !important;
+  transform: translateY(-2px);
+}
+#view-reminders .reminder-item.enabled .reminder-toggle-input:checked + .reminder-toggle-slider,
+#view-reminders .ios-switch input:checked + .slider {
+  background: #008CFF !important;
+  box-shadow: 0 0 16px rgba(0, 140, 255, 0.6) !important;
+}
+#view-reminders .reminder-upcoming-pill,
+#view-reminders .upcoming-alert-badge {
+  background: rgba(255, 181, 71, 0.18) !important;
+  color: #FFB547 !important;
+  border: 1px solid rgba(255, 181, 71, 0.45) !important;
+}
+#view-reminders .reminder-item:not(.enabled) .reminder-text-title,
+#view-reminders .reminder-item:not(.enabled) .reminder-title {
+  color: #8997B2 !important;
+}
+#view-reminders .reminder-item:not(.enabled) .reminder-icon-box {
+  color: #8997B2 !important;
+  border-color: rgba(137, 151, 178, 0.3) !important;
+  background: rgba(137, 151, 178, 0.1) !important;
+}
+
+/* 05. Siri Voice Assistant */
+#view-siri {
+  background: transparent !important;
+}
+#view-siri .glass-card,
+#view-siri .siri-hero-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%), rgba(10, 23, 48, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  box-shadow: 0 18px 48px -10px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 102, 255, 0.25), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2) !important;
+}
+#view-siri .siri-orb-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 16px 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+#view-siri .siri-orb {
+  width: 86px !important;
+  height: 86px !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 35% 35%, #00D9FF 0%, #008CFF 35%, #0066FF 70%, #050914 95%) !important;
+  box-shadow: 0 0 45px rgba(0, 102, 255, 0.8), 0 0 25px rgba(0, 217, 255, 0.6), inset 0 0 18px #8A7CFF !important;
+  border: 2px solid rgba(0, 217, 255, 0.6) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: siriOrbPulse 3s ease-in-out infinite alternate !important;
+}
+@keyframes siriOrbPulse {
+  0% { transform: scale(1); box-shadow: 0 0 40px rgba(0, 102, 255, 0.7), 0 0 20px rgba(0, 217, 255, 0.5); }
+  100% { transform: scale(1.06); box-shadow: 0 0 60px rgba(0, 102, 255, 0.9), 0 0 35px rgba(0, 217, 255, 0.8); }
+}
+#view-siri .siri-orb i {
+  font-size: 32px !important;
+  color: #F5F8FF !important;
+  filter: drop-shadow(0 0 12px #00D9FF) drop-shadow(0 0 6px #0066FF) !important;
+}
+#view-siri .popular-cmd-bubble {
+  background: rgba(16, 24, 40, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+#view-siri .popular-cmd-bubble:hover {
+  border-color: #00D9FF !important;
+  background: rgba(23, 34, 56, 0.75) !important;
+  box-shadow: 0 0 16px rgba(0, 217, 255, 0.35) !important;
+}
+#view-siri .popular-cmd-bubble .cmd-text {
+  color: #00D9FF !important;
+}
+#view-siri .siri-action-row {
+  background: rgba(16, 24, 40, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+#view-siri .siri-action-row:hover {
+  background: rgba(23, 34, 56, 0.75) !important;
+  border-color: #00D9FF !important;
+}
+#view-siri .siri-shortcut-card {
+  background: rgba(16, 24, 40, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+#view-siri .siri-phrase-box {
+  background: rgba(5, 9, 20, 0.7) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #00D9FF !important;
+}
+
+/* 06. Devices */
+#view-devices {
+  background: transparent !important;
+}
+#view-devices .device-card,
+#view-devices .request-feed-card,
+#view-devices .diag-box {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(17, 24, 39, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+#view-devices .device-badge.online,
+#view-devices .status-dot.online,
+#view-devices .stat-box #stat-devices-online {
+  color: #10D9A4 !important;
+}
+#view-devices .device-badge.idle,
+#view-devices .status-dot.idle,
+#view-devices .stat-box #stat-db-tasks-count {
+  color: #FFB547 !important;
+}
+#view-devices .btn-device-action,
+#view-devices #btn-ping-device {
+  color: #008CFF !important;
+}
+#view-devices #btn-deduplicate-tasks {
+  background: linear-gradient(135deg, #008CFF 0%, #00D9FF 100%) !important;
+  border: none !important;
+  box-shadow: 0 0 16px rgba(0, 140, 255, 0.45) !important;
+}
+
+/* 07. Settings & Cloud */
+#view-settings {
+  background: transparent !important;
+}
+#view-settings .glass-card,
+#view-settings .setting-expand-card,
+#view-settings .ios-list-item {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(20, 30, 46, 0.65) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15) !important;
+}
+#view-settings .ios-list-item:hover {
+  background: rgba(28, 42, 64, 0.75) !important;
+  border-color: #008CFF !important;
+}
+#view-settings .ios-item-icon.cyan,
+#view-settings .ios-item-icon i.fa-cloud,
+#view-settings .cloud-status-icon {
+  color: #00D9FF !important;
+}
+#view-settings .btn-primary,
+#view-settings #btn-save-settings {
+  background: #008CFF !important;
+  color: #F5F8FF !important;
+  border: none !important;
+  box-shadow: 0 0 18px rgba(0, 140, 255, 0.5) !important;
+}
+#view-settings .btn-primary:hover,
+#view-settings #btn-save-settings:hover {
+  background: #0066FF !important;
+  box-shadow: 0 0 24px rgba(0, 102, 255, 0.7) !important;
+}
+#view-settings #btn-reset-data,
+#view-settings #setting-card-storage button {
+  color: #FF5263 !important;
+  border-color: rgba(255, 82, 99, 0.4) !important;
+  background: rgba(255, 82, 99, 0.08) !important;
+}
+#view-settings #btn-reset-data:hover,
+#view-settings #setting-card-storage button:hover {
+  background: rgba(255, 82, 99, 0.2) !important;
+  box-shadow: 0 0 18px rgba(255, 82, 99, 0.5) !important;
+}
+
+/* Global Button & FAB Upgrades */
+.global-fab-btn {
+  background: linear-gradient(135deg, #0066FF 0%, #00D9FF 100%) !important;
+  border: 1.5px solid rgba(0, 217, 255, 0.6) !important;
+  box-shadow: 0 8px 25px rgba(0, 102, 255, 0.6), 0 0 20px rgba(0, 217, 255, 0.5) !important;
+}
+
+.global-fab-btn:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 12px 35px rgba(0, 102, 255, 0.8), 0 0 30px rgba(0, 217, 255, 0.7) !important;
+}
+
 
