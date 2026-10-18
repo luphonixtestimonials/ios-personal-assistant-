@@ -111,15 +111,17 @@ export const StorageService = {
   async getServerUrl(): Promise<string> {
     try {
       const url = await AsyncStorage.getItem(STORAGE_KEYS.SERVER_URL);
-      return url || 'https://luphonix.vercel.app';
+      const target = (url || 'https://luphonix-web.vercel.app').trim().replace(/\/+$/, '');
+      return target || 'https://luphonix-web.vercel.app';
     } catch {
-      return 'https://luphonix.vercel.app';
+      return 'https://luphonix-web.vercel.app';
     }
   },
 
   async saveServerUrl(url: string): Promise<void> {
     try {
-      await AsyncStorage.setItem(STORAGE_KEYS.SERVER_URL, url);
+      const cleaned = url.trim().replace(/\/+$/, '');
+      await AsyncStorage.setItem(STORAGE_KEYS.SERVER_URL, cleaned);
     } catch (e) {
       console.error('Failed to save server URL', e);
     }

@@ -38,8 +38,10 @@ export const SettingsScreen: React.FC = () => {
 
   const saveServerUrl = async () => {
     if (!serverUrl.trim()) return;
-    await StorageService.saveServerUrl(serverUrl.trim());
-    Alert.alert('Saved', 'Backend server URL updated.');
+    const clean = serverUrl.trim().replace(/\/+$/, '');
+    await StorageService.saveServerUrl(clean);
+    setServerUrl(clean);
+    Alert.alert('Saved', `Backend server URL set to:\n${clean}`);
   };
 
   const handleAuth = async () => {
@@ -48,12 +50,23 @@ export const SettingsScreen: React.FC = () => {
       return;
     }
 
+    if (isRegistering && password.length < 6) {
+      Alert.alert('Password Too Short', 'Password must be at least 6 characters long.');
+      return;
+    }
+
+    // Auto-save whatever server URL is currently entered
+    if (serverUrl.trim()) {
+      const clean = serverUrl.trim().replace(/\/+$/, '');
+      await StorageService.saveServerUrl(clean);
+    }
+
     setIsAuthenticating(true);
     let result;
     if (isRegistering) {
-      result = await ApiService.register(name || 'Luphonix User', email, password);
+      result = await ApiService.register(name.trim() || 'Luphonix User', email.trim(), password);
     } else {
-      result = await ApiService.login(email, password);
+      result = await ApiService.login(email.trim(), password);
     }
     setIsAuthenticating(false);
 
@@ -61,7 +74,19 @@ export const SettingsScreen: React.FC = () => {
       setUserProfile(result.user);
       Alert.alert('Success', `Welcome, ${result.user.name}!`);
     } else {
-      Alert.alert('Error', result.error || 'Authentication failed');
+      const err = result.error || 'Authentication failed';
+      if (err.toLowerCase().includes('already exists')) {
+        Alert.alert(
+          'Account Exists',
+          'An account with this email already exists. Switch to Log In?',
+          [
+            { text: 'Switch to Log In', onPress: () => setIsRegistering(false) },
+            { text: 'Cancel', style: 'cancel' },
+          ]
+        );
+      } else {
+        Alert.alert('Authentication Error', err);
+      }
     }
   };
 
@@ -192,7 +217,7 @@ export const SettingsScreen: React.FC = () => {
         <Text style={styles.fieldLabel}>API Server URL</Text>
         <TextInput
           style={styles.input}
-          placeholder="https://luphonix.vercel.app"
+          placeholder="https://luphonix-web.vercel.app"
           placeholderTextColor="#64748B"
           value={serverUrl}
           onChangeText={setServerUrl}
