@@ -8,32 +8,9 @@
     {
       "source": "/health",
       "destination": "/api"
-    },
-    {
-      "source": "/login",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/signup",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/setup",
-      "destination": "/setup.html"
-    },
-    {
-      "source": "/auth",
-      "destination": "/login.html"
-    },
-    {
-      "source": "/devices",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/siri",
-      "destination": "/setup.html"
     }
   ]
 }
+
 
 
