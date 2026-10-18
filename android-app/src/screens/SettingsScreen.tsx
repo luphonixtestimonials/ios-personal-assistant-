@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StorageService } from '../services/storage';
 import { ApiService } from '../services/api';
 import { NotificationService } from '../services/notifications';
-import { UserProfile } from '../types';
+import { UserProfile, Friend } from '../types';
 
 export const SettingsScreen: React.FC = () => {
   const [serverUrl, setServerUrl] = useState('');
@@ -27,14 +27,60 @@ export const SettingsScreen: React.FC = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
+  // Friends & Collaboration
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [newFriendHandle, setNewFriendHandle] = useState('');
+  const [isAddingFriend, setIsAddingFriend] = useState(false);
+
   useEffect(() => {
     (async () => {
       const url = await StorageService.getServerUrl();
       const profile = await StorageService.getUserProfile();
+      const cachedFriends = await StorageService.getFriends();
       setServerUrl(url);
       setUserProfile(profile);
+      setFriends(cachedFriends);
+
+      if (profile?.token) {
+        try {
+          const remoteFriends = await ApiService.getFriends();
+          if (remoteFriends) setFriends(remoteFriends);
+        } catch {}
+      }
     })();
   }, []);
+
+  const handleAddFriend = async () => {
+    if (!newFriendHandle.trim()) {
+      Alert.alert('Required', 'Please enter a username or email (e.g. @keval or @alex)');
+      return;
+    }
+    setIsAddingFriend(true);
+    const res = await ApiService.addFriend(newFriendHandle.trim());
+    setIsAddingFriend(false);
+    if (res.success && res.friend) {
+      setNewFriendHandle('');
+      const updated = [...friends.filter((f) => f.id !== res.friend!.id), res.friend];
+      setFriends(updated);
+      Alert.alert('Friend Connected!', `You are now connected with @${res.friend.username}. You can assign tasks to each other!`);
+    } else {
+      Alert.alert('Could Not Connect', res.error || 'Failed to add friend. Verify the username.');
+    }
+  };
+
+  const handleRemoveFriend = async (friend: Friend) => {
+    Alert.alert('Remove Friend', `Disconnect from @${friend.username}?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: async () => {
+          await ApiService.removeFriend(friend.id);
+          setFriends(friends.filter((f) => f.id !== friend.id));
+        },
+      },
+    ]);
+  };
 
   const saveServerUrl = async () => {
     if (!serverUrl.trim()) return;
@@ -127,10 +173,16 @@ export const SettingsScreen: React.FC = () => {
         {userProfile ? (
           <View>
             <View style={styles.profileRow}>
-              <Ionicons name="person-circle-outline" size={40} color="#38BDF8" />
-              <View style={{ marginLeft: 12 }}>
+              <Ionicons name="person-circle-outline" size={44} color="#38BDF8" />
+              <View style={{ marginLeft: 12, flex: 1 }}>
                 <Text style={styles.profileName}>{userProfile.name}</Text>
                 <Text style={styles.profileEmail}>{userProfile.email}</Text>
+                <View style={styles.handleBadge}>
+                  <Ionicons name="at-outline" size={12} color="#06B6D4" style={{ marginRight: 2 }} />
+                  <Text style={styles.handleBadgeText}>
+                    {userProfile.username || userProfile.email.split('@')[0]}
+                  </Text>
+                </View>
               </View>
             </View>
 
@@ -207,6 +259,67 @@ export const SettingsScreen: React.FC = () => {
                 {isRegistering ? 'Already have an account? Log In' : "Don't have an account? Register"}
               </Text>
             </TouchableOpacity>
+          </View>
+        )}
+      </View>
+
+      {/* Friends & Collaboration Section */}
+      <Text style={styles.sectionTitle}>Friends & Collaboration</Text>
+      <View style={styles.card}>
+        <View style={styles.friendHeaderRow}>
+          <Ionicons name="people" size={20} color="#06B6D4" style={{ marginRight: 8 }} />
+          <Text style={styles.friendHeaderTitle}>Connected Teammates</Text>
+        </View>
+        <Text style={styles.friendHeaderDesc}>
+          Connect with friends using unique handles (@username) to assign and share tasks.
+        </Text>
+
+        <View style={styles.addFriendBox}>
+          <TextInput
+            style={styles.friendInput}
+            placeholder="Enter @username (e.g. @alex, @keval)"
+            placeholderTextColor="#64748B"
+            value={newFriendHandle}
+            onChangeText={setNewFriendHandle}
+            autoCapitalize="none"
+          />
+          <TouchableOpacity
+            style={[styles.addFriendSubmitBtn, isAddingFriend && styles.btnDisabled]}
+            onPress={handleAddFriend}
+            disabled={isAddingFriend}
+          >
+            {isAddingFriend ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.addFriendBtnLabel}>Connect</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {friends.length > 0 ? (
+          <View style={styles.friendsListContainer}>
+            {friends.map((f) => (
+              <View key={f.id} style={styles.friendItem}>
+                <View style={styles.friendAvatarCircle}>
+                  <Text style={styles.friendAvatarInitial}>{f.name.charAt(0).toUpperCase()}</Text>
+                </View>
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={styles.friendItemName}>{f.name}</Text>
+                  <Text style={styles.friendItemHandle}>@{f.username}</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleRemoveFriend(f)} style={styles.friendRemoveAction}>
+                  <Ionicons name="person-remove-outline" size={18} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View style={styles.emptyFriendsContainer}>
+            <Ionicons name="person-add-outline" size={24} color="#475569" style={{ marginBottom: 6 }} />
+            <Text style={styles.emptyFriendsMsg}>No friends connected yet.</Text>
+            <Text style={styles.emptyFriendsHint}>
+              Enter demo handles like @alex or @keval above to test instant collaboration!
+            </Text>
           </View>
         )}
       </View>

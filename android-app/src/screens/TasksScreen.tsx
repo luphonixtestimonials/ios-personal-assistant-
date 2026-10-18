@@ -11,12 +11,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StorageService } from '../services/storage';
-import { Task, Priority, TaskCategory, Subtask } from '../types';
+import { ApiService } from '../services/api';
+import { Task, Priority, TaskCategory, Subtask, Friend } from '../types';
 import * as Haptics from 'expo-haptics';
 
 export const TasksScreen: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'high'>('all');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'completed' | 'high' | 'assigned'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
 
@@ -27,10 +28,28 @@ export const TasksScreen: React.FC = () => {
   const [taskCategory, setTaskCategory] = useState<TaskCategory>('Work');
   const [subtasks, setSubtasks] = useState<Subtask[]>([]);
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
+  const [assignedUsername, setAssignedUsername] = useState('');
+  const [friends, setFriends] = useState<Friend[]>([]);
 
   const loadTasks = useCallback(async () => {
     const list = await StorageService.getTasks();
     setTasks(list);
+    const cachedFriends = await StorageService.getFriends();
+    setFriends(cachedFriends);
+
+    // Background cloud sync
+    try {
+      const [remoteTasks, remoteFriends] = await Promise.all([
+        ApiService.syncTasks(),
+        ApiService.getFriends(),
+      ]);
+      if (remoteTasks && remoteTasks.length > 0) {
+        setTasks(remoteTasks);
+      }
+      if (remoteFriends && remoteFriends.length > 0) {
+        setFriends(remoteFriends);
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -65,6 +84,8 @@ export const TasksScreen: React.FC = () => {
       return;
     }
 
+    const cleanAssignee = assignedUsername.trim().replace(/^@/, '');
+
     const newTask: Task = {
       id: Date.now().toString(),
       title: taskTitle.trim(),
@@ -73,6 +94,7 @@ export const TasksScreen: React.FC = () => {
       category: taskCategory,
       isCompleted: false,
       subtasks: subtasks,
+      assignedToUsername: cleanAssignee || undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -81,10 +103,30 @@ export const TasksScreen: React.FC = () => {
     setTasks(updated);
     await StorageService.saveTasks(updated);
 
+    // Sync to backend if online
+    try {
+      const profile = await StorageService.getUserProfile();
+      if (profile?.token) {
+        const res = await ApiService.createTask({
+          title: newTask.title,
+          notes: newTask.notes,
+          priority: newTask.priority,
+          category: newTask.category,
+          assigned_to_username: cleanAssignee || undefined,
+        });
+        if (res.success && res.task) {
+          const synced = updated.map((t) => (t.id === newTask.id ? res.task! : t));
+          setTasks(synced);
+          await StorageService.saveTasks(synced);
+        }
+      }
+    } catch {}
+
     // Reset form
     setTaskTitle('');
     setTaskNotes('');
     setTaskPriority('medium');
+    setAssignedUsername('');
     setSubtasks([]);
     setIsModalVisible(false);
   };
@@ -99,10 +141,13 @@ export const TasksScreen: React.FC = () => {
     if (filter === 'pending' && t.isCompleted) return false;
     if (filter === 'completed' && !t.isCompleted) return false;
     if (filter === 'high' && t.priority !== 'high') return false;
+    if (filter === 'assigned' && !t.assignedToUsername && !t.assignedByUsername && !t.assignedToUserId) return false;
     if (searchQuery.trim()) {
       return (
         t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (t.notes && t.notes.toLowerCase().includes(searchQuery.toLowerCase()))
+        (t.notes && t.notes.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (t.assignedToUsername && t.assignedToUsername.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (t.assignedByUsername && t.assignedByUsername.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
     return true;
@@ -115,7 +160,7 @@ export const TasksScreen: React.FC = () => {
         <Ionicons name="search" size={18} color="#64748B" style={{ marginRight: 8 }} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search tasks..."
+          placeholder="Search tasks, notes, or @assignee..."
           placeholderTextColor="#64748B"
           value={searchQuery}
           onChangeText={setSearchQuery}
@@ -129,7 +174,7 @@ export const TasksScreen: React.FC = () => {
 
       {/* Filter Tabs */}
       <View style={styles.filterRow}>
-        {(['all', 'pending', 'completed', 'high'] as const).map((f) => (
+        {(['all', 'pending', 'completed', 'high', 'assigned'] as const).map((f) => (
           <TouchableOpacity
             key={f}
             style={[styles.filterChip, filter === f && styles.filterChipActive]}
@@ -199,6 +244,17 @@ export const TasksScreen: React.FC = () => {
                     </Text>
                   </View>
                 )}
+                {item.assignedToUsername ? (
+                  <View style={styles.assignedBadgeTo}>
+                    <Ionicons name="arrow-forward-circle" size={12} color="#06B6D4" style={{ marginRight: 3 }} />
+                    <Text style={styles.assignedBadgeText}>To @{item.assignedToUsername}</Text>
+                  </View>
+                ) : item.assignedByUsername ? (
+                  <View style={styles.assignedBadgeFrom}>
+                    <Ionicons name="arrow-down-circle" size={12} color="#38BDF8" style={{ marginRight: 3 }} />
+                    <Text style={styles.assignedBadgeText}>From @{item.assignedByUsername}</Text>
+                  </View>
+                ) : null}
               </View>
             </View>
 
@@ -296,6 +352,50 @@ export const TasksScreen: React.FC = () => {
                 <Text style={styles.subtaskText}>{s.title}</Text>
               </View>
             ))}
+
+            {/* Assign to Friend (Collaboration) */}
+            <Text style={styles.fieldLabel}>Assign to Friend (Collaboration)</Text>
+            <View style={styles.assignRow}>
+              <Ionicons name="person-outline" size={16} color="#06B6D4" style={{ marginRight: 8 }} />
+              <TextInput
+                style={styles.assignInput}
+                placeholder="Enter @username (e.g. @alex or @keval)"
+                placeholderTextColor="#64748B"
+                value={assignedUsername}
+                onChangeText={setAssignedUsername}
+                autoCapitalize="none"
+              />
+              {assignedUsername ? (
+                <TouchableOpacity onPress={() => setAssignedUsername('')}>
+                  <Ionicons name="close-circle" size={16} color="#64748B" />
+                </TouchableOpacity>
+              ) : null}
+            </View>
+
+            {friends.length > 0 && (
+              <View style={styles.friendsChipsContainer}>
+                <Text style={styles.friendsChipsLabel}>Quick Select Connected Friend:</Text>
+                <View style={styles.friendsChipsRow}>
+                  {friends.map((friend) => {
+                    const isSelected =
+                      assignedUsername.replace(/^@/, '').toLowerCase() === friend.username.toLowerCase();
+                    return (
+                      <TouchableOpacity
+                        key={friend.id}
+                        style={[styles.friendChip, isSelected && styles.friendChipActive]}
+                        onPress={() =>
+                          setAssignedUsername(isSelected ? '' : `@${friend.username}`)
+                        }
+                      >
+                        <Text style={[styles.friendChipText, isSelected && styles.friendChipTextActive]}>
+                          @{friend.username}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
 
             <TouchableOpacity style={styles.saveTaskBtn} onPress={handleSaveTask}>
               <Text style={styles.saveTaskBtnText}>Save Task</Text>
@@ -577,5 +677,80 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '700',
+  },
+  assignedBadgeTo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.35)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  assignedBadgeFrom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.35)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+  },
+  assignedBadgeText: {
+    color: '#38BDF8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  assignRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1E293B',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#334155',
+    marginBottom: 8,
+  },
+  assignInput: {
+    flex: 1,
+    color: '#F8FAFC',
+    fontSize: 14,
+  },
+  friendsChipsContainer: {
+    marginBottom: 12,
+  },
+  friendsChipsLabel: {
+    color: '#64748B',
+    fontSize: 11,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  friendsChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  friendChip: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  friendChipActive: {
+    backgroundColor: '#0E7490',
+    borderColor: '#06B6D4',
+  },
+  friendChipText: {
+    color: '#94A3B8',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  friendChipTextActive: {
+    color: '#FFFFFF',
   },
 });
