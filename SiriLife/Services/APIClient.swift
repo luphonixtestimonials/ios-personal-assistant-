@@ -199,11 +199,17 @@ public final class APIClient {
             var category: String
             var is_completed: Bool
             var recurrence_rule: String?
+            var assigned_to_user_id: String?
+            var assigned_by_user_id: String?
+            var assigned_to_username: String?
+            var assigned_by_username: String?
             var created_at: String
             var updated_at: String
 
             enum CodingKeys: String, CodingKey {
-                case id, user_id, title, description, due_at, priority, category, is_completed, recurrence_rule, created_at, updated_at
+                case id, user_id, title, description, due_at, priority, category, is_completed, recurrence_rule
+                case assigned_to_user_id, assigned_by_user_id, assigned_to_username, assigned_by_username
+                case created_at, updated_at
             }
 
             init(from decoder: Decoder) throws {
@@ -216,6 +222,10 @@ public final class APIClient {
                 priority = (try? container.decode(String.self, forKey: .priority)) ?? "medium"
                 category = (try? container.decode(String.self, forKey: .category)) ?? "other"
                 recurrence_rule = try? container.decode(String.self, forKey: .recurrence_rule)
+                assigned_to_user_id = try? container.decode(String.self, forKey: .assigned_to_user_id)
+                assigned_by_user_id = try? container.decode(String.self, forKey: .assigned_by_user_id)
+                assigned_to_username = try? container.decode(String.self, forKey: .assigned_to_username)
+                assigned_by_username = try? container.decode(String.self, forKey: .assigned_by_username)
                 created_at = (try? container.decode(String.self, forKey: .created_at)) ?? ""
                 updated_at = (try? container.decode(String.self, forKey: .updated_at)) ?? ""
 
@@ -244,6 +254,10 @@ public final class APIClient {
                     category: ItemCategory(rawValue: bt.category) ?? .other,
                     isCompleted: bt.is_completed,
                     recurrenceRule: RecurrenceRule(rawValue: bt.recurrence_rule ?? "none") ?? .none,
+                    assignedToUserId: bt.assigned_to_user_id,
+                    assignedByUserId: bt.assigned_by_user_id,
+                    assignedToUsername: bt.assigned_to_username,
+                    assignedByUsername: bt.assigned_by_username,
                     createdAt: isoFormatter.date(from: bt.created_at) ?? Date(),
                     updatedAt: isoFormatter.date(from: bt.updated_at) ?? Date()
                 )

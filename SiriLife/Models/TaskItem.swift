@@ -23,6 +23,10 @@ public struct TaskItem: Codable, Identifiable, Hashable {
     public var isCompleted: Bool
     public var recurrenceRule: RecurrenceRule
     public var subtasks: [SubTask]
+    public var assignedToUserId: String?
+    public var assignedByUserId: String?
+    public var assignedToUsername: String?
+    public var assignedByUsername: String?
     public var createdAt: Date
     public var updatedAt: Date
     
@@ -37,6 +41,10 @@ public struct TaskItem: Codable, Identifiable, Hashable {
         isCompleted: Bool = false,
         recurrenceRule: RecurrenceRule = .none,
         subtasks: [SubTask] = [],
+        assignedToUserId: String? = nil,
+        assignedByUserId: String? = nil,
+        assignedToUsername: String? = nil,
+        assignedByUsername: String? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date()
     ) {
@@ -50,6 +58,10 @@ public struct TaskItem: Codable, Identifiable, Hashable {
         self.isCompleted = isCompleted
         self.recurrenceRule = recurrenceRule
         self.subtasks = subtasks
+        self.assignedToUserId = assignedToUserId
+        self.assignedByUserId = assignedByUserId
+        self.assignedToUsername = assignedToUsername
+        self.assignedByUsername = assignedByUsername
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
