@@ -178,15 +178,22 @@ export const DashboardScreen: React.FC<Props> = ({ onNavigateTab, onOpenVoice })
                   {task.title}
                 </Text>
               </View>
-              <View
-                style={[
-                  styles.priorityBadge,
-                  task.priority === 'high' && styles.priorityHigh,
-                  task.priority === 'medium' && styles.priorityMedium,
-                  task.priority === 'low' && styles.priorityLow,
-                ]}
-              >
-                <Text style={styles.priorityText}>{task.priority}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                {task.assignedToUsername ? (
+                  <View style={styles.collabBadge}>
+                    <Text style={styles.collabBadgeText}>@{task.assignedToUsername}</Text>
+                  </View>
+                ) : null}
+                <View
+                  style={[
+                    styles.priorityBadge,
+                    task.priority === 'high' && styles.priorityHigh,
+                    task.priority === 'medium' && styles.priorityMedium,
+                    task.priority === 'low' && styles.priorityLow,
+                  ]}
+                >
+                  <Text style={styles.priorityText}>{task.priority}</Text>
+                </View>
               </View>
             </TouchableOpacity>
           ))
@@ -437,5 +444,18 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontSize: 12,
     marginTop: 2,
+  },
+  collabBadge: {
+    backgroundColor: 'rgba(6, 182, 212, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(6, 182, 212, 0.35)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  collabBadgeText: {
+    color: '#38BDF8',
+    fontSize: 10,
+    fontWeight: '700',
   },
 });
