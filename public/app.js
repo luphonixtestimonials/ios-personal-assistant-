@@ -1168,6 +1168,7 @@
     const modal = document.getElementById(id);
     if (modal) {
       modal.classList.add('active');
+      document.body.classList.add('modal-open');
       const input = modal.querySelector('input');
       if (input) setTimeout(() => input.focus(), 150);
     }
@@ -1176,10 +1177,14 @@
   function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.classList.remove('active');
+    if (!document.querySelector('.modal-overlay.active')) {
+      document.body.classList.remove('modal-open');
+    }
   }
 
   function closeAllModals() {
     document.querySelectorAll('.modal-overlay').forEach((m) => m.classList.remove('active'));
+    document.body.classList.remove('modal-open');
   }
 
   // --- Tab Navigation Controller ---

@@ -160,7 +160,9 @@ body {
   object-fit: contain;
 }
 
-#app-container > *:not(.ambient-bg-layer) {
+/* Scoped content containers above ambient background layer */
+header.app-header,
+main.app-main {
   position: relative;
   z-index: 1;
 }
@@ -823,36 +825,60 @@ main.app-main {
   gap: 8px;
 }
 
-/* Modals */
+/* Modals (Dynamic Bottom Sheets & Overlays) */
+body.modal-open {
+  overflow: hidden !important;
+  touch-action: none;
+}
+
 .modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 100;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  background: rgba(0, 0, 0, 0.76) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  z-index: 9999 !important;
   display: none;
-  align-items: flex-end;
-  justify-content: center;
+  align-items: flex-end !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
 }
 
 .modal-overlay.active {
-  display: flex;
+  display: flex !important;
+  animation: fadeInModalBg 0.22s ease forwards;
+}
+
+@keyframes fadeInModalBg {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-sheet {
-  width: 100%;
-  max-width: 480px;
-  background: var(--bg-surface);
-  border-top-left-radius: 28px;
-  border-top-right-radius: 28px;
-  border-top: 1px solid var(--border-glass-light);
-  padding: 24px 20px calc(var(--safe-bottom) + 20px) 20px;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8);
-  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  width: 100% !important;
+  max-width: 440px !important;
+  background: var(--bg-surface) !important;
+  border-top-left-radius: 28px !important;
+  border-top-right-radius: 28px !important;
+  border-top: 1px solid var(--border-glass-light) !important;
+  border-left: 1px solid var(--border-glass) !important;
+  border-right: 1px solid var(--border-glass) !important;
+  padding: 20px 20px calc(var(--safe-bottom) + 20px) 20px !important;
+  box-shadow: 0 -14px 50px rgba(0, 0, 0, 0.88), 0 0 40px rgba(0, 210, 255, 0.12) !important;
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  max-height: 88vh !important;
+  max-height: 88dvh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  margin: 0 auto !important;
 }
 
 @keyframes slideUpModal {
@@ -946,30 +972,31 @@ main.app-main {
   margin-top: 8px;
 }
 
-/* Floating Glass Bottom Navigation Bar (iOS 18 Liquid Glass — Translucent & Non-Blocking) */
+/* Floating Glass Bottom Navigation Bar (iOS 18 Liquid Glass — Anchored Dynamically on Mobile & Site) */
 nav.app-navbar {
-  position: fixed;
-  bottom: calc(var(--safe-bottom) + 4px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(calc(100% - 16px), 440px);
-  height: var(--nav-height);
-  background: rgba(10, 16, 28, 0.65);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 32px;
+  position: fixed !important;
+  bottom: calc(var(--safe-bottom) + 8px) !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(calc(100% - 16px), 440px) !important;
+  height: var(--nav-height) !important;
+  background: rgba(10, 16, 28, 0.78) !important;
+  backdrop-filter: blur(28px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 32px !important;
   box-shadow: 
-    0 10px 32px rgba(0, 0, 0, 0.45),
-    0 1px 0 rgba(255, 255, 255, 0.16) inset,
-    0 -1px 0 rgba(0, 0, 0, 0.3) inset;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  padding: 0 4px;
-  z-index: 60;
-  box-sizing: border-box;
-  transition: all 0.25s ease;
+    0 12px 36px rgba(0, 0, 0, 0.65),
+    0 1px 0 rgba(255, 255, 255, 0.18) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.35) inset,
+    0 0 25px rgba(0, 210, 255, 0.12) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-around !important;
+  padding: 0 4px !important;
+  z-index: 1000 !important;
+  box-sizing: border-box !important;
+  transition: transform 0.25s ease, box-shadow 0.25s ease !important;
 }
 
 .nav-item {
