@@ -17,7 +17,7 @@
 
   <!-- Styles & Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="/style.css?v=12.0">
+  <link rel="stylesheet" href="/style.css?v=12.2">
 </head>
 <body>
   <div id="app-container">
@@ -732,8 +732,31 @@
     <i class="fa-solid fa-plus"></i>
   </button>
 
-  <!-- Floating Glass Bottom Navigation Menu (Modern, Unique & Interactive) -->
+  <!-- Liquid Glass Distortion Filter (Optical Refraction Engine) -->
+  <svg class="liquid-glass-filter-svg" style="position: absolute; width: 0; height: 0; pointer-events: none; opacity: 0;" aria-hidden="true">
+    <filter id="glass-distortion" x="0%" y="0%" width="100%" height="100%" filterUnits="objectBoundingBox">
+      <feTurbulence type="fractalNoise" baseFrequency="0.001 0.005" numOctaves="1" seed="17" result="turbulence" />
+      <feComponentTransfer in="turbulence" result="mapped">
+        <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
+        <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
+        <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+      </feComponentTransfer>
+      <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+      <feSpecularLighting in="softMap" surfaceScale="5" specularConstant="1" specularExponent="100" lightingColor="white" result="specLight">
+        <fePointLight x="-200" y="-200" z="300" />
+      </feSpecularLighting>
+      <feComposite in="specLight" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="litImage" />
+      <feDisplacementMap in="SourceGraphic" in2="softMap" scale="20" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <!-- Floating Liquid Glass Bottom Navigation Menu -->
   <nav class="app-navbar" id="bottom-navbar">
+    <!-- Liquid Glass Multi-Layer Refractive Shell -->
+    <div class="liquid-glass-layer liquid-glass-refraction" aria-hidden="true"></div>
+    <div class="liquid-glass-layer liquid-glass-tint" aria-hidden="true"></div>
+    <div class="liquid-glass-layer liquid-glass-rim" aria-hidden="true"></div>
+
     <button class="nav-item active" data-view="dashboard" id="nav-btn-dashboard" title="Home / Dashboard">
       <i class="fa-solid fa-house"></i>
       <span>Home</span>

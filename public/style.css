@@ -1083,7 +1083,47 @@ body.modal-open {
   margin-top: 8px;
 }
 
-/* Floating Glass Bottom Navigation Bar (iOS 18 Liquid Glass — Anchored Dynamically on Mobile & Site) */
+/* ==========================================================================
+   LIQUID GLASS EFFECT — BOTTOM NAVIGATION MENU (Apple iOS 18 Glassmorphism)
+   Multi-Layer Optical Refraction, Distortion Filter & Fluid Spring Dynamics
+   ========================================================================== */
+
+/* Multi-Layer Glass Positioning */
+.liquid-glass-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Layer 1: Optical Refraction & Backdrop Blur with SVG Distortion */
+.liquid-glass-refraction {
+  z-index: 0;
+  overflow: hidden;
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  filter: url(#glass-distortion);
+  isolation: isolate;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Layer 2: Obsidian Translucent Tint */
+.liquid-glass-tint {
+  z-index: 1;
+  background: linear-gradient(145deg, rgba(16, 26, 44, 0.78), rgba(8, 14, 25, 0.88));
+}
+
+/* Layer 3: Liquid Specular Light Rim (Subtle Inner Bevel & Glass Edge) */
+.liquid-glass-rim {
+  z-index: 2;
+  overflow: hidden;
+  box-shadow: 
+    inset 2px 2px 1.5px 0 rgba(255, 255, 255, 0.45),
+    inset -1px -1px 1.5px 1px rgba(0, 217, 255, 0.35),
+    inset 0 0 16px rgba(0, 140, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
 nav.app-navbar {
   position: fixed !important;
   bottom: calc(var(--safe-bottom) + 8px) !important;
@@ -1091,26 +1131,26 @@ nav.app-navbar {
   transform: translateX(-50%) !important;
   width: min(calc(100% - 16px), 440px) !important;
   height: var(--nav-height) !important;
-  background: linear-gradient(145deg, rgba(16, 24, 39, 0.94), rgba(8, 14, 25, 0.97)) !important;
-  backdrop-filter: blur(28px) saturate(200%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
-  border: 1px solid var(--border-blue) !important;
   border-radius: 36px !important;
   box-shadow: 
-    0 16px 40px rgba(0, 0, 0, 0.8),
-    0 1px 0 rgba(0, 217, 255, 0.2) inset,
-    0 -1px 0 rgba(0, 0, 0, 0.4) inset,
-    0 0 25px rgba(0, 102, 255, 0.18) !important;
+    0 16px 40px rgba(0, 0, 0, 0.75),
+    0 6px 16px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(0, 140, 255, 0.22) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-around !important;
   padding: 0 4px !important;
   z-index: 1000 !important;
   box-sizing: border-box !important;
-  transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+  overflow: hidden !important;
+  isolation: isolate !important;
+  transition: transform 0.7s cubic-bezier(0.175, 0.885, 0.32, 2.2), box-shadow 0.7s cubic-bezier(0.175, 0.885, 0.32, 2.2) !important;
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 2.2) !important;
 }
 
 .nav-item {
+  position: relative;
+  z-index: 10;
   flex: 1 1 0;
   min-width: 0;
   height: 52px;
@@ -1122,9 +1162,10 @@ nav.app-navbar {
   color: var(--text-secondary);
   text-decoration: none;
   padding: 4px 1px;
-  border-radius: 16px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 2.2);
   background: transparent;
   border: 1px solid transparent;
   user-select: none;
@@ -1133,7 +1174,9 @@ nav.app-navbar {
 
 .nav-item:hover {
   color: #F5F8FF;
-  background: rgba(0, 140, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 1px 1px 1px rgba(255, 255, 255, 0.25), 0 4px 12px rgba(0, 140, 255, 0.2);
+  transform: translateY(-2px) scale(1.08);
 }
 
 .nav-item:active {
@@ -1152,7 +1195,7 @@ nav.app-navbar {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform 0.22s ease, filter 0.22s ease, color 0.22s ease;
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 2.2), filter 0.5s ease, color 0.3s ease;
   flex-shrink: 0;
 }
 
@@ -1167,20 +1210,27 @@ nav.app-navbar {
   max-width: 100%;
   display: block;
   text-align: center;
-  transition: color 0.22s ease;
+  transition: color 0.3s ease;
 }
 
+/* Active Liquid Capsule Pill */
 .nav-item.active {
   color: #00D9FF;
-  background: linear-gradient(135deg, rgba(0, 140, 255, 0.22), rgba(0, 217, 255, 0.12));
-  border-color: rgba(0, 217, 255, 0.35);
-  box-shadow: 0 0 16px rgba(0, 217, 255, 0.3);
+  background: linear-gradient(135deg, rgba(0, 140, 255, 0.32), rgba(0, 217, 255, 0.16));
+  border-color: rgba(0, 217, 255, 0.45);
+  box-shadow: 
+    inset 1px 1px 1px 0 rgba(255, 255, 255, 0.6),
+    inset -1px -1px 1px 0 rgba(0, 217, 255, 0.4),
+    0 0 18px rgba(0, 217, 255, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transform: translateY(-1px) scale(1.05);
 }
 
 .nav-item.active svg,
 .nav-item.active i {
-  transform: translateY(-1px) scale(1.08);
-  filter: drop-shadow(0 0 10px rgba(0, 217, 255, 0.85));
+  transform: translateY(-1px) scale(1.12);
+  filter: drop-shadow(0 0 12px rgba(0, 217, 255, 0.95));
   color: #00D9FF;
 }
 
@@ -1189,26 +1239,36 @@ nav.app-navbar {
   font-weight: 700;
 }
 
-/* Compact Central Luphonix Emblem (Navigation Spec Section 3) */
+/* Compact Central Luphonix Liquid Emblem */
 .nav-center-emblem {
+  position: relative;
+  z-index: 10;
   width: 44px;
   height: 44px;
   border-radius: 50%;
   background: linear-gradient(135deg, #0066FF, #00D9FF);
   border: 2px solid #00D9FF;
-  box-shadow: 0 0 20px rgba(0, 217, 255, 0.65), 0 4px 14px rgba(0, 102, 255, 0.45);
+  box-shadow: 
+    0 0 24px rgba(0, 217, 255, 0.75), 
+    0 4px 14px rgba(0, 102, 255, 0.5),
+    inset 2px 2px 2px rgba(255, 255, 255, 0.65),
+    inset -1px -1px 2px rgba(0, 102, 255, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   flex-shrink: 0;
   margin: 0 2px;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 2.2), box-shadow 0.6s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+  transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 2.2);
 }
 
 .nav-center-emblem:hover {
-  transform: scale(1.12);
-  box-shadow: 0 0 26px rgba(0, 217, 255, 0.9), 0 6px 18px rgba(0, 102, 255, 0.6);
+  transform: scale(1.16);
+  box-shadow: 
+    0 0 32px rgba(0, 217, 255, 0.95), 
+    0 8px 22px rgba(0, 102, 255, 0.65),
+    inset 2px 2px 2px rgba(255, 255, 255, 0.85);
 }
 
 .nav-center-emblem:active {
