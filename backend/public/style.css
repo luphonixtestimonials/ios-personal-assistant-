@@ -6,52 +6,122 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap');
 
 :root {
-  /* Color Palette — Midnight Obsidian & Blue / Sapphire / Electric Cyan */
-  --bg-dark: #08090E;
-  --bg-surface: #0E101A;
-  --bg-card: rgba(18, 20, 32, 0.78);
-  --bg-card-hover: rgba(28, 32, 50, 0.9);
-  --bg-input: rgba(13, 16, 26, 0.9);
-  
-  /* Glass Borders */
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --border-glass-light: rgba(255, 255, 255, 0.14);
-  --border-accent: rgba(0, 210, 255, 0.4);
+  /* 1. Main Color Palette (From Specification) */
+  --bg-primary: #05080F;
+  --bg-secondary: #080E19;
+  --bg-card: #101827;
+  --bg-elevated: #172235;
 
-  /* Accents & Gradients — Pure Blue Palette */
-  --accent-cyan: #00D2FF;
-  --accent-blue: #0EA5E9;
-  --accent-purple: #0EA5E9; /* Replaced with azure blue */
-  --accent-sapphire: #0284C7;
-  --accent-royal: #2563EB;
-  --accent-deep-blue: #1D4ED8;
-  --accent-emerald: #10B981;
-  --accent-amber: #F59E0B;
-  --accent-rose: #F43F5E;
-  
-  --grad-cyan-blue: linear-gradient(135deg, #00D2FF 0%, #0EA5E9 50%, #0284C7 100%);
-  --grad-water: linear-gradient(135deg, #00D2FF 0%, #0EA5E9 50%, #0284C7 100%);
-  --grad-sunset: linear-gradient(135deg, #F43F5E 0%, #FB923C 100%);
-  --grad-card: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
-  --grad-glass-border: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.02) 100%);
+  --blue-primary: #008CFF;
+  --cyan-accent: #00D9FF;
+  --blue-glow: #0066FF;
+  --border-blue: #17466B;
 
-  /* Typography */
-  --text-main: #FFFFFF;
-  --text-muted: #9497B0;
-  --text-sub: #696E88;
+  --text-primary: #F5F8FF;
+  --text-secondary: #8997B2;
+
+  --success: #10D9A4;
+  --warning: #FFB547;
+  --danger: #FF5263;
+
+  --gradient-primary: linear-gradient(135deg, #0066FF, #00D9FF);
+  --radius-card: 20px;
+
+  /* 2. Page Specific Color Tokens (Section 2) */
+  /* 01. Home / Dashboard */
+  --dash-bg: #05080F;
+  --dash-header: #081522;
+  --dash-card: #101827;
+  --dash-ring-blue: #008CFF;
+  --dash-ring-cyan: #00D9FF;
+
+  /* 02. Tasks */
+  --tasks-bg: #070B13;
+  --tasks-card: #111827;
+  --tasks-selected: #008CFF;
+  --tasks-completed: #10D9A4;
+
+  /* 03. Hydration */
+  --hyd-bg: #061323;
+  --hyd-card: #0B1D38;
+  --hyd-track: #263B5B;
+  --hyd-cyan: #00D9FF;
+  --hyd-blue: #008CFF;
+
+  /* 04. Reminders */
+  --rem-bg: #080D17;
+  --rem-card: #121A29;
+  --rem-enabled: #008CFF;
+  --rem-alert: #FFB547;
+  --rem-inactive: #8997B2;
+
+  /* 05. Siri integration */
+  --siri-bg: #050914;
+  --siri-card: #0A1730;
+  --siri-blue: #0066FF;
+  --siri-cyan: #00D9FF;
+  --siri-violet: #8A7CFF;
+
+  /* 06. Devices */
+  --dev-bg: #070B13;
+  --dev-card: #111827;
+  --dev-online: #10D9A4;
+  --dev-idle: #FFB547;
+  --dev-blue: #008CFF;
+
+  /* 07. Settings & Cloud */
+  --settings-bg: #080D17;
+  --settings-card: #141E2E;
+  --settings-blue: #008CFF;
+  --settings-cyan: #00D9FF;
+  --settings-danger: #FF5263;
+
+  /* 4. Gradients (Section 4) */
+  --grad-primary-blue: linear-gradient(135deg, #0066FF, #00D9FF);
+  --grad-dark-bg-glow: linear-gradient(145deg, #05080F, #081A2D, #05080F);
+  --grad-glass-card: linear-gradient(145deg, rgba(17,31,52,0.92), rgba(8,14,25,0.96));
+  --grad-electric-accent: linear-gradient(90deg, #008CFF, #5145FF);
+
+  /* Legacy & Semantic Mapping */
+  --bg-dark: var(--bg-primary);
+  --bg-surface: var(--bg-secondary);
+  --bg-input: #08111E;
+  --bg-card-hover: var(--bg-elevated);
+
+  --border-glass: var(--border-blue);
+  --border-glass-light: rgba(23, 70, 107, 0.65);
+  --border-accent: rgba(0, 217, 255, 0.45);
+
+  --accent-cyan: var(--cyan-accent);
+  --accent-blue: var(--blue-primary);
+  --accent-purple: var(--siri-violet);
+  --accent-sapphire: var(--blue-glow);
+  --accent-royal: var(--blue-glow);
+  --accent-deep-blue: #081A2D;
+  --accent-emerald: var(--success);
+  --accent-amber: var(--warning);
+  --accent-rose: var(--danger);
+
+  --grad-cyan-blue: var(--grad-primary-blue);
+  --grad-water: linear-gradient(135deg, #0066FF 0%, #008CFF 50%, #00D9FF 100%);
+  --grad-sunset: linear-gradient(135deg, #FF5263 0%, #FFB547 100%);
+  --grad-card: var(--grad-glass-card);
+  --grad-glass-border: linear-gradient(135deg, rgba(23, 70, 107, 0.7) 0%, rgba(0, 217, 255, 0.25) 100%);
+
+  --text-main: var(--text-primary);
+  --text-muted: var(--text-secondary);
+  --text-sub: #637392;
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
 
-  /* Shadows & Glows */
-  --shadow-card: 0 14px 38px -10px rgba(0, 0, 0, 0.65);
-  --glow-cyan: 0 0 25px rgba(0, 210, 255, 0.45);
-  --glow-blue: 0 0 30px rgba(14, 165, 233, 0.4);
-  --glow-water: 0 0 35px rgba(0, 210, 255, 0.5);
+  --shadow-card: 0 14px 38px -10px rgba(0, 0, 0, 0.75);
+  --glow-cyan: 0 0 25px rgba(0, 217, 255, 0.45);
+  --glow-blue: 0 0 30px rgba(0, 102, 255, 0.45);
+  --glow-water: 0 0 35px rgba(0, 217, 255, 0.5);
 
-  /* Dimensions & Spacing */
   --safe-top: max(env(safe-area-inset-top, 20px), 16px);
   --safe-bottom: max(env(safe-area-inset-bottom, 24px), 20px);
-  --nav-height: 62px;
+  --nav-height: 64px;
 }
 
 /* Base Reset */
@@ -65,8 +135,8 @@
 html, body {
   width: 100%;
   min-height: 100%;
-  background-color: var(--bg-dark);
-  color: var(--text-main);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   font-family: var(--font-body);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -76,12 +146,12 @@ html, body {
 body {
   display: flex;
   justify-content: center;
-  background-color: #08090D;
-  background: radial-gradient(circle at 50% 0%, #101524 0%, var(--bg-dark) 60%);
+  background-color: var(--bg-primary);
+  background: var(--grad-dark-bg-glow);
   background-attachment: fixed;
 }
 
-/* App Viewport Container (Native mobile shell on desktop, full screen on mobile) */
+/* App Viewport Container */
 #app-container {
   width: 100%;
   max-width: 480px;
@@ -91,7 +161,7 @@ body {
   display: flex;
   flex-direction: column;
   padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + 80px);
-  background: #08090E;
+  background: var(--bg-primary);
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.85);
   overflow: hidden;
 }
@@ -1021,16 +1091,16 @@ nav.app-navbar {
   transform: translateX(-50%) !important;
   width: min(calc(100% - 16px), 440px) !important;
   height: var(--nav-height) !important;
-  background: rgba(10, 16, 28, 0.78) !important;
+  background: linear-gradient(145deg, rgba(16, 24, 39, 0.94), rgba(8, 14, 25, 0.97)) !important;
   backdrop-filter: blur(28px) saturate(200%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
-  border-radius: 32px !important;
+  border: 1px solid var(--border-blue) !important;
+  border-radius: 36px !important;
   box-shadow: 
-    0 12px 36px rgba(0, 0, 0, 0.65),
-    0 1px 0 rgba(255, 255, 255, 0.18) inset,
-    0 -1px 0 rgba(0, 0, 0, 0.35) inset,
-    0 0 25px rgba(0, 210, 255, 0.12) !important;
+    0 16px 40px rgba(0, 0, 0, 0.8),
+    0 1px 0 rgba(0, 217, 255, 0.2) inset,
+    0 -1px 0 rgba(0, 0, 0, 0.4) inset,
+    0 0 25px rgba(0, 102, 255, 0.18) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-around !important;
@@ -1049,21 +1119,21 @@ nav.app-navbar {
   align-items: center;
   justify-content: center;
   gap: 3px;
-  color: var(--text-sub);
+  color: var(--text-secondary);
   text-decoration: none;
   padding: 4px 1px;
   border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   user-select: none;
   -webkit-user-select: none;
 }
 
 .nav-item:hover {
-  color: #E2E8F0;
-  background: rgba(255, 255, 255, 0.05);
+  color: #F5F8FF;
+  background: rgba(0, 140, 255, 0.08);
 }
 
 .nav-item:active {
@@ -1072,7 +1142,7 @@ nav.app-navbar {
 
 .nav-item svg,
 .nav-item i {
-  font-size: 17px;
+  font-size: 16px;
   width: 20px;
   height: 20px;
   display: flex;
@@ -1082,7 +1152,7 @@ nav.app-navbar {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform 0.2s ease, filter 0.2s ease, color 0.2s ease;
+  transition: transform 0.22s ease, filter 0.22s ease, color 0.22s ease;
   flex-shrink: 0;
 }
 
@@ -1090,31 +1160,67 @@ nav.app-navbar {
   font-size: 8.5px;
   font-weight: 600;
   line-height: 1;
-  letter-spacing: -0.35px;
+  letter-spacing: -0.3px;
   white-space: nowrap;
   overflow: visible;
   text-overflow: clip;
   max-width: 100%;
   display: block;
   text-align: center;
-  transition: color 0.2s ease;
+  transition: color 0.22s ease;
 }
 
 .nav-item.active {
-  color: #00D2FF;
-  background: rgba(0, 210, 255, 0.14);
+  color: #00D9FF;
+  background: linear-gradient(135deg, rgba(0, 140, 255, 0.22), rgba(0, 217, 255, 0.12));
+  border-color: rgba(0, 217, 255, 0.35);
+  box-shadow: 0 0 16px rgba(0, 217, 255, 0.3);
 }
 
 .nav-item.active svg,
 .nav-item.active i {
-  transform: translateY(-1px) scale(1.06);
-  filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.85));
-  color: #00D2FF;
+  transform: translateY(-1px) scale(1.08);
+  filter: drop-shadow(0 0 10px rgba(0, 217, 255, 0.85));
+  color: #00D9FF;
 }
 
 .nav-item.active span {
-  color: #BAE6FD;
+  color: #F5F8FF;
   font-weight: 700;
+}
+
+/* Compact Central Luphonix Emblem (Navigation Spec Section 3) */
+.nav-center-emblem {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0066FF, #00D9FF);
+  border: 2px solid #00D9FF;
+  box-shadow: 0 0 20px rgba(0, 217, 255, 0.65), 0 4px 14px rgba(0, 102, 255, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0 2px;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+}
+
+.nav-center-emblem:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 26px rgba(0, 217, 255, 0.9), 0 6px 18px rgba(0, 102, 255, 0.6);
+}
+
+.nav-center-emblem:active {
+  transform: scale(0.92);
+}
+
+.nav-emblem-img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .bottom-nav-spacer {
@@ -2439,6 +2545,333 @@ nav.app-navbar {
   color: #00D2FF;
   border: 1px solid rgba(0, 210, 255, 0.25);
   flex-shrink: 0;
+}
+
+/* ==========================================================================
+   PAGE-SPECIFIC COLOR PALETTE (From User Specification Section 2)
+   Neon Blue + Black + Cyan System with Electric Blue Gradients & Glowing Borders
+   ========================================================================== */
+
+/* 01. Home / Dashboard (#05080F, #081522, #008CFF, #00D9FF, #F5F8FF) */
+#view-dashboard {
+  background: #05080F;
+}
+#view-dashboard .today-water-card {
+  background: #081522 !important;
+  border: 1px solid #17466B !important;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px rgba(0, 140, 255, 0.2) !important;
+}
+#view-dashboard .quick-actions-bar .quick-action-btn {
+  background: #101827;
+  border: 1px solid #17466B;
+  color: #00D9FF;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  transition: all 0.22s ease;
+}
+#view-dashboard .quick-actions-bar .quick-action-btn:hover {
+  background: #172235;
+  border-color: #00D9FF;
+  box-shadow: 0 0 18px rgba(0, 217, 255, 0.4);
+  transform: translateY(-2px);
+}
+#view-dashboard .quick-action-btn i,
+#view-dashboard .quick-action-btn svg,
+#view-dashboard .qa-icon-circle {
+  color: #00D9FF !important;
+}
+#view-dashboard .stat-box {
+  background: #101827;
+  border: 1px solid #17466B;
+}
+#view-dashboard .stat-val {
+  color: #00D9FF !important;
+}
+#view-dashboard .quote-banner-card {
+  background: linear-gradient(145deg, #081522, #101827);
+  border: 1px solid #17466B;
+}
+#view-dashboard .quote-quote-icon {
+  color: #00D9FF;
+}
+
+/* 02. Tasks (#070B13, #111827, #008CFF, #10D9A4, #F5F8FF) */
+#view-tasks {
+  background: #070B13;
+}
+#view-tasks .task-item {
+  background: #111827 !important;
+  border: 1px solid #17466B !important;
+  box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.5) !important;
+}
+#view-tasks .task-item:hover {
+  background: #172235 !important;
+  border-color: #008CFF !important;
+  box-shadow: 0 0 20px rgba(0, 140, 255, 0.3) !important;
+}
+#view-tasks .filter-pill.active {
+  background: #008CFF !important;
+  border-color: #008CFF !important;
+  color: #F5F8FF !important;
+  box-shadow: 0 0 16px rgba(0, 140, 255, 0.6) !important;
+}
+#view-tasks .task-item.completed {
+  border-color: rgba(16, 217, 164, 0.4) !important;
+}
+#view-tasks .task-item.completed .task-checkbox {
+  background: #10D9A4 !important;
+  border-color: #10D9A4 !important;
+  color: #05080F !important;
+  box-shadow: 0 0 14px rgba(16, 217, 164, 0.6) !important;
+}
+#view-tasks .task-priority-badge.high,
+#view-tasks .badge-priority.high {
+  background: rgba(255, 82, 99, 0.18) !important;
+  color: #FF5263 !important;
+  border: 1px solid rgba(255, 82, 99, 0.45) !important;
+}
+#view-tasks .task-priority-badge.medium,
+#view-tasks .badge-priority.medium {
+  background: rgba(255, 181, 71, 0.18) !important;
+  color: #FFB547 !important;
+  border: 1px solid rgba(255, 181, 71, 0.45) !important;
+}
+#view-tasks .task-priority-badge.low,
+#view-tasks .badge-priority.low {
+  background: rgba(0, 217, 255, 0.15) !important;
+  color: #00D9FF !important;
+  border: 1px solid rgba(0, 217, 255, 0.4) !important;
+}
+
+/* 03. Hydration (#061323, #0B1D38, #008CFF, #00D9FF, #263B5B) */
+#view-hydration {
+  background: #061323;
+}
+#view-hydration .glass-card,
+#view-hydration .ring-widget-card {
+  background: #0B1D38 !important;
+  border: 1px solid #17466B !important;
+  box-shadow: 0 18px 48px -10px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 140, 255, 0.25) !important;
+}
+#view-hydration .ring-bg-circle {
+  stroke: #263B5B !important;
+}
+#view-hydration .ring-progress-circle {
+  stroke: url(#waterGradient) !important;
+  filter: drop-shadow(0 0 16px rgba(0, 217, 255, 0.75)) !important;
+}
+#view-hydration .chart-bar-bg {
+  background: #263B5B !important;
+}
+#view-hydration .chart-bar-fill {
+  background: linear-gradient(180deg, #00D9FF 0%, #008CFF 100%) !important;
+  box-shadow: 0 0 12px rgba(0, 217, 255, 0.5) !important;
+}
+#view-hydration .quick-btn {
+  background: #0B1D38 !important;
+  border: 1px solid #17466B !important;
+  color: #F5F8FF !important;
+}
+#view-hydration .quick-btn:hover {
+  background: #172235 !important;
+  border-color: #00D9FF !important;
+  color: #00D9FF !important;
+  box-shadow: 0 0 18px rgba(0, 217, 255, 0.4) !important;
+}
+#view-hydration .ring-percentage-pill {
+  background: rgba(0, 217, 255, 0.18) !important;
+  color: #00D9FF !important;
+  border-color: rgba(0, 217, 255, 0.4) !important;
+}
+
+/* 04. Reminders (#080D17, #121A29, #008CFF, #FFB547, #8997B2) */
+#view-reminders {
+  background: #080D17;
+}
+#view-reminders .reminder-item {
+  background: #121A29 !important;
+  border: 1px solid #17466B !important;
+  box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.5) !important;
+}
+#view-reminders .reminder-item:hover {
+  background: #172235 !important;
+  border-color: #008CFF !important;
+}
+#view-reminders .reminder-item.enabled .reminder-toggle-input:checked + .reminder-toggle-slider,
+#view-reminders .ios-switch input:checked + .slider {
+  background: #008CFF !important;
+  box-shadow: 0 0 16px rgba(0, 140, 255, 0.6) !important;
+}
+#view-reminders .reminder-upcoming-pill,
+#view-reminders .upcoming-alert-badge {
+  background: rgba(255, 181, 71, 0.18) !important;
+  color: #FFB547 !important;
+  border: 1px solid rgba(255, 181, 71, 0.45) !important;
+}
+#view-reminders .reminder-item:not(.enabled) .reminder-text-title,
+#view-reminders .reminder-item:not(.enabled) .reminder-title {
+  color: #8997B2 !important;
+}
+#view-reminders .reminder-item:not(.enabled) .reminder-icon-box {
+  color: #8997B2 !important;
+  border-color: rgba(137, 151, 178, 0.3) !important;
+  background: rgba(137, 151, 178, 0.1) !important;
+}
+
+/* 05. Siri Voice Assistant (#050914, #0A1730, #0066FF, #00D9FF, #8A7CFF) */
+#view-siri {
+  background: #050914;
+}
+#view-siri .glass-card,
+#view-siri .siri-hero-card {
+  background: #0A1730 !important;
+  border: 1px solid #17466B !important;
+  box-shadow: 0 18px 48px -10px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 102, 255, 0.3) !important;
+}
+#view-siri .siri-orb-wrapper {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 16px 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+#view-siri .siri-orb {
+  width: 86px !important;
+  height: 86px !important;
+  border-radius: 50% !important;
+  background: radial-gradient(circle at 35% 35%, #00D9FF 0%, #008CFF 35%, #0066FF 70%, #050914 95%) !important;
+  box-shadow: 0 0 45px rgba(0, 102, 255, 0.8), 0 0 25px rgba(0, 217, 255, 0.6), inset 0 0 18px #8A7CFF !important;
+  border: 2px solid rgba(0, 217, 255, 0.6) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  animation: siriOrbPulse 3s ease-in-out infinite alternate !important;
+}
+@keyframes siriOrbPulse {
+  0% { transform: scale(1); box-shadow: 0 0 40px rgba(0, 102, 255, 0.7), 0 0 20px rgba(0, 217, 255, 0.5); }
+  100% { transform: scale(1.06); box-shadow: 0 0 60px rgba(0, 102, 255, 0.9), 0 0 35px rgba(0, 217, 255, 0.8); }
+}
+#view-siri .siri-orb i {
+  font-size: 32px !important;
+  color: #F5F8FF !important;
+  filter: drop-shadow(0 0 12px #00D9FF) drop-shadow(0 0 6px #0066FF) !important;
+}
+#view-siri .popular-cmd-bubble {
+  background: #0A1730 !important;
+  border: 1px solid #17466B !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
+}
+#view-siri .popular-cmd-bubble:hover {
+  border-color: #00D9FF !important;
+  box-shadow: 0 0 16px rgba(0, 217, 255, 0.35) !important;
+}
+#view-siri .popular-cmd-bubble .cmd-text {
+  color: #00D9FF !important;
+}
+#view-siri .siri-action-row {
+  background: #0A1730 !important;
+  border: 1px solid #17466B !important;
+}
+#view-siri .siri-action-row:hover {
+  background: #172235 !important;
+  border-color: #00D9FF !important;
+}
+#view-siri .siri-shortcut-card {
+  background: #0A1730 !important;
+  border: 1px solid #17466B !important;
+}
+#view-siri .siri-phrase-box {
+  background: rgba(5, 9, 20, 0.8) !important;
+  border: 1px solid #17466B !important;
+  color: #00D9FF !important;
+}
+
+/* 06. Devices (#070B13, #111827, #008CFF, #10D9A4, #FFB547) */
+#view-devices {
+  background: #070B13;
+}
+#view-devices .device-card,
+#view-devices .request-feed-card,
+#view-devices .diag-box {
+  background: #111827 !important;
+  border: 1px solid #17466B !important;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6) !important;
+}
+#view-devices .device-badge.online,
+#view-devices .status-dot.online,
+#view-devices .stat-box #stat-devices-online {
+  color: #10D9A4 !important;
+}
+#view-devices .device-badge.idle,
+#view-devices .status-dot.idle,
+#view-devices .stat-box #stat-db-tasks-count {
+  color: #FFB547 !important;
+}
+#view-devices .btn-device-action,
+#view-devices #btn-ping-device {
+  color: #008CFF !important;
+}
+#view-devices #btn-deduplicate-tasks {
+  background: linear-gradient(135deg, #008CFF 0%, #00D9FF 100%) !important;
+  border: none !important;
+  box-shadow: 0 0 16px rgba(0, 140, 255, 0.45) !important;
+}
+
+/* 07. Settings & Cloud (#080D17, #141E2E, #008CFF, #00D9FF, #FF5263) */
+#view-settings {
+  background: #080D17;
+}
+#view-settings .glass-card,
+#view-settings .setting-expand-card,
+#view-settings .ios-list-item {
+  background: #141E2E !important;
+  border: 1px solid #17466B !important;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.6) !important;
+}
+#view-settings .ios-list-item:hover {
+  background: #172235 !important;
+  border-color: #008CFF !important;
+}
+#view-settings .ios-item-icon.cyan,
+#view-settings .ios-item-icon i.fa-cloud,
+#view-settings .cloud-status-icon {
+  color: #00D9FF !important;
+}
+#view-settings .btn-primary,
+#view-settings #btn-save-settings {
+  background: #008CFF !important;
+  color: #F5F8FF !important;
+  border: none !important;
+  box-shadow: 0 0 18px rgba(0, 140, 255, 0.5) !important;
+}
+#view-settings .btn-primary:hover,
+#view-settings #btn-save-settings:hover {
+  background: #0066FF !important;
+  box-shadow: 0 0 24px rgba(0, 102, 255, 0.7) !important;
+}
+#view-settings #btn-reset-data,
+#view-settings #setting-card-storage button {
+  color: #FF5263 !important;
+  border-color: rgba(255, 82, 99, 0.4) !important;
+  background: rgba(255, 82, 99, 0.08) !important;
+}
+#view-settings #btn-reset-data:hover,
+#view-settings #setting-card-storage button:hover {
+  background: rgba(255, 82, 99, 0.2) !important;
+  box-shadow: 0 0 18px rgba(255, 82, 99, 0.5) !important;
+}
+
+/* Global Button & FAB Upgrades */
+.global-fab-btn {
+  background: linear-gradient(135deg, #0066FF 0%, #00D9FF 100%) !important;
+  border: 1.5px solid rgba(0, 217, 255, 0.6) !important;
+  box-shadow: 0 8px 25px rgba(0, 102, 255, 0.6), 0 0 20px rgba(0, 217, 255, 0.5) !important;
+}
+
+.global-fab-btn:hover {
+  transform: scale(1.1) !important;
+  box-shadow: 0 12px 35px rgba(0, 102, 255, 0.8), 0 0 30px rgba(0, 217, 255, 0.7) !important;
 }
 
 

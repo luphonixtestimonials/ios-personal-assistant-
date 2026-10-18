@@ -1273,6 +1273,15 @@
       });
     });
 
+    // Compact Central Luphonix Emblem
+    const centerEmblem = document.getElementById('nav-btn-center-emblem');
+    if (centerEmblem) {
+      centerEmblem.addEventListener('click', () => {
+        playSound('check');
+        switchView('dashboard');
+      });
+    }
+
     // Header Quick Add
     const quickAddBtn = document.getElementById('btn-quick-add');
     if (quickAddBtn) {
