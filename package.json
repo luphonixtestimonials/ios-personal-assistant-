@@ -8,7 +8,9 @@
     "dev": "cd backend && npm run dev",
     "build": "tsc && cd backend && npm run build",
     "start": "cd backend && npm start",
-    "test": "npm --prefix backend test"
+    "test": "npm --prefix backend test",
+    "android:dev": "npm --prefix android-app start",
+    "android:apk": "npm --prefix android-app run build:apk"
   },
   "engines": {
     "node": ">=20.0.0"
