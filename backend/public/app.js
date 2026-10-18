@@ -1245,6 +1245,15 @@
       }
     });
 
+    const headerSettingsBtn = document.getElementById('btn-header-settings');
+    if (headerSettingsBtn) {
+      if (viewName === 'settings') {
+        headerSettingsBtn.classList.add('active');
+      } else {
+        headerSettingsBtn.classList.remove('active');
+      }
+    }
+
     if (viewName === 'devices') {
       fetchDevicesAndRequests();
       if (!state.devicePollTimer) {
@@ -1606,6 +1615,15 @@
       headerBell.addEventListener('click', () => {
         playSound('check');
         showToast('All notifications & habit schedules are active! 🔔', 'info');
+      });
+    }
+
+    // Settings Button in Header (Next to Bell)
+    const headerSettings = document.getElementById('btn-header-settings');
+    if (headerSettings) {
+      headerSettings.addEventListener('click', () => {
+        playSound('check');
+        switchView('settings');
       });
     }
 
