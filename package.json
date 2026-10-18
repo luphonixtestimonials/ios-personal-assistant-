@@ -1,9 +1,32 @@
 {
   "name": "luphonix",
   "version": "1.0.0",
+  "type": "module",
   "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "dev": "cd backend && npm run dev",
+    "build": "tsc && cd backend && npm run build",
+    "start": "cd backend && npm start",
+    "test": "npm --prefix backend test"
+  },
   "engines": {
-    "node": "22.x"
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.7",
+    "@libsql/client": "^0.14.0",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7",
+    "hono": "^4.6.14",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   }
 }
-

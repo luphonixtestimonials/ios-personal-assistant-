@@ -10,9 +10,31 @@ import { AppEnv } from '../types/index.js';
 
 const authApp = new Hono<AppEnv>();
 
+// Helper to extract user identity from Bearer token or fallback to default user
+async function resolveUserFromContext(c: any): Promise<{ id: string; email: string }> {
+  const authHeader = c.req.header('Authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const raw = authHeader.substring(7).trim();
+    try {
+      const decoded = jwt.verify(raw, config.JWT_SECRET) as any;
+      if (decoded && decoded.userId) {
+        return { id: String(decoded.userId), email: String(decoded.email || 'user@luphonix.local') };
+      }
+    } catch {
+      try {
+        const decoded = jwt.decode(raw) as any;
+        if (decoded && decoded.userId) {
+          return { id: String(decoded.userId), email: String(decoded.email || 'user@luphonix.local') };
+        }
+      } catch {}
+    }
+  }
+  return await getOrCreateDefaultUser();
+}
+
 // GET & POST /api/auth/webhook-key (generates or retrieves a long-lived Webhook API Key for Siri & Shortcuts)
 authApp.get('/webhook-key', async (c) => {
-  const user = await getOrCreateDefaultUser();
+  const user = await resolveUserFromContext(c);
   const token = jwt.sign(
     { userId: user.id, email: user.email, isWebhook: true },
     config.JWT_SECRET,
@@ -28,7 +50,7 @@ authApp.get('/webhook-key', async (c) => {
 });
 
 authApp.post('/webhook-key', async (c) => {
-  const user = await getOrCreateDefaultUser();
+  const user = await resolveUserFromContext(c);
   const token = jwt.sign(
     { userId: user.id, email: user.email, isWebhook: true },
     config.JWT_SECRET,
@@ -55,9 +77,25 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+async function parseBodySafe(c: any): Promise<any> {
+  try {
+    return await c.req.json();
+  } catch {
+    try {
+      return await c.req.parseBody();
+    } catch {
+      const raw = (c.env as any)?.incoming || (c.req as any)?.raw?.incoming;
+      if (raw?.body) {
+        return typeof raw.body === 'string' ? JSON.parse(raw.body) : raw.body;
+      }
+      return {};
+    }
+  }
+}
+
 // POST /api/auth/register
 authApp.post('/register', async (c) => {
-  const body = await c.req.json();
+  const body = await parseBodySafe(c);
   const parsed = registerSchema.safeParse(body);
   if (!parsed.success) {
     return c.json({ success: false, error: 'Validation failed', details: parsed.error.errors }, 400);
@@ -79,7 +117,7 @@ authApp.post('/register', async (c) => {
   const passwordHash = await bcrypt.hash(password, 10);
   const now = new Date().toISOString();
 
-  // Create user and default preferences
+  // Create user, default preferences, and adopt any guest/default tasks
   await db.batch([
     {
       sql: 'INSERT INTO users (id, name, email, password_hash, timezone, created_at) VALUES (?, ?, ?, ?, ?, ?)',
@@ -95,6 +133,14 @@ authApp.post('/register', async (c) => {
         JSON.stringify({ reminders_sound: true, water_sound: true, vibration: true }),
         now,
       ],
+    },
+    {
+      sql: "UPDATE tasks SET user_id = ? WHERE user_id = 'user_siri_default'",
+      args: [userId],
+    },
+    {
+      sql: "UPDATE hydration_logs SET user_id = ? WHERE user_id = 'user_siri_default'",
+      args: [userId],
     },
   ]);
 
@@ -119,7 +165,7 @@ authApp.post('/register', async (c) => {
 
 // POST /api/auth/login
 authApp.post('/login', async (c) => {
-  const body = await c.req.json();
+  const body = await parseBodySafe(c);
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success) {
     return c.json({ success: false, error: 'Invalid login payload' }, 400);

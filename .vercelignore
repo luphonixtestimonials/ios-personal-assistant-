@@ -3,6 +3,8 @@
 SiriLife
 SiriLife.xcodeproj
 SiriLifeTests
+node_modules
+dist
 backend/node_modules
 backend/dist
 backend/dev.db

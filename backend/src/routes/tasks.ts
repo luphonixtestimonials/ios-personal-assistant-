@@ -543,13 +543,28 @@ tasksApp.patch('/:id', async (c) => {
   });
 });
 
+// DELETE /api/tasks (Delete all tasks for logged in user)
+tasksApp.delete('/', async (c) => {
+  const userId = c.get('userId');
+  const result = await db.execute({
+    sql: 'DELETE FROM tasks WHERE user_id = ? OR user_id = \'user_siri_default\'',
+    args: [userId],
+  });
+
+  return c.json({
+    success: true,
+    message: `All tasks deleted (${result.rowsAffected} removed)`,
+    deletedCount: result.rowsAffected,
+  });
+});
+
 // DELETE /api/tasks/:id
 tasksApp.delete('/:id', async (c) => {
   const userId = c.get('userId');
   const id = c.req.param('id');
 
   const result = await db.execute({
-    sql: 'DELETE FROM tasks WHERE id = ? AND user_id = ?',
+    sql: 'DELETE FROM tasks WHERE id = ? AND (user_id = ? OR user_id = \'user_siri_default\')',
     args: [id, userId],
   });
 

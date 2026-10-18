@@ -15,14 +15,16 @@
   const STORAGE_KEY_AUTH_TOKEN = 'luphonix_auth_token_v1';
   const STORAGE_KEY_AUTH_USER = 'luphonix_auth_user_v1';
 
-  // Default sample data for instant wow effect on first open
+  // Default sample data for instant wow effect matching mockup
   const DEFAULT_TASKS = [
-    { id: '1', title: 'Review Luphonix project architecture', category: 'work', priority: 'high', is_completed: true, created_at: new Date().toISOString() },
-    { id: '2', title: 'Drink 500ml fresh water with electrolytes', category: 'health', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
-    { id: '3', title: 'Sync tasks with iPhone Siri shortcuts', category: 'study', priority: 'high', is_completed: false, created_at: new Date().toISOString() },
-    { id: '4', title: 'Evening meditation or 20-min brisk walk', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() }
+    { id: '1', title: 'Luphonix or...', category: 'work', priority: 'medium', is_completed: true, created_at: new Date().toISOString() },
+    { id: '2', title: 'Make Keval wish per', category: 'work', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
+    { id: '3', title: 'Complete project UI', category: 'work', priority: 'high', is_completed: false, created_at: new Date().toISOString() },
+    { id: '4', title: 'Read 10 pages', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() },
+    { id: '5', title: 'Gym Exercise', category: 'health', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
+    { id: '6', title: 'Plan tomorrow', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() }
   ];
-  const SAMPLE_TASK_IDS = new Set(['1', '2', '3', '4']);
+  const SAMPLE_TASK_IDS = new Set(['1', '2', '3', '4', '5', '6']);
 
   const DEFAULT_WATER = [
     { id: 'w1', amount_ml: 250, timestamp: new Date(Date.now() - 4 * 3600000).toISOString() },
@@ -31,7 +33,9 @@
 
   const DEFAULT_REMINDERS = [
     { id: 'r1', title: 'Hydration Check-in', time: '14:00', recurrence: 'daily', is_enabled: true },
-    { id: 'r2', title: 'Plan Tomorrow Priorities', time: '20:30', recurrence: 'daily', is_enabled: true }
+    { id: 'r2', title: 'Plan Tomorrow Priorities', time: '20:30', recurrence: 'daily', is_enabled: true },
+    { id: 'r3', title: 'Take Medicine', time: '09:00', recurrence: 'health', is_enabled: false },
+    { id: 'r4', title: 'Study Session', time: '18:00', recurrence: 'study', is_enabled: true }
   ];
 
   const DEFAULT_PREFS = {
@@ -60,6 +64,7 @@
     token: loadStorage(STORAGE_KEY_AUTH_TOKEN, null),
     user: loadStorage(STORAGE_KEY_AUTH_USER, null),
     currentFilter: 'all',
+    currentRemFilter: 'all',
     currentReqFilter: 'all',
     searchQuery: '',
     activeView: 'dashboard',
@@ -70,7 +75,12 @@
   function loadStorage(key, fallback) {
     try {
       const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : fallback;
+      if (data === null || data === undefined) return fallback;
+      try {
+        return JSON.parse(data);
+      } catch {
+        return data; // Raw string (such as JWT token)
+      }
     } catch (e) {
       return fallback;
     }
@@ -78,7 +88,11 @@
 
   function saveStorage(key, data) {
     try {
-      localStorage.setItem(key, JSON.stringify(data));
+      if (typeof data === 'string') {
+        localStorage.setItem(key, data);
+      } else {
+        localStorage.setItem(key, JSON.stringify(data));
+      }
     } catch (e) {
       console.warn('Storage save failed:', e);
     }
@@ -167,7 +181,9 @@
     else if (hour >= 22 || hour < 5) timeText = 'Good Night';
 
     timeEl.textContent = timeText;
-    titleEl.textContent = hour < 12 ? 'Start Your Day Strong' : 'Today at a Glance';
+    const userName = (state.user && state.user.name) ? state.user.name.split(' ')[0] : 'Dhyey';
+    const emoji = hour < 12 ? '🌤️' : hour < 18 ? '☀️' : '🌙';
+    titleEl.innerHTML = `${escapeHTML(userName)} <span class="greeting-emoji">${emoji}</span>`;
   }
 
   // --- Hydration Calculation & Ring Animation ---
@@ -374,7 +390,7 @@
     return `
       <div class="task-item ${task.is_completed ? 'completed' : ''}" data-task-id="${task.id}">
         <button class="task-checkbox-btn" data-toggle-task="${task.id}" aria-label="Toggle task">
-          <span class="task-checkbox-check">✓</span>
+          <span class="task-checkbox-check"><i class="fa-solid fa-check" style="font-size: 11px;"></i></span>
         </button>
         <div class="task-content">
           <div class="task-title">${escapeHTML(task.title)}</div>
@@ -383,7 +399,7 @@
             <span class="category-tag">${categoryName}</span>
           </div>
         </div>
-        <button class="task-delete-btn" data-delete-task="${task.id}" title="Delete task">✕</button>
+        <button class="task-delete-btn" data-delete-task="${task.id}" title="Task menu / delete"><i class="fa-solid fa-ellipsis-vertical" style="font-size: 14px;"></i></button>
       </div>
     `;
   }
@@ -465,29 +481,54 @@
     const container = document.getElementById('reminders-full-list');
     if (!container) return;
 
-    if (state.reminders.length === 0) {
+    let filtered = [...state.reminders];
+    if (state.currentRemFilter === 'today') {
+      filtered = filtered.filter((r) => r.is_enabled);
+    } else if (state.currentRemFilter === 'upcoming') {
+      filtered = filtered.filter((r) => r.is_enabled);
+    } else if (state.currentRemFilter === 'completed') {
+      filtered = filtered.filter((r) => !r.is_enabled);
+    }
+
+    if (filtered.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">🔔</div>
-          <p>No reminders scheduled. Tap + to set one!</p>
+          <p>No reminders found. Tap + to set one!</p>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = state.reminders
+    container.innerHTML = filtered
       .map((r) => {
+        let icon = '<i class="fa-solid fa-bell"></i>';
+        const tLower = r.title.toLowerCase();
+        if (tLower.includes('water') || tLower.includes('hydrat')) {
+          icon = '<i class="fa-solid fa-droplet" style="color: #00D2FF;"></i>';
+        } else if (tLower.includes('medicine') || tLower.includes('pill') || tLower.includes('health')) {
+          icon = '<i class="fa-solid fa-capsules" style="color: #F43F5E;"></i>';
+        } else if (tLower.includes('study') || tLower.includes('read') || tLower.includes('book')) {
+          icon = '<i class="fa-solid fa-book-open" style="color: #38BDF8;"></i>';
+        } else if (tLower.includes('priority') || tLower.includes('plan')) {
+          icon = '<i class="fa-regular fa-clock" style="color: #F59E0B;"></i>';
+        }
+
         return `
-        <div class="task-item">
-          <span style="font-size: 22px;">⏰</span>
+        <div class="reminder-item" data-reminder-id="${r.id}">
+          <div class="reminder-icon-box">${icon}</div>
           <div class="task-content">
             <div class="task-title" style="text-decoration: none; color: #FFFFFF;">${escapeHTML(r.title)}</div>
             <div class="task-meta">
               <span class="priority-tag low">${r.time}</span>
-              <span class="category-tag">${(r.recurrence || 'ONCE').toUpperCase()}</span>
+              <span class="category-tag">${(r.recurrence || 'DAILY').toUpperCase()}</span>
             </div>
           </div>
-          <button class="task-delete-btn" data-delete-reminder="${r.id}" title="Delete reminder">✕</button>
+          <label class="ios-switch" title="Toggle reminder on/off">
+            <input type="checkbox" class="reminder-toggle-switch" data-reminder-id="${r.id}" ${r.is_enabled ? 'checked' : ''}>
+            <span class="ios-slider"></span>
+          </label>
+          <button class="task-delete-btn" data-delete-reminder="${r.id}" title="Delete reminder" style="margin-left: 6px;"><i class="fa-solid fa-xmark" style="font-size: 13px;"></i></button>
         </div>
       `;
       })
@@ -762,23 +803,16 @@
 
   // --- Authentication Engine (Sign In & Sign Up) ---
   function updateAuthUI() {
+    const userAuthPill = document.getElementById('user-auth-pill');
     const nameSpan = document.getElementById('user-display-name');
     const avatarIcon = document.getElementById('user-avatar-icon');
     const accountName = document.getElementById('account-name-val');
     const accountEmail = document.getElementById('account-email-val');
     const accountId = document.getElementById('account-id-val');
     const accountAvatarChar = document.getElementById('account-avatar-char');
-    const settingsPill = document.getElementById('settings-auth-status-pill');
-
-    // Page-level elements
-    const pageLoggedIn = document.getElementById('auth-page-logged-in');
-    const pageForms = document.getElementById('auth-page-forms');
-    const pageAvatar = document.getElementById('auth-page-avatar');
-    const pageName = document.getElementById('auth-page-name');
-    const pageEmail = document.getElementById('auth-page-email');
-    const pageUid = document.getElementById('auth-page-uid');
 
     if (state.user && state.token) {
+      if (userAuthPill) userAuthPill.classList.add('logged-in');
       const initial = (state.user.name || state.user.email || 'U').charAt(0).toUpperCase();
       if (nameSpan) nameSpan.textContent = state.user.name ? state.user.name.split(' ')[0] : 'Account';
       if (avatarIcon) avatarIcon.textContent = initial;
@@ -786,60 +820,45 @@
       if (accountEmail) accountEmail.textContent = state.user.email || '';
       if (accountId) accountId.textContent = state.user.id || '';
       if (accountAvatarChar) accountAvatarChar.textContent = initial;
-      if (settingsPill) {
-        settingsPill.textContent = 'Active: ' + (state.user.name ? state.user.name.split(' ')[0] : 'User');
-        settingsPill.style.background = 'rgba(16, 185, 129, 0.2)';
-        settingsPill.style.color = '#34D399';
-      }
-
-      if (pageLoggedIn) pageLoggedIn.style.display = 'block';
-      if (pageForms) pageForms.style.display = 'none';
-      if (pageAvatar) pageAvatar.textContent = initial;
-      if (pageName) pageName.textContent = state.user.name || 'User';
-      if (pageEmail) pageEmail.textContent = state.user.email || '';
-      if (pageUid) pageUid.textContent = state.user.id || '';
     } else {
+      if (userAuthPill) userAuthPill.classList.remove('logged-in');
       if (nameSpan) nameSpan.textContent = 'Sign In';
       if (avatarIcon) avatarIcon.textContent = '👤';
       if (accountName) accountName.textContent = 'Guest / Siri Default';
       if (accountEmail) accountEmail.textContent = 'user@luphonix.local';
       if (accountId) accountId.textContent = 'user_siri_default';
       if (accountAvatarChar) accountAvatarChar.textContent = 'G';
-      if (settingsPill) {
-        settingsPill.textContent = 'Guest Mode';
-        settingsPill.style.background = 'rgba(6, 182, 212, 0.2)';
-        settingsPill.style.color = '#38BDF8';
-      }
-
-      if (pageLoggedIn) pageLoggedIn.style.display = 'none';
-      if (pageForms) pageForms.style.display = 'block';
     }
   }
 
-  async function loginUser(email, password, source = 'modal') {
+  async function loginUser(email, password) {
     const base = getBackendBaseUrl();
-    const errorDiv = source === 'page'
-      ? document.getElementById('auth-page-error-msg')
-      : document.getElementById('auth-error-msg');
-    const submitBtn = source === 'page'
-      ? document.getElementById('btn-submit-page-login')
-      : document.getElementById('btn-submit-login');
+    const errorDiv = document.getElementById('auth-error-msg');
+    const errorText = document.getElementById('auth-error-text');
+    const submitBtn = document.getElementById('btn-submit-login');
+    const btnText = submitBtn?.querySelector('.btn-text');
+    const btnSpinner = submitBtn?.querySelector('.btn-spinner');
 
     if (errorDiv) errorDiv.style.display = 'none';
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Signing in...';
-    }
+    if (submitBtn) submitBtn.disabled = true;
+    if (btnText) btnText.textContent = 'Signing in...';
+    else if (submitBtn) submitBtn.textContent = 'Signing in...';
+    if (btnSpinner) btnSpinner.classList.remove('hidden');
+
+    const controller = new AbortController();
+    const timeoutTimer = setTimeout(() => controller.abort(), 15000);
 
     try {
       const res = await fetch(`${base}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal,
       });
-      const data = await res.json();
+      clearTimeout(timeoutTimer);
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Login failed. Please check your credentials.');
+        throw new Error(data.error || 'Invalid email or password. Please try again.');
       }
 
       state.token = data.data.token;
@@ -853,42 +872,48 @@
       // Refresh cloud data for logged-in user
       syncAllWithCloud(true);
     } catch (err) {
-      if (errorDiv) {
-        errorDiv.textContent = err.message;
-        errorDiv.style.display = 'block';
-      } else {
-        showToast(err.message, 'error');
-      }
+      clearTimeout(timeoutTimer);
+      const msg = err.name === 'AbortError' ? 'Server timed out. Please try again.' : (err.message || 'Login failed.');
+      if (errorText) errorText.textContent = msg;
+      else if (errorDiv) errorDiv.textContent = msg;
+      if (errorDiv) errorDiv.style.display = 'flex';
+      showToast(msg, 'error');
     } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Sign In';
-      }
+      clearTimeout(timeoutTimer);
+      if (submitBtn) submitBtn.disabled = false;
+      if (btnText) btnText.textContent = 'Sign In to Luphonix';
+      else if (submitBtn) submitBtn.textContent = 'Sign In to Luphonix';
+      if (btnSpinner) btnSpinner.classList.add('hidden');
     }
   }
 
-  async function registerUser(name, email, password, source = 'modal') {
+  async function registerUser(name, email, password) {
     const base = getBackendBaseUrl();
-    const errorDiv = source === 'page'
-      ? document.getElementById('auth-page-error-msg')
-      : document.getElementById('auth-error-msg');
-    const submitBtn = source === 'page'
-      ? document.getElementById('btn-submit-page-signup')
-      : document.getElementById('btn-submit-signup');
+    const errorDiv = document.getElementById('auth-error-msg');
+    const errorText = document.getElementById('auth-error-text');
+    const submitBtn = document.getElementById('btn-submit-signup');
+    const btnText = submitBtn?.querySelector('.btn-text');
+    const btnSpinner = submitBtn?.querySelector('.btn-spinner');
 
     if (errorDiv) errorDiv.style.display = 'none';
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Creating account...';
-    }
+    if (submitBtn) submitBtn.disabled = true;
+    if (btnText) btnText.textContent = 'Creating account...';
+    else if (submitBtn) submitBtn.textContent = 'Creating account...';
+    if (btnSpinner) btnSpinner.classList.remove('hidden');
+
+    const controller = new AbortController();
+    const timeoutTimer = setTimeout(() => controller.abort(), 15000);
 
     try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
       const res = await fetch(`${base}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name, email, password, timezone }),
+        signal: controller.signal,
       });
-      const data = await res.json();
+      clearTimeout(timeoutTimer);
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
         throw new Error(data.error || (data.details ? data.details[0].message : 'Registration failed.'));
       }
@@ -904,17 +929,18 @@
       // Refresh cloud data
       syncAllWithCloud(true);
     } catch (err) {
-      if (errorDiv) {
-        errorDiv.textContent = err.message;
-        errorDiv.style.display = 'block';
-      } else {
-        showToast(err.message, 'error');
-      }
+      clearTimeout(timeoutTimer);
+      const msg = err.name === 'AbortError' ? 'Server timed out. Please try again.' : (err.message || 'Registration failed.');
+      if (errorText) errorText.textContent = msg;
+      else if (errorDiv) errorDiv.textContent = msg;
+      if (errorDiv) errorDiv.style.display = 'flex';
+      showToast(msg, 'error');
     } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Create Account';
-      }
+      clearTimeout(timeoutTimer);
+      if (submitBtn) submitBtn.disabled = false;
+      if (btnText) btnText.textContent = 'Create My Account';
+      else if (submitBtn) submitBtn.textContent = 'Create My Account';
+      if (btnSpinner) btnSpinner.classList.add('hidden');
     }
   }
 
@@ -1174,6 +1200,7 @@
     const modal = document.getElementById(id);
     if (modal) {
       modal.classList.add('active');
+      document.body.classList.add('modal-open');
       const input = modal.querySelector('input');
       if (input) setTimeout(() => input.focus(), 150);
     }
@@ -1182,10 +1209,14 @@
   function closeModal(id) {
     const modal = document.getElementById(id);
     if (modal) modal.classList.remove('active');
+    if (!document.querySelector('.modal-overlay.active')) {
+      document.body.classList.remove('modal-open');
+    }
   }
 
   function closeAllModals() {
     document.querySelectorAll('.modal-overlay').forEach((m) => m.classList.remove('active'));
+    document.body.classList.remove('modal-open');
   }
 
   // --- Tab Navigation Controller ---
@@ -1200,13 +1231,28 @@
     const targetSection = document.getElementById(`view-${viewName}`);
     if (targetSection) targetSection.classList.add('active');
 
-    // Toggle Nav Icons
+    // Toggle Nav Icons & Circular Orbit Icons
     document.querySelectorAll('.nav-item').forEach((item) => {
       item.classList.remove('active');
       if (item.dataset.view === viewName) {
         item.classList.add('active');
       }
     });
+    document.querySelectorAll('.circular-orbit-item').forEach((item) => {
+      item.classList.remove('active');
+      if (item.dataset.view === viewName) {
+        item.classList.add('active');
+      }
+    });
+
+    const headerSettingsBtn = document.getElementById('btn-header-settings');
+    if (headerSettingsBtn) {
+      if (viewName === 'settings') {
+        headerSettingsBtn.classList.add('active');
+      } else {
+        headerSettingsBtn.classList.remove('active');
+      }
+    }
 
     if (viewName === 'devices') {
       fetchDevicesAndRequests();
@@ -1240,6 +1286,113 @@
         const view = btn.dataset.view;
         if (view) switchView(view);
       });
+    });
+
+    // --- Circular Radial Navigation Logic ---
+    const circularNavOverlay = document.getElementById('circular-nav-overlay');
+    const circularNavCloseBtn = document.getElementById('circular-nav-close-btn');
+
+    function updateCircularItemPositions() {
+      const portal = document.getElementById('circular-nav-portal');
+      if (!portal) return;
+      const portalWidth = portal.offsetWidth || 390;
+      const radius = Math.min(Math.round(portalWidth * 0.38), 150);
+      const items = document.querySelectorAll('.circular-orbit-item');
+      const total = items.length;
+      items.forEach((item, idx) => {
+        // 8 items spaced evenly, starting from top (angle = -90deg)
+        const angleDeg = (360 / total) * idx - 90;
+        const angleRad = (angleDeg * Math.PI) / 180;
+        const x = Math.round(radius * Math.cos(angleRad));
+        const y = Math.round(radius * Math.sin(angleRad));
+        item.style.setProperty('--orbit-x', `${x}px`);
+        item.style.setProperty('--orbit-y', `${y}px`);
+
+        // Highlight active view
+        const view = item.dataset.view;
+        if (view && state.currentView === view) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+    }
+
+    function openCircularNav() {
+      if (!circularNavOverlay) return;
+      playSound('check');
+      updateCircularItemPositions();
+      circularNavOverlay.classList.add('open');
+      circularNavOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeCircularNav() {
+      if (!circularNavOverlay) return;
+      circularNavOverlay.classList.remove('open');
+      circularNavOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function toggleCircularNav() {
+      if (!circularNavOverlay) return;
+      if (circularNavOverlay.classList.contains('open')) {
+        closeCircularNav();
+      } else {
+        openCircularNav();
+      }
+    }
+
+    // Compact Central Luphonix Emblem - Opens Circular Radial Navigation Menu
+    const centerEmblem = document.getElementById('nav-btn-center-emblem');
+    if (centerEmblem) {
+      centerEmblem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCircularNav();
+      });
+    }
+
+    if (circularNavCloseBtn) {
+      circularNavCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playSound('click');
+        closeCircularNav();
+      });
+    }
+
+    if (circularNavOverlay) {
+      circularNavOverlay.addEventListener('click', (e) => {
+        if (e.target === circularNavOverlay) {
+          closeCircularNav();
+        }
+      });
+    }
+
+    // Radial Orbit Items
+    document.querySelectorAll('.circular-orbit-item').forEach((item) => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playSound('check');
+        const view = item.dataset.view;
+        const action = item.dataset.action;
+        closeCircularNav();
+        if (view) {
+          switchView(view);
+        } else if (action === 'quick-add') {
+          openModal('modal-task');
+        }
+      });
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && circularNavOverlay && circularNavOverlay.classList.contains('open')) {
+        closeCircularNav();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (circularNavOverlay && circularNavOverlay.classList.contains('open')) {
+        updateCircularItemPositions();
+      }
     });
 
     // Header Quick Add
@@ -1396,6 +1549,189 @@
       });
     }
 
+    // Back Button on all sub-screens
+    document.querySelectorAll('.view-back-btn').forEach((btn) => {
+      btn.addEventListener('click', () => switchView('dashboard'));
+    });
+
+    // Motivational Quote Banner Rotator
+    const MOTIVATIONAL_QUOTES = [
+      'Stay consistent, your future self will thank you.',
+      'Small habits, big changes.',
+      'Stay consistent, progress takes time but it is always worth it.',
+      'Discipline is choosing between what you want now and what you want most.',
+      'Every healthy choice counts towards your highest potential.'
+    ];
+    let quoteIdx = 0;
+    const quoteBanner = document.getElementById('quote-banner');
+    const quoteTextEl = document.getElementById('quote-text');
+    if (quoteBanner && quoteTextEl) {
+      const cycleQuote = () => {
+        quoteIdx = (quoteIdx + 1) % MOTIVATIONAL_QUOTES.length;
+        quoteTextEl.style.opacity = '0';
+        setTimeout(() => {
+          quoteTextEl.textContent = MOTIVATIONAL_QUOTES[quoteIdx];
+          quoteTextEl.style.opacity = '1';
+        }, 220);
+      };
+      quoteBanner.addEventListener('click', cycleQuote);
+      setInterval(cycleQuote, 8500);
+    }
+
+    // Keep Going Button inside Today's Water card
+    const btnKeepGoing = document.getElementById('btn-keep-going');
+    if (btnKeepGoing) {
+      btnKeepGoing.addEventListener('click', () => {
+        logWater(250);
+      });
+    }
+
+    // 4 Squircle Quick Action Buttons (Dashboard Screen 1)
+    const qaWater = document.getElementById('btn-qa-water');
+    if (qaWater) qaWater.addEventListener('click', () => openModal('modal-water'));
+
+    const qaTask = document.getElementById('btn-qa-task');
+    if (qaTask) qaTask.addEventListener('click', () => openModal('modal-task'));
+
+    const qaSiri = document.getElementById('btn-qa-siri');
+    if (qaSiri) qaSiri.addEventListener('click', () => switchView('siri'));
+
+    const qaNote = document.getElementById('btn-qa-note');
+    if (qaNote) qaNote.addEventListener('click', () => openModal('modal-reminder'));
+
+    // Global Floating Action Button (FAB)
+    const globalFab = document.getElementById('btn-global-fab');
+    if (globalFab) {
+      globalFab.addEventListener('click', () => {
+        if (state.activeView === 'reminders') openModal('modal-reminder');
+        else if (state.activeView === 'hydration') openModal('modal-water');
+        else openModal('modal-task');
+      });
+    }
+
+    // Notification Bell Button
+    const headerBell = document.getElementById('btn-header-bell');
+    if (headerBell) {
+      headerBell.addEventListener('click', () => {
+        playSound('check');
+        showToast('All notifications & habit schedules are active! 🔔', 'info');
+      });
+    }
+
+    // Settings Button in Header (Next to Bell)
+    const headerSettings = document.getElementById('btn-header-settings');
+    if (headerSettings) {
+      headerSettings.addEventListener('click', () => {
+        playSound('check');
+        switchView('settings');
+      });
+    }
+
+    // Reminders Filter Pills Bar
+    const remFilterBar = document.getElementById('reminders-filter-bar');
+    if (remFilterBar) {
+      remFilterBar.querySelectorAll('.filter-pill').forEach((pill) => {
+        pill.addEventListener('click', () => {
+          remFilterBar.querySelectorAll('.filter-pill').forEach((p) => p.classList.remove('active'));
+          pill.classList.add('active');
+          state.currentRemFilter = pill.dataset.remFilter || 'all';
+          renderReminders();
+        });
+      });
+    }
+
+    // Interactive iOS Switch Toggle for Reminders
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.classList.contains('reminder-toggle-switch')) {
+        const remId = e.target.dataset.reminderId;
+        const rem = state.reminders.find((r) => r.id === remId);
+        if (rem) {
+          rem.is_enabled = e.target.checked;
+          saveStorage(STORAGE_KEY_REMINDERS, state.reminders);
+          playSound(rem.is_enabled ? 'check' : 'click');
+          showToast(rem.is_enabled ? `Reminder "${rem.title}" active` : `Reminder "${rem.title}" paused`, 'info');
+        }
+      }
+    });
+
+    // Siri 3 Action Buttons (Screen 5)
+    const btnSiriView = document.getElementById('btn-siri-action-view');
+    if (btnSiriView) {
+      btnSiriView.addEventListener('click', () => {
+        document.querySelector('.siri-shortcut-card')?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+
+    const btnSiriCopy = document.getElementById('btn-siri-action-copy');
+    if (btnSiriCopy) {
+      btnSiriCopy.addEventListener('click', async () => {
+        const base = getBackendBaseUrl();
+        const key = await ensureApiKey();
+        const url = `${base}/api/water/add?apiKey=${encodeURIComponent(key)}&amount=250`;
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Siri API Webhook URL copied! 📋', 'success');
+        }).catch(() => {
+          showToast('Webhook: ' + url, 'info');
+        });
+      });
+    }
+
+    const btnSiriTest = document.getElementById('btn-siri-action-test');
+    if (btnSiriTest) {
+      btnSiriTest.addEventListener('click', () => {
+        playSound('water');
+        showToast('🎙️ Siri Voice Simulation: "Logged 250ml water in Luphonix!"', 'water');
+        logWater(250);
+      });
+    }
+
+    const btnSiriHelp = document.getElementById('btn-siri-help');
+    if (btnSiriHelp) {
+      btnSiriHelp.addEventListener('click', () => openModal('modal-install'));
+    }
+
+    // Popular Voice Command Pills (Screen 5)
+    document.querySelectorAll('.popular-cmd-bubble').forEach((pill) => {
+      pill.addEventListener('click', () => {
+        const id = pill.id;
+        if (id === 'pill-cmd-water') {
+          logWater(250);
+        } else if (id === 'pill-cmd-tasks') {
+          switchView('tasks');
+          showToast('Siri: "Here are your tasks for today"', 'info');
+        } else if (id === 'pill-cmd-complete') {
+          const firstUncompleted = state.tasks.find((t) => !t.is_completed);
+          if (firstUncompleted) {
+            toggleTask(firstUncompleted.id);
+          } else {
+            showToast('All tasks are already completed!', 'success');
+          }
+        } else if (id === 'pill-cmd-progress') {
+          switchView('dashboard');
+          showToast('Siri: "Showing your today\'s progress"', 'info');
+        } else if (id === 'pill-cmd-add') {
+          openModal('modal-task');
+        }
+      });
+    });
+
+    // Settings iOS Grouped Menu Item Accordion
+    document.querySelectorAll('.ios-list-item[data-accordion]').forEach((item) => {
+      item.addEventListener('click', () => {
+        const targetId = item.dataset.accordion;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetEl.style.borderColor = 'rgba(0, 210, 255, 0.8)';
+          targetEl.style.boxShadow = '0 0 25px rgba(0, 210, 255, 0.4)';
+          setTimeout(() => {
+            targetEl.style.borderColor = '';
+            targetEl.style.boxShadow = '';
+          }, 1500);
+        }
+      });
+    });
+
     // Settings View Triggers
     const linkViewAllTasks = document.getElementById('link-view-all-tasks');
     if (linkViewAllTasks) {
@@ -1519,6 +1855,8 @@
     const formLogin = document.getElementById('form-auth-login');
     const formSignup = document.getElementById('form-auth-signup');
     const authTitle = document.getElementById('auth-modal-title');
+    const authSubtitle = document.getElementById('auth-modal-subtitle');
+    const authHeaderIcon = document.getElementById('auth-header-icon');
     const authError = document.getElementById('auth-error-msg');
 
     if (tabBtnLogin && tabBtnSignup) {
@@ -1527,8 +1865,12 @@
         tabBtnSignup.classList.remove('active');
         if (formLogin) formLogin.style.display = 'block';
         if (formSignup) formSignup.style.display = 'none';
-        if (authTitle) authTitle.textContent = 'Sign In to Luphonix';
+        if (authTitle) authTitle.textContent = 'Welcome Back';
+        if (authSubtitle) authSubtitle.textContent = 'Sign in to access your cloud tasks and personalized Siri shortcuts.';
+        if (authHeaderIcon) authHeaderIcon.textContent = '✨';
         if (authError) authError.style.display = 'none';
+        const emailInput = document.getElementById('login-email');
+        if (emailInput) setTimeout(() => emailInput.focus(), 150);
       });
 
       tabBtnSignup.addEventListener('click', () => {
@@ -1537,9 +1879,45 @@
         if (formSignup) formSignup.style.display = 'block';
         if (formLogin) formLogin.style.display = 'none';
         if (authTitle) authTitle.textContent = 'Create New Account';
+        if (authSubtitle) authSubtitle.textContent = 'Sync tasks, hydration, and Siri voice shortcuts across all devices.';
+        if (authHeaderIcon) authHeaderIcon.textContent = '🚀';
         if (authError) authError.style.display = 'none';
+        const nameInput = document.getElementById('signup-name');
+        if (nameInput) setTimeout(() => nameInput.focus(), 150);
       });
     }
+
+    const linkSwitchSignup = document.getElementById('link-switch-to-signup');
+    if (linkSwitchSignup && tabBtnSignup) {
+      linkSwitchSignup.addEventListener('click', (e) => {
+        e.preventDefault();
+        tabBtnSignup.click();
+      });
+    }
+
+    const linkSwitchLogin = document.getElementById('link-switch-to-login');
+    if (linkSwitchLogin && tabBtnLogin) {
+      linkSwitchLogin.addEventListener('click', (e) => {
+        e.preventDefault();
+        tabBtnLogin.click();
+      });
+    }
+
+    // Password Visibility Toggles
+    document.querySelectorAll('.pwd-toggle-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.target;
+        const input = document.getElementById(targetId);
+        if (!input) return;
+        if (input.type === 'password') {
+          input.type = 'text';
+          btn.innerHTML = '<i class="fa-regular fa-eye-slash"></i>';
+        } else {
+          input.type = 'password';
+          btn.innerHTML = '<i class="fa-regular fa-eye"></i>';
+        }
+      });
+    });
 
     if (formLogin) {
       formLogin.addEventListener('submit', (e) => {
@@ -1567,71 +1945,6 @@
     const btnLogout = document.getElementById('btn-logout');
     if (btnLogout) {
       btnLogout.addEventListener('click', logoutUser);
-    }
-
-    // Dedicated Auth Page Bindings
-    const btnOpenAuthPage = document.getElementById('btn-open-auth-page');
-    if (btnOpenAuthPage) {
-      btnOpenAuthPage.addEventListener('click', () => switchView('auth'));
-    }
-
-    const btnAuthBack = document.getElementById('btn-auth-back');
-    if (btnAuthBack) {
-      btnAuthBack.addEventListener('click', () => switchView('settings'));
-    }
-
-    const pageTabLogin = document.getElementById('auth-page-tab-login');
-    const pageTabSignup = document.getElementById('auth-page-tab-signup');
-    const pageCardLogin = document.getElementById('auth-page-card-login');
-    const pageCardSignup = document.getElementById('auth-page-card-signup');
-    const pageAuthError = document.getElementById('auth-page-error-msg');
-
-    if (pageTabLogin && pageTabSignup) {
-      pageTabLogin.addEventListener('click', () => {
-        pageTabLogin.classList.add('active');
-        pageTabSignup.classList.remove('active');
-        if (pageCardLogin) pageCardLogin.style.display = 'block';
-        if (pageCardSignup) pageCardSignup.style.display = 'none';
-        if (pageAuthError) pageAuthError.style.display = 'none';
-      });
-
-      pageTabSignup.addEventListener('click', () => {
-        pageTabSignup.classList.add('active');
-        pageTabLogin.classList.remove('active');
-        if (pageCardSignup) pageCardSignup.style.display = 'block';
-        if (pageCardLogin) pageCardLogin.style.display = 'none';
-        if (pageAuthError) pageAuthError.style.display = 'none';
-      });
-    }
-
-    const formPageLogin = document.getElementById('form-auth-page-login');
-    if (formPageLogin) {
-      formPageLogin.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = document.getElementById('page-login-email')?.value.trim();
-        const password = document.getElementById('page-login-password')?.value;
-        if (email && password) {
-          loginUser(email, password, 'page');
-        }
-      });
-    }
-
-    const formPageSignup = document.getElementById('form-auth-page-signup');
-    if (formPageSignup) {
-      formPageSignup.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = document.getElementById('page-signup-name')?.value.trim();
-        const email = document.getElementById('page-signup-email')?.value.trim();
-        const password = document.getElementById('page-signup-password')?.value;
-        if (name && email && password) {
-          registerUser(name, email, password, 'page');
-        }
-      });
-    }
-
-    const btnPageLogout = document.getElementById('btn-auth-page-logout');
-    if (btnPageLogout) {
-      btnPageLogout.addEventListener('click', logoutUser);
     }
 
     // --- Connected Devices & Request Monitor Event Handlers ---
@@ -1715,23 +2028,6 @@
 
     // Health ping test on load
     setTimeout(testBackendPing, 800);
-
-    // Check initial route / hash for direct navigation (/login, /signup, /auth, /devices)
-    const path = (window.location.pathname || '').toLowerCase();
-    const hash = (window.location.hash || '').toLowerCase();
-    if (path.includes('login') || path.includes('signup') || path.includes('auth') || hash.includes('login') || hash.includes('signup') || hash.includes('auth')) {
-      setTimeout(() => {
-        switchView('auth');
-        if (path.includes('signup') || hash.includes('signup')) {
-          const signupTab = document.getElementById('auth-page-tab-signup');
-          if (signupTab) signupTab.click();
-        }
-      }, 50);
-    } else if (path.includes('device') || hash.includes('device')) {
-      setTimeout(() => switchView('devices'), 50);
-    } else if (path.includes('setup') || hash.includes('setup') || path.includes('siri') || hash.includes('siri')) {
-      setTimeout(() => switchView('siri'), 50);
-    }
   }
 
 
