@@ -214,23 +214,7 @@ body {
 }
 
 .ambient-logo-watermark {
-  position: absolute;
-  top: 60px;
-  right: -20px;
-  width: 340px;
-  height: 340px;
-  pointer-events: none;
-  opacity: 0.16;
-  mix-blend-mode: screen;
-  filter: drop-shadow(0 0 45px rgba(0, 210, 255, 0.65)) saturate(180%);
-  transform: rotate(-10deg);
-  transition: transform 0.5s ease;
-}
-
-.bg-watermark-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  display: none !important;
 }
 
 /* Scoped content containers above ambient background layer */
