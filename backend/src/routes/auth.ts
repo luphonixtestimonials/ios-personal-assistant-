@@ -235,6 +235,86 @@ authApp.post('/login', async (c) => {
   });
 });
 
+const resetPasswordSchema = z.object({
+  email: z.string().min(1, 'Email or username is required'),
+  newPassword: z.string().min(6, 'New password must be at least 6 characters'),
+});
+
+// POST /api/auth/reset-password (Public - resets password by email/handle)
+authApp.post('/reset-password', async (c) => {
+  const body = await parseBodySafe(c);
+  const parsed = resetPasswordSchema.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ success: false, error: 'Validation failed', details: parsed.error.errors }, 400);
+  }
+
+  const { email, newPassword } = parsed.data;
+  const cleanIdentifier = email.startsWith('@') ? email.substring(1).trim() : email.trim();
+
+  const userResult = await db.execute({
+    sql: 'SELECT id, name, username, email FROM users WHERE LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?) LIMIT 1',
+    args: [cleanIdentifier, cleanIdentifier],
+  });
+
+  if (userResult.rows.length === 0) {
+    return c.json({ success: false, error: 'No account found with this email or username' }, 404);
+  }
+
+  const userRow = userResult.rows[0];
+  const newHash = await bcrypt.hash(newPassword, 10);
+
+  await db.execute({
+    sql: 'UPDATE users SET password_hash = ? WHERE id = ?',
+    args: [newHash, userRow.id],
+  });
+
+  return c.json({
+    success: true,
+    message: `Password has been reset successfully for ${userRow.email}. You can now log in.`,
+    user: {
+      id: userRow.id,
+      name: userRow.name,
+      username: userRow.username,
+      email: userRow.email,
+    },
+  });
+});
+
+// POST /api/auth/change-password (Authenticated user)
+authApp.post('/change-password', authMiddleware, async (c) => {
+  const userId = c.get('userId');
+  const body = await parseBodySafe(c);
+  const { currentPassword, newPassword } = body;
+
+  if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6) {
+    return c.json({ success: false, error: 'New password must be at least 6 characters' }, 400);
+  }
+
+  const userResult = await db.execute({
+    sql: 'SELECT password_hash FROM users WHERE id = ?',
+    args: [userId],
+  });
+
+  if (userResult.rows.length === 0) {
+    return c.json({ success: false, error: 'User not found' }, 404);
+  }
+
+  if (currentPassword) {
+    const isValid = await bcrypt.compare(currentPassword, userResult.rows[0].password_hash as string);
+    if (!isValid) {
+      return c.json({ success: false, error: 'Current password is incorrect' }, 401);
+    }
+  }
+
+  const newHash = await bcrypt.hash(newPassword, 10);
+  await db.execute({
+    sql: 'UPDATE users SET password_hash = ? WHERE id = ?',
+    args: [newHash, userId],
+  });
+
+  return c.json({ success: true, message: 'Password updated successfully' });
+});
+
 // GET /api/auth/me
 authApp.get('/me', authMiddleware, async (c) => {
   const userId = c.get('userId');

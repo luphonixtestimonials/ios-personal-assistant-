@@ -398,6 +398,48 @@ describe('Luphonix Backend API Test Suite', async () => {
     const delBody = await delRes.json();
     assert.strictEqual(delBody.success, true);
   });
+
+  it('23. POST /api/auth/reset-password should reset password for account', async () => {
+    const res = await app.request('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: testEmail,
+        newPassword: 'newsecurepassword123',
+      }),
+    });
+    assert.strictEqual(res.status, 200);
+    const body = await res.json();
+    assert.strictEqual(body.success, true);
+
+    // Verify login with new password works
+    const loginRes = await app.request('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: testEmail,
+        password: 'newsecurepassword123',
+      }),
+    });
+    assert.strictEqual(loginRes.status, 200);
+  });
+
+  it('24. POST /api/auth/change-password should allow authenticated password update', async () => {
+    const res = await app.request('/api/auth/change-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({
+        currentPassword: 'newsecurepassword123',
+        newPassword: 'password123',
+      }),
+    });
+    assert.strictEqual(res.status, 200);
+    const body = await res.json();
+    assert.strictEqual(body.success, true);
+  });
 });
 
 

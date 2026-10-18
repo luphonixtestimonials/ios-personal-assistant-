@@ -24,8 +24,21 @@ export const SettingsScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot_password'>('login');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  // Reset password fields (logged-out)
+  const [resetIdentifier, setResetIdentifier] = useState('');
+  const [resetNewPassword, setResetNewPassword] = useState('');
+  const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [isResetting, setIsResetting] = useState(false);
+
+  // Change password fields (logged-in)
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [changeNewPassword, setChangeNewPassword] = useState('');
+  const [changeConfirmPassword, setChangeConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Friends & Collaboration
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -96,7 +109,7 @@ export const SettingsScreen: React.FC = () => {
       return;
     }
 
-    if (isRegistering && password.length < 6) {
+    if (authMode === 'register' && password.length < 6) {
       Alert.alert('Password Too Short', 'Password must be at least 6 characters long.');
       return;
     }
@@ -109,7 +122,7 @@ export const SettingsScreen: React.FC = () => {
 
     setIsAuthenticating(true);
     let result;
-    if (isRegistering) {
+    if (authMode === 'register') {
       result = await ApiService.register(name.trim() || 'Luphonix User', email.trim(), password);
     } else {
       result = await ApiService.login(email.trim(), password);
@@ -126,7 +139,7 @@ export const SettingsScreen: React.FC = () => {
           'Account Exists',
           'An account with this email already exists. Switch to Log In?',
           [
-            { text: 'Switch to Log In', onPress: () => setIsRegistering(false) },
+            { text: 'Switch to Log In', onPress: () => setAuthMode('login') },
             { text: 'Cancel', style: 'cancel' },
           ]
         );
@@ -136,9 +149,64 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    if (!resetIdentifier.trim()) {
+      Alert.alert('Required', 'Please enter your account email or @username.');
+      return;
+    }
+    if (!resetNewPassword || resetNewPassword.length < 6) {
+      Alert.alert('Invalid Password', 'New password must be at least 6 characters long.');
+      return;
+    }
+    if (resetNewPassword !== resetConfirmPassword) {
+      Alert.alert('Mismatch', 'New passwords do not match. Please verify.');
+      return;
+    }
+
+    setIsResetting(true);
+    const res = await ApiService.resetPassword(resetIdentifier.trim(), resetNewPassword);
+    setIsResetting(false);
+
+    if (res.success) {
+      Alert.alert('Password Reset', res.message || 'Password reset successfully! Please log in with your new password.');
+      setResetIdentifier('');
+      setResetNewPassword('');
+      setResetConfirmPassword('');
+      setAuthMode('login');
+    } else {
+      Alert.alert('Reset Failed', res.error || 'Could not reset password. Check email/username.');
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!changeNewPassword || changeNewPassword.length < 6) {
+      Alert.alert('Invalid Password', 'New password must be at least 6 characters long.');
+      return;
+    }
+    if (changeNewPassword !== changeConfirmPassword) {
+      Alert.alert('Mismatch', 'New passwords do not match. Please verify.');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    const res = await ApiService.changePassword(currentPassword, changeNewPassword);
+    setIsChangingPassword(false);
+
+    if (res.success) {
+      Alert.alert('Password Updated', res.message || 'Your password was changed successfully.');
+      setCurrentPassword('');
+      setChangeNewPassword('');
+      setChangeConfirmPassword('');
+      setShowChangePassword(false);
+    } else {
+      Alert.alert('Change Failed', res.error || 'Could not update password. Please check your current password.');
+    }
+  };
+
   const handleLogout = async () => {
     await StorageService.saveUserProfile(null);
     setUserProfile(null);
+    setShowChangePassword(false);
     Alert.alert('Logged Out', 'Switched to offline local mode.');
   };
 
@@ -202,18 +270,99 @@ export const SettingsScreen: React.FC = () => {
                 )}
               </TouchableOpacity>
 
+              <TouchableOpacity
+                style={styles.changePwdToggleBtn}
+                onPress={() => setShowChangePassword(!showChangePassword)}
+              >
+                <Ionicons name="key-outline" size={16} color="#38BDF8" style={{ marginRight: 4 }} />
+                <Text style={styles.changePwdToggleText}>Password</Text>
+              </TouchableOpacity>
+
               <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
                 <Text style={styles.logoutBtnText}>Log Out</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Change Password Expansion Form */}
+            {showChangePassword && (
+              <View style={styles.changePasswordCard}>
+                <View style={styles.changePwdHeaderRow}>
+                  <Ionicons name="lock-closed-outline" size={18} color="#38BDF8" style={{ marginRight: 6 }} />
+                  <Text style={styles.changePwdTitle}>Change Account Password</Text>
+                </View>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Current Password"
+                  placeholderTextColor="#64748B"
+                  secureTextEntry
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="New Password (min 6 characters)"
+                  placeholderTextColor="#64748B"
+                  secureTextEntry
+                  value={changeNewPassword}
+                  onChangeText={setChangeNewPassword}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm New Password"
+                  placeholderTextColor="#64748B"
+                  secureTextEntry
+                  value={changeConfirmPassword}
+                  onChangeText={setChangeConfirmPassword}
+                />
+
+                <View style={styles.changePwdActionsRow}>
+                  <TouchableOpacity
+                    style={[styles.updatePwdBtn, isChangingPassword && styles.btnDisabled]}
+                    onPress={handleChangePassword}
+                    disabled={isChangingPassword}
+                  >
+                    {isChangingPassword ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.btnText}>Update Password</Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.cancelPwdBtn}
+                    onPress={() => {
+                      setShowChangePassword(false);
+                      setCurrentPassword('');
+                      setChangeNewPassword('');
+                      setChangeConfirmPassword('');
+                    }}
+                  >
+                    <Text style={styles.cancelPwdBtnText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
         ) : (
           <View>
+            {/* Mode Header */}
             <Text style={styles.authModeTitle}>
-              {isRegistering ? 'Create Luphonix Account' : 'Sign In with Luphonix'}
+              {authMode === 'register'
+                ? 'Create Luphonix Account'
+                : authMode === 'forgot_password'
+                ? 'Reset Account Password'
+                : 'Sign In with Luphonix'}
             </Text>
 
-            {isRegistering && (
+            {authMode === 'forgot_password' && (
+              <Text style={styles.authModeSubtitle}>
+                Enter your registered email address or @username handle, along with a new password to reset your credentials.
+              </Text>
+            )}
+
+            {/* Register specific name field */}
+            {authMode === 'register' && (
               <TextInput
                 style={styles.input}
                 placeholder="Full Name"
@@ -223,42 +372,109 @@ export const SettingsScreen: React.FC = () => {
               />
             )}
 
-            <TextInput
-              style={styles.input}
-              placeholder="Email address"
-              placeholderTextColor="#64748B"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-            />
+            {/* Input fields based on mode */}
+            {authMode === 'forgot_password' ? (
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email or @username (e.g. user@example.com or @alex)"
+                  placeholderTextColor="#64748B"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={resetIdentifier}
+                  onChangeText={setResetIdentifier}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="New Password (min 6 chars)"
+                  placeholderTextColor="#64748B"
+                  secureTextEntry
+                  value={resetNewPassword}
+                  onChangeText={setResetNewPassword}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm New Password"
+                  placeholderTextColor="#64748B"
+                  secureTextEntry
+                  value={resetConfirmPassword}
+                  onChangeText={setResetConfirmPassword}
+                />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#64748B"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-            />
+                <TouchableOpacity
+                  style={[styles.authSubmitBtn, isResetting && styles.btnDisabled]}
+                  onPress={handleResetPassword}
+                  disabled={isResetting}
+                >
+                  {isResetting ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.btnText}>Reset & Set New Password</Text>
+                  )}
+                </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.authSubmitBtn, isAuthenticating && styles.btnDisabled]}
-              onPress={handleAuth}
-              disabled={isAuthenticating}
-            >
-              {isAuthenticating ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Text style={styles.btnText}>{isRegistering ? 'Register' : 'Log In'}</Text>
-              )}
-            </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setAuthMode('login')}
+                  style={styles.toggleAuthBtn}
+                >
+                  <Text style={styles.toggleAuthText}>Back to Sign In</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email address"
+                  placeholderTextColor="#64748B"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={email}
+                  onChangeText={setEmail}
+                />
 
-            <TouchableOpacity onPress={() => setIsRegistering(!isRegistering)} style={styles.toggleAuthBtn}>
-              <Text style={styles.toggleAuthText}>
-                {isRegistering ? 'Already have an account? Log In' : "Don't have an account? Register"}
-              </Text>
-            </TouchableOpacity>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password"
+                  placeholderTextColor="#64748B"
+                  secureTextEntry
+                  value={password}
+                  onChangeText={setPassword}
+                />
+
+                <TouchableOpacity
+                  style={[styles.authSubmitBtn, isAuthenticating && styles.btnDisabled]}
+                  onPress={handleAuth}
+                  disabled={isAuthenticating}
+                >
+                  {isAuthenticating ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.btnText}>{authMode === 'register' ? 'Register' : 'Log In'}</Text>
+                  )}
+                </TouchableOpacity>
+
+                <View style={styles.authNavLinksRow}>
+                  <TouchableOpacity
+                    onPress={() => setAuthMode(authMode === 'register' ? 'login' : 'register')}
+                    style={styles.authNavLink}
+                  >
+                    <Text style={styles.toggleAuthText}>
+                      {authMode === 'register' ? 'Already have an account? Log In' : "Don't have an account? Register"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {authMode === 'login' && (
+                    <TouchableOpacity
+                      onPress={() => setAuthMode('forgot_password')}
+                      style={styles.forgotPasswordLink}
+                    >
+                      <Ionicons name="key-outline" size={13} color="#06B6D4" style={{ marginRight: 4 }} />
+                      <Text style={styles.forgotPasswordText}>Reset Password?</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </>
+            )}
           </View>
         )}
       </View>
@@ -655,5 +871,90 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 16,
+  },
+  changePwdToggleBtn: {
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.3)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  changePwdToggleText: {
+    color: '#38BDF8',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  changePasswordCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  changePwdHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  changePwdTitle: {
+    color: '#F8FAFC',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  changePwdActionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 4,
+  },
+  updatePwdBtn: {
+    flex: 1,
+    backgroundColor: '#0284C7',
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelPwdBtn: {
+    backgroundColor: '#1E293B',
+    paddingHorizontal: 16,
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelPwdBtnText: {
+    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  authModeSubtitle: {
+    color: '#94A3B8',
+    fontSize: 13,
+    lineHeight: 18,
+    marginBottom: 14,
+  },
+  authNavLinksRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  authNavLink: {
+    flex: 1,
+  },
+  forgotPasswordLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+  },
+  forgotPasswordText: {
+    color: '#06B6D4',
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

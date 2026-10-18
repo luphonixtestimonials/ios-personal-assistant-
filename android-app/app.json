@@ -27,7 +27,8 @@
         "RECEIVE_BOOT_COMPLETED",
         "POST_NOTIFICATIONS",
         "SCHEDULE_EXACT_ALARM",
-        "VIBRATE"
+        "VIBRATE",
+        "RECORD_AUDIO"
       ],
       "predictiveBackGestureEnabled": false
     },
@@ -37,6 +38,12 @@
         {
           "icon": "./assets/icon.png",
           "color": "#38BDF8"
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Allow Luphonix to access your microphone for voice assistant commands."
         }
       ]
     ],

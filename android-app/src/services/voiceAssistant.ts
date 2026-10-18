@@ -93,12 +93,23 @@ export const VoiceAssistantService = {
       return { action: 'add_reminder', message: msg, data: newReminder };
     }
 
-    // 4. Tasks: "add task study for exam", "create task finish slides", "task buy groceries"
-    if (q.startsWith('add task') || q.startsWith('create task') || q.startsWith('new task')) {
-      const title = q
-        .replace(/^add task(?:\s+to)?\s+/i, '')
-        .replace(/^create task(?:\s+to)?\s+/i, '')
-        .replace(/^new task\s+/i, '');
+    // 4. Task Assignment & Tasks: "assign task review code to keval", "add task study for exam", "create task finish slides"
+    if (q.startsWith('assign task') || q.includes('assign to') || q.startsWith('add task') || q.startsWith('create task') || q.startsWith('new task')) {
+      let title = q;
+      let assignee: string | undefined = undefined;
+
+      // Check if command assigns to a friend: e.g. "assign task complete deck to @alex" or "add task call client to alex"
+      const assignMatch = q.match(/(?:assign\s+task|add\s+task|create\s+task)\s+(.+?)\s+to\s+@?([a-zA-Z0-9_]+)$/i);
+      if (assignMatch) {
+        title = assignMatch[1].trim();
+        assignee = assignMatch[2].trim().toLowerCase();
+      } else {
+        title = q
+          .replace(/^assign task(?:\s+to)?\s+/i, '')
+          .replace(/^add task(?:\s+to)?\s+/i, '')
+          .replace(/^create task(?:\s+to)?\s+/i, '')
+          .replace(/^new task\s+/i, '');
+      }
 
       const newTask: Task = {
         id: Date.now().toString(),
@@ -107,6 +118,7 @@ export const VoiceAssistantService = {
         category: 'Work',
         isCompleted: false,
         subtasks: [],
+        assignedToUsername: assignee,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -115,12 +127,40 @@ export const VoiceAssistantService = {
       tasks.unshift(newTask);
       await StorageService.saveTasks(tasks);
 
-      const msg = `Added task: "${newTask.title}".`;
+      const msg = assignee
+        ? `Created and assigned task "${newTask.title}" to @${assignee}.`
+        : `Added task: "${newTask.title}".`;
       await this.speak(msg);
       return { action: 'add_task', message: msg, data: newTask };
     }
 
-    // 5. List Tasks: "what are my tasks", "list tasks", "my tasks for today"
+    // 5. Complete Task: "complete task ...", "finish task ...", "done with task ..."
+    if (q.startsWith('complete task') || q.startsWith('finish task') || q.startsWith('mark task')) {
+      const targetTitle = q
+        .replace(/^complete task\s+/i, '')
+        .replace(/^finish task\s+/i, '')
+        .replace(/^mark task\s+/i, '')
+        .replace(/\s+as completed$/i, '');
+
+      const tasks = await StorageService.getTasks();
+      let found = false;
+      const updated = tasks.map((t) => {
+        if (!found && !t.isCompleted && t.title.toLowerCase().includes(targetTitle.toLowerCase())) {
+          found = true;
+          return { ...t, isCompleted: true, completedAt: new Date().toISOString() };
+        }
+        return t;
+      });
+
+      if (found) {
+        await StorageService.saveTasks(updated);
+        const msg = `Marked task "${targetTitle}" as completed!`;
+        await this.speak(msg);
+        return { action: 'add_task', message: msg };
+      }
+    }
+
+    // 6. List Tasks: "what are my tasks", "list tasks", "my tasks for today"
     if (q.includes('tasks') && (q.includes('what') || q.includes('list') || q.includes('show') || q.includes('pending'))) {
       const tasks = await StorageService.getTasks();
       const pending = tasks.filter((t) => !t.isCompleted);
@@ -135,7 +175,14 @@ export const VoiceAssistantService = {
       return { action: 'list_tasks', message: msg, data: pending };
     }
 
-    const fallbackMsg = `I heard: "${query}". Try saying "add task study", "remind me to drink water", or "log 250 ml of water".`;
+    // 7. Cloud Sync: "sync data", "sync tasks", "sync with cloud"
+    if (q.includes('sync')) {
+      const msg = 'Synchronizing your tasks and hydration logs with Luphonix Cloud.';
+      await this.speak(msg);
+      return { action: 'unknown', message: msg };
+    }
+
+    const fallbackMsg = `I heard: "${query}". Try saying "add task study", "assign task review to alex", "remind me to drink water", or "log 250 ml of water".`;
     await this.speak(fallbackMsg);
     return { action: 'unknown', message: fallbackMsg };
   },

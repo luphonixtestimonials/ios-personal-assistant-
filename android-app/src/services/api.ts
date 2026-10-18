@@ -113,6 +113,60 @@ export const ApiService = {
     }
   },
 
+  async resetPassword(email: string, newPassword: string): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const res = await fetch(`${cleanUrl}/api/auth/reset-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({ email: email.trim(), newPassword }),
+      });
+
+      const parsed = await parseApiResponse(res);
+      if (!parsed.ok || !parsed.data) {
+        return { success: false, error: parsed.error || parsed.data?.error || 'Password reset failed' };
+      }
+
+      if (parsed.data.success === false) {
+        return { success: false, error: parsed.data.error || 'Password reset failed' };
+      }
+
+      return { success: true, message: parsed.data.message || 'Password reset successful!' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ success: boolean; message?: string; error?: string }> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const headers = await this.getHeaders();
+      const res = await fetch(`${cleanUrl}/api/auth/change-password`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const parsed = await parseApiResponse(res);
+      if (!parsed.ok || !parsed.data) {
+        return { success: false, error: parsed.error || parsed.data?.error || 'Password change failed' };
+      }
+
+      if (parsed.data.success === false) {
+        return { success: false, error: parsed.data.error || 'Password change failed' };
+      }
+
+      return { success: true, message: parsed.data.message || 'Password updated successfully!' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
   async syncTasks(): Promise<Task[]> {
     try {
       const serverUrl = await StorageService.getServerUrl();
