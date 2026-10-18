@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Task, Reminder, HydrationLog, HydrationSettings, UserProfile } from '../types';
+import { Task, Reminder, HydrationLog, HydrationSettings, UserProfile, Friend } from '../types';
 
 const STORAGE_KEYS = {
   TASKS: '@luphonix_tasks',
@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   HYDRATION_SETTINGS: '@luphonix_hydration_settings',
   USER_PROFILE: '@luphonix_user_profile',
   SERVER_URL: '@luphonix_server_url',
+  FRIENDS: '@luphonix_friends',
 };
 
 const DEFAULT_HYDRATION_SETTINGS: HydrationSettings = {
@@ -124,6 +125,23 @@ export const StorageService = {
       await AsyncStorage.setItem(STORAGE_KEYS.SERVER_URL, cleaned);
     } catch (e) {
       console.error('Failed to save server URL', e);
+    }
+  },
+
+  async getFriends(): Promise<Friend[]> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.FRIENDS);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  async saveFriends(friends: Friend[]): Promise<void> {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.FRIENDS, JSON.stringify(friends));
+    } catch (e) {
+      console.error('Failed to save friends', e);
     }
   },
 };

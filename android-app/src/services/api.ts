@@ -1,5 +1,5 @@
 import { StorageService } from './storage';
-import { Task, Reminder, HydrationLog, HydrationSettings, UserProfile } from '../types';
+import { Task, Reminder, HydrationLog, HydrationSettings, UserProfile, Friend } from '../types';
 
 async function parseApiResponse(res: Response): Promise<{ ok: boolean; status: number; data?: any; error?: string }> {
   try {
@@ -63,6 +63,7 @@ export const ApiService = {
       const userProfile: UserProfile = {
         id: String(responseData.user?.id || 'user_1'),
         name: responseData.user?.name || email.split('@')[0],
+        username: responseData.user?.username || email.split('@')[0],
         email: responseData.user?.email || email.trim(),
         token: responseData.token,
       };
@@ -100,6 +101,7 @@ export const ApiService = {
       const userProfile: UserProfile = {
         id: String(responseData.user?.id || 'user_1'),
         name: responseData.user?.name || name.trim(),
+        username: responseData.user?.username || email.split('@')[0],
         email: responseData.user?.email || email.trim(),
         token: responseData.token,
       };
@@ -131,6 +133,10 @@ export const ApiService = {
             dueDate: t.due_at || t.due_date || t.dueDate,
             isCompleted: Boolean(t.is_completed ?? t.completed),
             subtasks: t.subtasks || [],
+            assignedToUserId: t.assigned_to_user_id || undefined,
+            assignedByUserId: t.assigned_by_user_id || undefined,
+            assignedToUsername: t.assigned_to_username || t.assignee_username || undefined,
+            assignedByUsername: t.assigned_by_username || t.assigner_username || undefined,
             createdAt: t.created_at || new Date().toISOString(),
             updatedAt: t.updated_at || new Date().toISOString(),
           }));
@@ -142,6 +148,57 @@ export const ApiService = {
       // Offline fallback
     }
     return StorageService.getTasks();
+  },
+
+  async createTask(task: Partial<Task> & { assigned_to_username?: string }): Promise<{ success: boolean; task?: Task; error?: string }> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const headers = await this.getHeaders();
+      const body: any = {
+        title: task.title,
+        description: task.notes || null,
+        priority: task.priority || 'medium',
+        category: (task.category || 'Personal').toLowerCase(),
+        due_at: task.dueDate || null,
+      };
+      if (task.assignedToUsername || task.assigned_to_username) {
+        body.assigned_to_username = task.assignedToUsername || task.assigned_to_username;
+      }
+      if (task.assignedToUserId) {
+        body.assigned_to_user_id = task.assignedToUserId;
+      }
+
+      const res = await fetch(`${cleanUrl}/api/tasks`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+      const parsed = await parseApiResponse(res);
+      if (parsed.ok && parsed.data) {
+        const t = parsed.data.data || parsed.data;
+        const createdTask: Task = {
+          id: String(t.id),
+          title: t.title,
+          notes: t.description || t.notes || '',
+          priority: t.priority || 'medium',
+          category: t.category || 'Personal',
+          dueDate: t.due_at || t.due_date,
+          isCompleted: Boolean(t.is_completed),
+          subtasks: t.subtasks || [],
+          assignedToUserId: t.assigned_to_user_id || undefined,
+          assignedByUserId: t.assigned_by_user_id || undefined,
+          assignedToUsername: t.assigned_to_username || t.assignee_username || undefined,
+          assignedByUsername: t.assigned_by_username || t.assigner_username || undefined,
+          createdAt: t.created_at || new Date().toISOString(),
+          updatedAt: t.updated_at || new Date().toISOString(),
+        };
+        return { success: true, task: createdTask };
+      }
+      return { success: false, error: parsed.error || 'Failed to create task' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
   },
 
   async syncHydration(): Promise<{ logs: HydrationLog[]; settings: HydrationSettings }> {
@@ -172,5 +229,88 @@ export const ApiService = {
       // Offline fallback
     }
     return { logs: localLogs, settings: localSettings };
+  },
+
+  async getFriends(): Promise<Friend[]> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const headers = await this.getHeaders();
+      const res = await fetch(`${cleanUrl}/api/friends`, { headers });
+      const parsed = await parseApiResponse(res);
+      if (parsed.ok && parsed.data) {
+        const friendsList = parsed.data.data || parsed.data.friends || [];
+        if (Array.isArray(friendsList)) {
+          const mapped: Friend[] = friendsList.map((f: any) => ({
+            id: String(f.id),
+            friendshipId: f.friendship_id,
+            name: f.name,
+            username: f.username || String(f.email).split('@')[0],
+            email: f.email,
+            connectedAt: f.connected_at,
+          }));
+          await StorageService.saveFriends(mapped);
+          return mapped;
+        }
+      }
+    } catch {
+      // fallback to cached
+    }
+    return StorageService.getFriends();
+  },
+
+  async addFriend(username: string): Promise<{ success: boolean; friend?: Friend; error?: string }> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const headers = await this.getHeaders();
+      const res = await fetch(`${cleanUrl}/api/friends/add`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ username: username.trim() }),
+      });
+      const parsed = await parseApiResponse(res);
+      if (!parsed.ok || !parsed.data) {
+        return { success: false, error: parsed.error || parsed.data?.error || 'Failed to add friend' };
+      }
+      if (parsed.data.success === false) {
+        return { success: false, error: parsed.data.error || 'Could not find user' };
+      }
+      const f = parsed.data.data || parsed.data.friend;
+      const friend: Friend = {
+        id: String(f.id),
+        name: f.name,
+        username: f.username || username.trim(),
+        email: f.email,
+      };
+      const currentFriends = await StorageService.getFriends();
+      if (!currentFriends.some((cf) => cf.id === friend.id)) {
+        await StorageService.saveFriends([...currentFriends, friend]);
+      }
+      return { success: true, friend };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
+  },
+
+  async removeFriend(friendId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const headers = await this.getHeaders();
+      const res = await fetch(`${cleanUrl}/api/friends/${friendId}`, {
+        method: 'DELETE',
+        headers,
+      });
+      const parsed = await parseApiResponse(res);
+      if (parsed.ok) {
+        const current = await StorageService.getFriends();
+        await StorageService.saveFriends(current.filter((f) => f.id !== friendId));
+        return { success: true };
+      }
+      return { success: false, error: parsed.error || 'Failed to remove friend' };
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Network error' };
+    }
   },
 };

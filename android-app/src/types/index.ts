@@ -18,6 +18,10 @@ export interface Task {
   isCompleted: boolean;
   completedAt?: string;
   subtasks: Subtask[];
+  assignedToUserId?: string;
+  assignedByUserId?: string;
+  assignedToUsername?: string;
+  assignedByUsername?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -53,6 +57,17 @@ export interface HydrationSettings {
 export interface UserProfile {
   id: string;
   name: string;
+  username?: string;
   email: string;
   token?: string;
 }
+
+export interface Friend {
+  id: string;
+  friendshipId?: string;
+  name: string;
+  username: string;
+  email: string;
+  connectedAt?: string;
+}
+
