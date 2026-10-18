@@ -17,7 +17,7 @@
 
   <!-- Styles & Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="/style.css?v=12.2">
+  <link rel="stylesheet" href="/style.css?v=12.3">
 </head>
 <body>
   <div id="app-container">
@@ -757,46 +757,111 @@
     <div class="liquid-glass-layer liquid-glass-tint" aria-hidden="true"></div>
     <div class="liquid-glass-layer liquid-glass-rim" aria-hidden="true"></div>
 
-    <button class="nav-item active" data-view="dashboard" id="nav-btn-dashboard" title="Home / Dashboard">
-      <i class="fa-solid fa-house"></i>
-      <span>Home</span>
-    </button>
+    <!-- Left Wing (Balanced Tabs) -->
+    <div class="nav-side-group nav-left-group">
+      <button class="nav-item active" data-view="dashboard" id="nav-btn-dashboard" title="Home / Dashboard">
+        <i class="fa-solid fa-house"></i>
+        <span>Home</span>
+      </button>
 
-    <button class="nav-item" data-view="tasks" id="nav-btn-tasks" title="Tasks">
-      <i class="fa-solid fa-list-check"></i>
-      <span>Tasks</span>
-    </button>
+      <button class="nav-item" data-view="tasks" id="nav-btn-tasks" title="Tasks">
+        <i class="fa-solid fa-list-check"></i>
+        <span>Tasks</span>
+      </button>
 
-    <button class="nav-item" data-view="hydration" id="nav-btn-hydration" title="Water Tracker">
-      <i class="fa-solid fa-droplet"></i>
-      <span>Water</span>
-    </button>
-
-    <!-- Compact Central Luphonix Emblem (Navigation Spec Section 3) -->
-    <div class="nav-center-emblem" id="nav-btn-center-emblem" title="Luphonix Home">
-      <img src="/icons/apple-touch-icon.png" alt="Luphonix" class="nav-emblem-img">
+      <button class="nav-item" data-view="hydration" id="nav-btn-hydration" title="Water Tracker">
+        <i class="fa-solid fa-droplet"></i>
+        <span>Water</span>
+      </button>
     </div>
 
-    <button class="nav-item" data-view="reminders" id="nav-btn-reminders" title="Reminders">
-      <i class="fa-solid fa-bell"></i>
-      <span>Reminders</span>
-    </button>
+    <!-- Center Luphonix Orb Trigger (Dead-Center Geometric Alignment) -->
+    <div class="nav-center-slot">
+      <button class="nav-center-emblem" id="nav-btn-center-emblem" title="Luphonix Navigation Menu" aria-label="Open Radial Navigation Menu">
+        <img src="/icons/apple-touch-icon.png" alt="Luphonix" class="nav-emblem-img">
+        <span class="nav-center-pulse"></span>
+      </button>
+    </div>
 
-    <button class="nav-item" data-view="siri" id="nav-btn-siri" title="Siri Voice Assistant">
-      <i class="fa-solid fa-microphone-lines"></i>
-      <span>Siri</span>
-    </button>
+    <!-- Right Wing (Balanced Tabs) -->
+    <div class="nav-side-group nav-right-group">
+      <button class="nav-item" data-view="reminders" id="nav-btn-reminders" title="Reminders">
+        <i class="fa-solid fa-bell"></i>
+        <span>Reminders</span>
+      </button>
 
-    <button class="nav-item" data-view="devices" id="nav-btn-devices" title="Connected Devices">
-      <i class="fa-solid fa-mobile-screen-button"></i>
-      <span>Devices</span>
-    </button>
+      <button class="nav-item" data-view="siri" id="nav-btn-siri" title="Siri Voice Assistant">
+        <i class="fa-solid fa-microphone-lines"></i>
+        <span>Siri</span>
+      </button>
 
-    <button class="nav-item" data-view="settings" id="nav-btn-settings" title="Settings">
-      <i class="fa-solid fa-gear"></i>
-      <span>Settings</span>
-    </button>
+      <button class="nav-item" data-view="devices" id="nav-btn-devices" title="Connected Devices">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <span>Devices</span>
+      </button>
+
+      <button class="nav-item" data-view="settings" id="nav-btn-settings" title="Settings">
+        <i class="fa-solid fa-gear"></i>
+        <span>Settings</span>
+      </button>
+    </div>
   </nav>
+
+  <!-- Circular Radial Navigation Menu Modal (Luphonix Circular Dial) -->
+  <div class="circular-nav-overlay" id="circular-nav-overlay" aria-hidden="true">
+    <div class="circular-nav-portal" id="circular-nav-portal" role="dialog" aria-label="Circular Navigation Menu">
+      <!-- Ambient Outer Liquid Halo -->
+      <div class="circular-nav-halo" aria-hidden="true"></div>
+
+      <!-- Center Action Button (Closes menu) -->
+      <button class="circular-nav-center-btn" id="circular-nav-close-btn" aria-label="Close circular navigation" title="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <!-- Radial Orbiting Items (8 destinations positioned in a circle) -->
+      <div class="circular-nav-items-wrapper" id="circular-nav-items-wrapper">
+        <button class="circular-orbit-item active" data-view="dashboard" title="Home / Dashboard">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-house"></i></div>
+          <span class="orbit-label">Home</span>
+        </button>
+
+        <button class="circular-orbit-item" data-view="tasks" title="Tasks">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-list-check"></i></div>
+          <span class="orbit-label">Tasks</span>
+        </button>
+
+        <button class="circular-orbit-item" data-view="hydration" title="Water Tracker">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-droplet"></i></div>
+          <span class="orbit-label">Water</span>
+        </button>
+
+        <button class="circular-orbit-item" data-view="reminders" title="Reminders">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-bell"></i></div>
+          <span class="orbit-label">Reminders</span>
+        </button>
+
+        <button class="circular-orbit-item" data-view="siri" title="Siri Shortcuts">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-microphone-lines"></i></div>
+          <span class="orbit-label">Siri</span>
+        </button>
+
+        <button class="circular-orbit-item" data-view="devices" title="Connected Devices">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-mobile-screen-button"></i></div>
+          <span class="orbit-label">Devices</span>
+        </button>
+
+        <button class="circular-orbit-item" data-view="settings" title="Settings">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-gear"></i></div>
+          <span class="orbit-label">Settings</span>
+        </button>
+
+        <button class="circular-orbit-item" data-action="quick-add" title="Quick Add Task">
+          <div class="orbit-icon-circle orbit-special"><i class="fa-solid fa-plus"></i></div>
+          <span class="orbit-label">New Task</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- ================= MODALS ================= -->
 
@@ -1044,6 +1109,6 @@
   <div id="toast-container"></div>
 
   <!-- Main JavaScript Logic -->
-  <script src="/app.js?v=6.0"></script>
+  <script src="/app.js?v=7.0"></script>
 </body>
 </html>

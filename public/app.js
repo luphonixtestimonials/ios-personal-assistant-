@@ -1231,8 +1231,14 @@
     const targetSection = document.getElementById(`view-${viewName}`);
     if (targetSection) targetSection.classList.add('active');
 
-    // Toggle Nav Icons
+    // Toggle Nav Icons & Circular Orbit Icons
     document.querySelectorAll('.nav-item').forEach((item) => {
+      item.classList.remove('active');
+      if (item.dataset.view === viewName) {
+        item.classList.add('active');
+      }
+    });
+    document.querySelectorAll('.circular-orbit-item').forEach((item) => {
       item.classList.remove('active');
       if (item.dataset.view === viewName) {
         item.classList.add('active');
@@ -1273,14 +1279,112 @@
       });
     });
 
-    // Compact Central Luphonix Emblem
-    const centerEmblem = document.getElementById('nav-btn-center-emblem');
-    if (centerEmblem) {
-      centerEmblem.addEventListener('click', () => {
-        playSound('check');
-        switchView('dashboard');
+    // --- Circular Radial Navigation Logic ---
+    const circularNavOverlay = document.getElementById('circular-nav-overlay');
+    const circularNavCloseBtn = document.getElementById('circular-nav-close-btn');
+
+    function updateCircularItemPositions() {
+      const portal = document.getElementById('circular-nav-portal');
+      if (!portal) return;
+      const portalWidth = portal.offsetWidth || 390;
+      const radius = Math.min(Math.round(portalWidth * 0.38), 150);
+      const items = document.querySelectorAll('.circular-orbit-item');
+      const total = items.length;
+      items.forEach((item, idx) => {
+        // 8 items spaced evenly, starting from top (angle = -90deg)
+        const angleDeg = (360 / total) * idx - 90;
+        const angleRad = (angleDeg * Math.PI) / 180;
+        const x = Math.round(radius * Math.cos(angleRad));
+        const y = Math.round(radius * Math.sin(angleRad));
+        item.style.setProperty('--orbit-x', `${x}px`);
+        item.style.setProperty('--orbit-y', `${y}px`);
+
+        // Highlight active view
+        const view = item.dataset.view;
+        if (view && state.currentView === view) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
       });
     }
+
+    function openCircularNav() {
+      if (!circularNavOverlay) return;
+      playSound('check');
+      updateCircularItemPositions();
+      circularNavOverlay.classList.add('open');
+      circularNavOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeCircularNav() {
+      if (!circularNavOverlay) return;
+      circularNavOverlay.classList.remove('open');
+      circularNavOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function toggleCircularNav() {
+      if (!circularNavOverlay) return;
+      if (circularNavOverlay.classList.contains('open')) {
+        closeCircularNav();
+      } else {
+        openCircularNav();
+      }
+    }
+
+    // Compact Central Luphonix Emblem - Opens Circular Radial Navigation Menu
+    const centerEmblem = document.getElementById('nav-btn-center-emblem');
+    if (centerEmblem) {
+      centerEmblem.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleCircularNav();
+      });
+    }
+
+    if (circularNavCloseBtn) {
+      circularNavCloseBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playSound('click');
+        closeCircularNav();
+      });
+    }
+
+    if (circularNavOverlay) {
+      circularNavOverlay.addEventListener('click', (e) => {
+        if (e.target === circularNavOverlay) {
+          closeCircularNav();
+        }
+      });
+    }
+
+    // Radial Orbit Items
+    document.querySelectorAll('.circular-orbit-item').forEach((item) => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        playSound('check');
+        const view = item.dataset.view;
+        const action = item.dataset.action;
+        closeCircularNav();
+        if (view) {
+          switchView(view);
+        } else if (action === 'quick-add') {
+          openModal('modal-task');
+        }
+      });
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && circularNavOverlay && circularNavOverlay.classList.contains('open')) {
+        closeCircularNav();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (circularNavOverlay && circularNavOverlay.classList.contains('open')) {
+        updateCircularItemPositions();
+      }
+    });
 
     // Header Quick Add
     const quickAddBtn = document.getElementById('btn-quick-add');
