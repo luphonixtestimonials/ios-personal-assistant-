@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Luphonix — Personal Assistant</title>
   <meta name="description" content="Your personal assistant for daily tasks, hydration tracking, and Siri voice shortcuts with cloud sync.">
-  <meta name="theme-color" content="#07090E">
+  <meta name="theme-color" content="#08090E">
 
-  <!-- Apple iOS PWA Meta Tags (No Developer Mode Required!) -->
+  <!-- Apple iOS PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Luphonix">
@@ -17,21 +17,21 @@
 
   <!-- Styles & Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="/style.css?v=10.0">
+  <link rel="stylesheet" href="/style.css?v=11.0">
 </head>
 <body>
   <div id="app-container">
-    <!-- Ambient Background Branding & Glowing 3D Curves (from reference design) -->
+    <!-- Ambient Background Branding & Cosmic Night Gradient -->
     <div class="ambient-bg-layer" aria-hidden="true">
       <div class="ambient-glow glow-1"></div>
       <div class="ambient-glow glow-2"></div>
       <svg class="ambient-ribbon-svg" viewBox="0 0 480 800" fill="none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="ribbonGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#1D4ED8" stop-opacity="0.9" />
-            <stop offset="30%" stop-color="#2563EB" stop-opacity="0.9" />
-            <stop offset="65%" stop-color="#0EA5E9" stop-opacity="0.95" />
-            <stop offset="100%" stop-color="#00D2FF" stop-opacity="0.9" />
+            <stop offset="0%" stop-color="#1D4ED8" stop-opacity="0.8" />
+            <stop offset="30%" stop-color="#2563EB" stop-opacity="0.8" />
+            <stop offset="65%" stop-color="#0EA5E9" stop-opacity="0.9" />
+            <stop offset="100%" stop-color="#00D2FF" stop-opacity="0.85" />
           </linearGradient>
           <filter id="ribbonGlow" x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation="16" result="blur" />
@@ -42,30 +42,34 @@
           </filter>
         </defs>
         <path d="M-60,160 C90,40 390,90 430,270 C470,450 250,560 110,510 C-30,460 -40,300 80,220 C200,140 420,200 520,360" 
-              stroke="url(#ribbonGrad1)" stroke-width="36" stroke-linecap="round" fill="none" filter="url(#ribbonGlow)" opacity="0.45" />
+              stroke="url(#ribbonGrad1)" stroke-width="32" stroke-linecap="round" fill="none" filter="url(#ribbonGlow)" opacity="0.38" />
       </svg>
       <div class="ambient-logo-watermark">
         <img src="/icons/apple-touch-icon.png" alt="" class="bg-watermark-img">
       </div>
     </div>
 
-    <!-- Top Header Bar -->
+    <!-- Top iOS Header Bar -->
     <header class="app-header" id="main-header">
-      <div class="brand-section">
-        <img src="/icons/apple-touch-icon.png" alt="Luphonix" class="brand-logo-img" id="header-logo">
-        <h1 class="brand-title">Luphonix</h1>
+      <div class="header-left-user">
+        <div class="user-greeting-sub" id="greeting-time">Good Morning</div>
+        <div class="user-greeting-name" id="greeting-title">Dhyey <span class="greeting-emoji">🌤️</span></div>
       </div>
       <div class="header-actions">
         <div class="user-auth-pill" id="user-auth-pill" title="Account / Sign In">
           <span class="user-avatar-dot" id="user-avatar-icon"><i class="fa-solid fa-user"></i></span>
-          <span id="user-display-name">Sign In</span>
+          <span id="user-display-name">Dhyey</span>
         </div>
-        <div class="status-pill" id="connection-pill">
+        <div class="status-pill" id="connection-pill" title="Cloud Database Sync">
           <span class="status-dot"></span>
-          <span id="connection-text">Cloud Sync</span>
+          <span id="connection-text">Sync</span>
         </div>
+        <button class="header-icon-btn notification-bell-btn" id="btn-header-bell" aria-label="Notifications" title="Notifications">
+          <i class="fa-regular fa-bell"></i>
+          <span class="notification-indicator-dot"></span>
+        </button>
         <button class="header-icon-btn" id="btn-quick-add" aria-label="Quick Add" title="Quick Add">
-          <i class="fa-solid fa-plus" style="font-size: 15px;"></i>
+          <i class="fa-solid fa-plus"></i>
         </button>
       </div>
     </header>
@@ -75,13 +79,37 @@
       
       <!-- ================= VIEW 1: DASHBOARD ================= -->
       <section class="view-section active" id="view-dashboard">
-        <div class="greeting-section">
-          <p class="greeting-time" id="greeting-time">Welcome Back</p>
-          <h2 class="greeting-title" id="greeting-title">Today at a Glance</h2>
+        <!-- Motivational Quote Banner -->
+        <div class="quote-banner-card" id="quote-banner" title="Click for new inspiration">
+          <div class="quote-quote-icon"><i class="fa-solid fa-quote-left"></i></div>
+          <p class="quote-text-p" id="quote-text">Stay consistent, your future self will thank you.</p>
+          <div class="quote-rotator-line"></div>
         </div>
 
-        <!-- Circular Hydration Tracker Widget -->
-        <div class="glass-card ring-widget-card" id="dash-water-card">
+        <!-- Today's Water Hero Card (With Mountain Silhouette & Circular Ring) -->
+        <div class="glass-card ring-widget-card today-water-card" id="dash-water-card">
+          <div class="card-ambient-backdrop" aria-hidden="true">
+            <!-- Mountain silhouette SVG backdrop matching mockup -->
+            <svg class="mountain-silhouette-svg" viewBox="0 0 400 160" preserveAspectRatio="none" fill="none">
+              <path d="M0,160 L0,110 L45,65 L95,100 L160,35 L220,95 L270,55 L340,115 L400,75 L400,160 Z" fill="rgba(8, 22, 48, 0.7)" />
+              <path d="M0,160 L0,125 L70,80 L140,120 L210,60 L280,105 L350,70 L400,105 L400,160 Z" fill="rgba(6, 15, 34, 0.9)" />
+              <!-- Subtle Star Dots -->
+              <circle cx="35" cy="25" r="1.5" fill="#00D2FF" opacity="0.8" />
+              <circle cx="85" cy="40" r="1" fill="#FFFFFF" opacity="0.7" />
+              <circle cx="140" cy="18" r="1.8" fill="#38BDF8" opacity="0.9" />
+              <circle cx="260" cy="28" r="1.2" fill="#FFFFFF" opacity="0.6" />
+              <circle cx="330" cy="20" r="1.5" fill="#00D2FF" opacity="0.8" />
+              <circle cx="375" cy="42" r="1" fill="#BAE6FD" opacity="0.7" />
+            </svg>
+          </div>
+
+          <div class="card-water-header">
+            <span class="water-header-title"><i class="fa-solid fa-droplet" style="color: #00D2FF; margin-right: 6px;"></i> Today's Water</span>
+            <button class="btn-keep-going-pill" id="btn-keep-going" title="Quick log 250 ml">
+              Keep Going <i class="fa-solid fa-arrow-right" style="font-size: 11px; margin-left: 4px;"></i>
+            </button>
+          </div>
+
           <div class="circular-ring-container">
             <svg class="ring-svg" viewBox="0 0 120 120">
               <defs>
@@ -91,19 +119,19 @@
                   <stop offset="100%" stop-color="#0284C7" />
                 </linearGradient>
               </defs>
-              <circle class="ring-bg-circle" cx="60" cy="60" r="52" stroke-width="10" fill="none" />
-              <circle class="ring-progress-circle" id="dash-ring-progress" cx="60" cy="60" r="52" stroke-width="10" fill="none"
+              <circle class="ring-bg-circle" cx="60" cy="60" r="52" stroke-width="9" fill="none" />
+              <circle class="ring-progress-circle" id="dash-ring-progress" cx="60" cy="60" r="52" stroke-width="9" fill="none"
                       stroke-dasharray="326.72" stroke-dashoffset="326.72" />
             </svg>
             <div class="ring-content">
               <span class="ring-water-icon">💧</span>
-              <div class="ring-val-current" id="dash-water-val">0</div>
+              <div class="ring-val-current" id="dash-water-val">750</div>
               <div class="ring-val-goal">of <span id="dash-water-goal">2,000</span> ml</div>
-              <span class="ring-percentage-pill" id="dash-water-percent">0%</span>
+              <span class="ring-percentage-pill" id="dash-water-percent">38%</span>
             </div>
           </div>
 
-          <!-- Quick Log Water Pills -->
+          <!-- Quick Log Water Pills Inside Card -->
           <div class="quick-add-grid">
             <button class="quick-btn" data-water="250" id="btn-quick-250">
               +250 ml
@@ -123,14 +151,38 @@
           </div>
         </div>
 
-        <!-- Quick Stats Overview -->
+        <!-- 4 Quick-Action Buttons Grid (from Reference Screen 1) -->
+        <div class="quick-actions-row">
+          <button class="qa-item-btn" id="btn-qa-water">
+            <div class="qa-icon-box blue"><i class="fa-solid fa-droplet"></i></div>
+            <span class="qa-label">Add Water</span>
+          </button>
+          <button class="qa-item-btn" id="btn-qa-task">
+            <div class="qa-icon-box blue"><i class="fa-solid fa-list-check"></i></div>
+            <span class="qa-label">Add Task</span>
+          </button>
+          <button class="qa-item-btn" id="btn-qa-siri">
+            <div class="qa-icon-box cyan"><i class="fa-solid fa-microphone-lines"></i></div>
+            <span class="qa-label">Siri Shortcuts</span>
+          </button>
+          <button class="qa-item-btn" id="btn-qa-note">
+            <div class="qa-icon-box amber"><i class="fa-solid fa-pen-to-square"></i></div>
+            <span class="qa-label">Quick Note</span>
+          </button>
+        </div>
+
+        <!-- Today's Progress Overview Row -->
+        <div class="section-header">
+          <h3 class="section-title">Today's Progress</h3>
+          <span class="section-link" id="link-view-all-tasks">View All →</span>
+        </div>
         <div class="stats-row">
           <div class="stat-box">
-            <div class="stat-val" style="color: #06B6D4;" id="stat-tasks-pending">0</div>
-            <div class="stat-label">Pending Tasks</div>
+            <div class="stat-val" style="color: #00D2FF;" id="stat-tasks-pending">1</div>
+            <div class="stat-label">Pending</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" style="color: #10B981;" id="stat-tasks-done">0</div>
+            <div class="stat-val" style="color: #10B981;" id="stat-tasks-done">1</div>
             <div class="stat-label">Completed</div>
           </div>
           <div class="stat-box">
@@ -142,9 +194,8 @@
         <!-- Today's Priority Tasks -->
         <div class="section-header">
           <h3 class="section-title">
-            <i class="fa-solid fa-clipboard-list" style="color: #38BDF8; margin-right: 6px;"></i> Today's Priorities
+            <i class="fa-solid fa-clipboard-list" style="color: #00D2FF; margin-right: 6px;"></i> Today's Priorities
           </h3>
-          <span class="section-link" id="link-view-all-tasks">View All →</span>
         </div>
         <div id="dash-tasks-preview">
           <!-- Dynamic task items inserted here -->
@@ -153,14 +204,17 @@
 
       <!-- ================= VIEW 2: TASKS ================= -->
       <section class="view-section" id="view-tasks">
-        <div class="section-header" style="margin-top: 0;">
-          <h2 class="section-title">My Tasks</h2>
-          <div style="display: flex; gap: 8px;">
-            <button class="header-icon-btn" id="btn-sync-tasks-cloud" style="width: 32px; height: 32px;" title="Sync with Siri Cloud">
-              <i class="fa-solid fa-arrows-rotate" style="font-size: 13px;"></i>
+        <div class="view-header-bar">
+          <div class="view-title-wrap">
+            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="view-screen-title">Tasks</h2>
+          </div>
+          <div class="view-header-tools">
+            <button class="header-icon-btn" id="btn-sync-tasks-cloud" title="Sync with Cloud">
+              <i class="fa-solid fa-arrows-rotate"></i>
             </button>
-            <button class="header-icon-btn" id="btn-add-task-modal" style="width: 32px; height: 32px;" title="Add Task">
-              <i class="fa-solid fa-plus" style="font-size: 14px;"></i>
+            <button class="header-icon-btn" id="btn-add-task-modal" title="Add New Task">
+              <i class="fa-solid fa-plus"></i>
             </button>
           </div>
         </div>
@@ -176,9 +230,10 @@
           <button class="filter-pill" data-filter="completed">Completed</button>
         </div>
 
-        <!-- Search Bar -->
-        <div class="form-group">
-          <input type="text" class="form-input" id="tasks-search-input" placeholder="🔍 Search tasks..." autocomplete="off">
+        <!-- Search Bar with Leading Magnifying Glass -->
+        <div class="search-input-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-leading-icon"></i>
+          <input type="text" class="form-input search-input" id="tasks-search-input" placeholder="Search tasks..." autocomplete="off">
         </div>
 
         <!-- Tasks List -->
@@ -189,8 +244,11 @@
 
       <!-- ================= VIEW 3: HYDRATION ================= -->
       <section class="view-section" id="view-hydration">
-        <div class="section-header" style="margin-top: 0;">
-          <h2 class="section-title">Hydration Tracker</h2>
+        <div class="view-header-bar">
+          <div class="view-title-wrap">
+            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="view-screen-title">Hydration</h2>
+          </div>
           <span class="section-link" id="link-edit-water-goal">Goal: <span id="hyd-goal-display">2,000</span> ml</span>
         </div>
 
@@ -203,10 +261,10 @@
                       stroke-dasharray="326.72" stroke-dashoffset="326.72" />
             </svg>
             <div class="ring-content">
-              <span class="ring-water-icon" style="font-size: 26px; color: #06B6D4;"><i class="fa-solid fa-droplet"></i></span>
-              <div class="ring-val-current" id="hyd-water-val" style="font-size: 38px;">0</div>
+              <span class="ring-water-icon" style="font-size: 26px; color: #00D2FF;"><i class="fa-solid fa-droplet"></i></span>
+              <div class="ring-val-current" id="hyd-water-val" style="font-size: 38px;">750</div>
               <div class="ring-val-goal">of <span id="hyd-water-goal-text">2,000</span> ml</div>
-              <span class="ring-percentage-pill" id="hyd-water-percent">0%</span>
+              <span class="ring-percentage-pill" id="hyd-water-percent">38%</span>
             </div>
           </div>
 
@@ -221,8 +279,8 @@
         <!-- 7-Day Weekly Bar Chart -->
         <div class="glass-card">
           <div class="section-header" style="margin: 0 0 8px 0;">
-            <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-chart-simple" style="color: #38BDF8; margin-right: 6px;"></i> Past 7 Days</h3>
-            <span style="font-size: 12px; color: var(--accent-cyan);" id="hyd-weekly-average">Avg: 0 ml</span>
+            <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-chart-simple" style="color: #00D2FF; margin-right: 6px;"></i> Weekly Overview</h3>
+            <span style="font-size: 12px; color: var(--accent-cyan);" id="hyd-weekly-average">Avg: 107 ml</span>
           </div>
           <div class="chart-container" id="weekly-chart-bars">
             <!-- Dynamic 7 bars (Mon to Sun) -->
@@ -231,8 +289,8 @@
 
         <!-- Today's Intake History Log -->
         <div class="section-header">
-          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-clock-rotate-left" style="color: #38BDF8; margin-right: 6px;"></i> Today's Drink Logs</h3>
-          <span class="section-link" id="btn-clear-water-logs" style="color: var(--accent-rose); font-size: 12px;">Reset Today</span>
+          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-clock-rotate-left" style="color: #00D2FF; margin-right: 6px;"></i> Today's Drink Logs</h3>
+          <span class="section-link" id="btn-clear-water-logs" style="color: var(--accent-rose); font-size: 12px; cursor: pointer;">Reset</span>
         </div>
         <div id="water-logs-list">
           <!-- Dynamically populated -->
@@ -241,30 +299,116 @@
 
       <!-- ================= VIEW 4: REMINDERS ================= -->
       <section class="view-section" id="view-reminders">
-        <div class="section-header" style="margin-top: 0;">
-          <h2 class="section-title">Reminders</h2>
-          <button class="header-icon-btn" id="btn-add-reminder-modal" style="width: 32px; height: 32px;" title="Add Reminder">
-            <i class="fa-solid fa-plus" style="font-size: 14px;"></i>
+        <div class="view-header-bar">
+          <div class="view-title-wrap">
+            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="view-screen-title">Reminders</h2>
+          </div>
+          <button class="header-icon-btn" id="btn-add-reminder-modal" title="Add Reminder">
+            <i class="fa-solid fa-plus"></i>
           </button>
         </div>
 
+        <!-- Filter Pills Bar -->
+        <div class="filter-pills-bar" id="reminders-filter-bar">
+          <button class="filter-pill active" data-rem-filter="all">All</button>
+          <button class="filter-pill" data-rem-filter="today">Today</button>
+          <button class="filter-pill" data-rem-filter="upcoming">Upcoming</button>
+          <button class="filter-pill" data-rem-filter="completed">Completed</button>
+        </div>
+
         <div id="reminders-full-list">
-          <!-- Dynamically populated -->
+          <!-- Dynamically populated with iOS Switches -->
         </div>
       </section>
 
       <!-- ================= VIEW 5: SIRI VOICE ASSISTANT ================= -->
       <section class="view-section" id="view-siri">
+        <div class="view-header-bar">
+          <div class="view-title-wrap">
+            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="view-screen-title">Siri</h2>
+          </div>
+          <button class="header-icon-btn" id="btn-siri-help" title="Siri Setup Guide">
+            <i class="fa-solid fa-question"></i>
+          </button>
+        </div>
+
+        <!-- Glowing Siri Orb Hero Card -->
         <div class="glass-card siri-hero-card">
-          <div class="siri-orb"></div>
-          <h2 style="font-family: var(--font-heading); font-size: 22px; font-weight: 700;">Apple Siri Integration</h2>
-          <p style="font-size: 13px; color: #CBD5E1; margin-top: 6px; line-height: 1.5;">
-            Control Luphonix hands-free on your <strong>iPhone 16 Pro</strong> using built-in Siri voice commands — <strong>Zero Developer Mode required!</strong>
+          <div class="siri-orb-wrapper">
+            <div class="siri-orb">
+              <i class="fa-solid fa-microphone"></i>
+            </div>
+          </div>
+          <h2 style="font-family: var(--font-heading); font-size: 22px; font-weight: 700; text-align: center;">Luphonix with Siri</h2>
+          <p style="font-size: 13px; color: #CBD5E1; margin-top: 6px; line-height: 1.5; text-align: center;">
+            Control your tasks, hydration and more using just your voice.
           </p>
         </div>
 
-        <div class="section-header">
-          <h3 class="section-title"><i class="fa-solid fa-comments" style="color: #38BDF8; margin-right: 6px;"></i> Ready-To-Use Siri Phrases</h3>
+        <!-- 3 Primary Action List Buttons (Screen 5) -->
+        <div class="siri-action-list">
+          <button class="siri-action-row" id="btn-siri-action-view">
+            <div class="siri-act-left">
+              <span class="siri-act-icon blue"><i class="fa-solid fa-eye"></i></span>
+              <span class="siri-act-title">View Siri Commands</span>
+            </div>
+            <i class="fa-solid fa-chevron-right siri-act-chevron"></i>
+          </button>
+
+          <button class="siri-action-row" id="btn-siri-action-copy">
+            <div class="siri-act-left">
+              <span class="siri-act-icon cyan"><i class="fa-solid fa-copy"></i></span>
+              <span class="siri-act-title">Copy Webhook URL</span>
+            </div>
+            <i class="fa-solid fa-chevron-right siri-act-chevron"></i>
+          </button>
+
+          <button class="siri-action-row" id="btn-siri-action-test">
+            <div class="siri-act-left">
+              <span class="siri-act-icon emerald"><i class="fa-solid fa-play"></i></span>
+              <span class="siri-act-title">Test Siri Command</span>
+            </div>
+            <i class="fa-solid fa-chevron-right siri-act-chevron"></i>
+          </button>
+        </div>
+
+        <!-- Popular Commands Section (Speech Bubble Quotes from Screen 5) -->
+        <div class="section-header" style="margin-top: 22px;">
+          <h3 class="section-title"><i class="fa-solid fa-comment-dots" style="color: #00D2FF; margin-right: 6px;"></i> Popular Commands</h3>
+        </div>
+        <div class="popular-commands-list">
+          <div class="popular-cmd-bubble" id="pill-cmd-water">
+            <span class="cmd-quote-icon">“</span>
+            <span class="cmd-text">"Log 250 ml water"</span>
+            <span class="cmd-trailing-icon">💧</span>
+          </div>
+          <div class="popular-cmd-bubble" id="pill-cmd-tasks">
+            <span class="cmd-quote-icon">“</span>
+            <span class="cmd-text">"What are my tasks today?"</span>
+            <span class="cmd-trailing-icon">💬</span>
+          </div>
+          <div class="popular-cmd-bubble" id="pill-cmd-complete">
+            <span class="cmd-quote-icon">“</span>
+            <span class="cmd-text">"Mark task as complete"</span>
+            <span class="cmd-trailing-icon">✅</span>
+          </div>
+          <div class="popular-cmd-bubble" id="pill-cmd-progress">
+            <span class="cmd-quote-icon">“</span>
+            <span class="cmd-text">"Show my progress"</span>
+            <span class="cmd-trailing-icon">📊</span>
+          </div>
+          <div class="popular-cmd-bubble" id="pill-cmd-add">
+            <span class="cmd-quote-icon">“</span>
+            <span class="cmd-text">"Add a new task"</span>
+            <span class="cmd-trailing-icon">➕</span>
+          </div>
+        </div>
+
+        <!-- Full Siri Webhook Cards (Intact Functionality) -->
+        <div class="section-header" style="margin-top: 24px;">
+          <h3 class="section-title"><i class="fa-solid fa-code" style="color: #00D2FF; margin-right: 6px;"></i> Ready-To-Use Siri Shortcuts</h3>
         </div>
 
         <!-- Shortcut 1: Log Water -->
@@ -274,12 +418,9 @@
             <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 600;">Siri Voice</span>
           </div>
           <div class="siri-phrase-box">
-            <span><i class="fa-solid fa-microphone-lines" style="color: #38BDF8;"></i></span>
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
             <span>"Hey Siri, log 250 ml in Luphonix"</span>
           </div>
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-            Siri triggers your Vercel cloud API and immediately updates your water ring!
-          </p>
           <button class="btn-secondary" id="btn-copy-siri-water" style="padding: 8px 12px; font-size: 13px;">
             <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
           </button>
@@ -292,12 +433,9 @@
             <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 600;">Siri Voice</span>
           </div>
           <div class="siri-phrase-box">
-            <span><i class="fa-solid fa-microphone-lines" style="color: #38BDF8;"></i></span>
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
             <span>"Hey Siri, what are my tasks in Luphonix?"</span>
           </div>
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-            Siri reads aloud your remaining pending tasks for today.
-          </p>
           <button class="btn-secondary" id="btn-copy-siri-tasks" style="padding: 8px 12px; font-size: 13px;">
             <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
           </button>
@@ -310,70 +448,73 @@
             <span style="font-size: 11px; color: #10B981; font-weight: 600;">Siri Voice</span>
           </div>
           <div class="siri-phrase-box">
-            <span><i class="fa-solid fa-microphone-lines" style="color: #38BDF8;"></i></span>
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
             <span>"Hey Siri, mark study completed in Luphonix"</span>
           </div>
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-            Siri instantly marks your task as completed in cloud &amp; on iPhone.
-          </p>
           <button class="btn-secondary" id="btn-copy-siri-complete" style="padding: 8px 12px; font-size: 13px;">
             <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
           </button>
         </div>
 
-        <!-- How to Add to iPhone Shortcuts App Guide -->
-        <div class="glass-card">
-          <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; margin-bottom: 8px;">
-            <i class="fa-solid fa-mobile-screen-button" style="color: #38BDF8; margin-right: 6px;"></i> 60-Second Setup in iPhone "Shortcuts" App
+        <!-- Setup in iPhone Shortcuts Guide -->
+        <div class="glass-card" style="margin-top: 14px;">
+          <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 700; margin-bottom: 8px;">
+            <i class="fa-solid fa-mobile-screen-button" style="color: #00D2FF; margin-right: 6px;"></i> iPhone Shortcuts App Setup
           </h3>
-          <ol style="font-size: 13px; color: var(--text-muted); padding-left: 18px; line-height: 1.7;">
-            <li>Open the built-in <strong>Shortcuts</strong> app on your iPhone 16 Pro.</li>
-            <li>Tap <strong>+</strong> (New Shortcut) → Name it: <em>"Check Today's Tasks"</em> or <em>"Log Water in Luphonix"</em>.</li>
-            <li>Add action: <strong>"Get Contents of URL"</strong>.</li>
-            <li>Paste your Webhook URL copied above (<strong>apiKey is already included</strong> — zero auth headers required!).</li>
-            <li>Optional: Add action <strong>"Show Result"</strong> or <strong>"Speak Text"</strong> to have Siri read out your tasks aloud!</li>
-            <li>Done! Say <em>"Hey Siri, what are my tasks in Luphonix?"</em> anytime!</li>
+          <ol style="font-size: 13px; color: var(--text-muted); padding-left: 18px; line-height: 1.6;">
+            <li>Open built-in <strong>Shortcuts</strong> on iPhone 16 Pro.</li>
+            <li>Tap <strong>+</strong> → Add action: <strong>"Get Contents of URL"</strong>.</li>
+            <li>Paste your Webhook URL above (apiKey is included automatically).</li>
+            <li>Say <em>"Hey Siri, [Shortcut Name]"</em> anytime!</li>
           </ol>
         </div>
       </section>
 
       <!-- ================= VIEW 6: CONNECTED DEVICES & REQUEST MONITOR ================= -->
       <section class="view-section" id="view-devices">
-        <div class="section-header" style="margin-top: 0;">
-          <h2 class="section-title">Connected Devices</h2>
-          <button class="header-icon-btn" id="btn-refresh-devices" style="width: 32px; height: 32px;" title="Refresh Devices & Requests">
-            <i class="fa-solid fa-arrows-rotate" style="font-size: 13px;"></i>
-          </button>
+        <div class="view-header-bar">
+          <div class="view-title-wrap">
+            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="view-screen-title">Devices</h2>
+          </div>
+          <div class="view-header-tools">
+            <button class="header-icon-btn" id="btn-add-device-modal" title="Add Device Session">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+            <button class="header-icon-btn" id="btn-refresh-devices" title="Refresh Devices & Requests">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </button>
+          </div>
         </div>
 
-        <!-- Quick Stats Overview -->
+        <!-- 3 Quick Stats Overview -->
         <div class="stats-row">
           <div class="stat-box">
             <div class="stat-val" style="color: #10B981;" id="stat-devices-online">1</div>
-            <div class="stat-label">Online Devices</div>
+            <div class="stat-label">Online</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" style="color: #06B6D4;" id="stat-requests-total">0</div>
-            <div class="stat-label">Requests Logged</div>
+            <div class="stat-val" style="color: #00D2FF;" id="stat-requests-total">21</div>
+            <div class="stat-label">Requests</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" style="color: #F59E0B;" id="stat-db-tasks-count">--</div>
-            <div class="stat-label">Tasks in DB</div>
+            <div class="stat-val" style="color: #F59E0B;" id="stat-db-tasks-count">2</div>
+            <div class="stat-label">In DB</div>
           </div>
         </div>
 
         <!-- Active Connected Devices List -->
         <div class="section-header">
-          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-mobile-screen-button" style="color: #00D2FF; margin-right: 6px;"></i> Active Device Sessions</h3>
-          <span class="section-link" id="btn-ping-device" style="font-size: 12px; cursor: pointer;"><i class="fa-solid fa-bolt" style="margin-right: 4px;"></i> Ping Device</span>
+          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-mobile-screen-button" style="color: #00D2FF; margin-right: 6px;"></i> Active Sessions</h3>
+          <span class="section-link" id="btn-ping-device" style="font-size: 12px; cursor: pointer;"><i class="fa-solid fa-bolt" style="margin-right: 4px;"></i> Ping All</span>
         </div>
         <div id="devices-list-container">
           <!-- Dynamically populated -->
         </div>
 
-        <!-- Client Request Inspector -->
+        <!-- Live Client Request Inspector -->
         <div class="section-header" style="margin-top: 24px;">
-          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-tower-broadcast" style="color: #06B6D4; margin-right: 6px;"></i> Live Client Request Inspector</h3>
+          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-tower-broadcast" style="color: #00D2FF; margin-right: 6px;"></i> Live Request Inspector</h3>
           <span style="font-size: 11px; color: var(--accent-emerald); font-weight: 600;">● Live Stream</span>
         </div>
 
@@ -381,36 +522,32 @@
         <div class="diag-box diag-box-success" id="diag-banner-box">
           <span style="font-size: 18px;"><i class="fa-solid fa-shield-halved" style="color: #34D399;"></i></span>
           <div>
-            <div style="font-weight: 700; margin-bottom: 2px;">Continuous Task Addition Loop: Neutralized &amp; Guarded</div>
+            <div style="font-weight: 700; margin-bottom: 2px;">Continuous Loop Guard: Active</div>
             <p style="font-size: 12px; opacity: 0.9;">
-              <strong>Cause Identified:</strong> Client background sync was inadvertently re-pushing synced tasks back to <code>/api/tasks/add</code> every 15s.
-              The client sync loop has been fixed. Use the button below to purge all leftover duplicate tasks from your database!
+              Client background sync protected. Duplicate tasks purged automatically.
             </p>
           </div>
         </div>
 
         <div class="request-feed-card">
-          <!-- Action Buttons Bar -->
           <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
             <button class="btn-primary" id="btn-deduplicate-tasks" style="padding: 8px 12px; font-size: 12px; width: auto; background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
-              <i class="fa-solid fa-broom" style="margin-right: 6px;"></i> Clean Duplicate Tasks in DB
+              <i class="fa-solid fa-broom" style="margin-right: 6px;"></i> Clean Duplicates
             </button>
             <button class="btn-secondary" id="btn-clear-request-logs" style="padding: 8px 12px; font-size: 12px; width: auto;">
               <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Clear Feed
             </button>
           </div>
 
-          <!-- Filter Pills for Requests -->
           <div class="filter-pills-bar" style="margin-bottom: 12px;" id="request-filter-bar">
             <button class="filter-pill active" data-req-filter="all">All Traffic</button>
-            <button class="filter-pill" data-req-filter="tasks_add" style="border-color: rgba(244, 63, 94, 0.4); color: #FDA4AF;">Task Additions ⚠️</button>
-            <button class="filter-pill" data-req-filter="sync">Sync &amp; Read 📋</button>
-            <button class="filter-pill" data-req-filter="auth">Auth 🔑</button>
+            <button class="filter-pill" data-req-filter="tasks_add">Task Additions</button>
+            <button class="filter-pill" data-req-filter="sync">Sync &amp; Read</button>
+            <button class="filter-pill" data-req-filter="auth">Auth</button>
           </div>
 
-          <!-- Live Feed Container -->
           <div class="request-feed-list" id="requests-feed-container">
-            <div style="text-align: center; padding: 30px 10px; color: var(--text-sub);">
+            <div style="text-align: center; padding: 24px 10px; color: var(--text-sub);">
               Listening for incoming client requests...
             </div>
           </div>
@@ -419,99 +556,169 @@
 
       <!-- ================= VIEW 7: SETTINGS ================= -->
       <section class="view-section" id="view-settings">
-        <div class="section-header" style="margin-top: 0;">
-          <h2 class="section-title">Settings & Cloud</h2>
-        </div>
-
-        <!-- Install PWA Card for iPhone -->
-        <div class="glass-card" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(59, 130, 246, 0.15) 100%); border-color: rgba(6, 182, 212, 0.35);">
-          <div style="display: flex; gap: 12px; align-items: center;">
-            <span style="font-size: 28px; color: #38BDF8;"><i class="fa-solid fa-mobile-screen-button"></i></span>
-            <div>
-              <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700;">Install on iPhone 16 Pro</h3>
-              <p style="font-size: 12px; color: #CBD5E1; margin-top: 2px;">
-                Runs full screen like a native app. 0% Developer Mode needed.
-              </p>
-            </div>
+        <div class="view-header-bar">
+          <div class="view-title-wrap">
+            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="view-screen-title">Settings</h2>
           </div>
-          <button class="btn-primary" id="btn-show-install-guide" style="margin-top: 14px; padding: 10px; font-size: 14px;">
-            Show iPhone Install Steps
-          </button>
         </div>
 
-        <!-- Siri Webhook API Key Card -->
-        <div class="glass-card" style="border-color: rgba(6, 182, 212, 0.35); background: linear-gradient(135deg, rgba(6, 182, 212, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; color: #38BDF8;">
-              <i class="fa-solid fa-key" style="color: #F59E0B; margin-right: 6px;"></i> Siri Shortcuts & Webhook API Key
+        <!-- iOS Grouped Menu Layout (Screen 7 of Mockup) -->
+        <div class="ios-grouped-list">
+          <div class="ios-list-item" data-accordion="setting-card-install">
+            <div class="ios-item-icon blue"><i class="fa-solid fa-mobile-screen-button"></i></div>
+            <div class="ios-item-info">
+              <div class="ios-item-title">iPhone App Setup</div>
+              <div class="ios-item-sub">Install on iPhone 16 Pro</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ios-item-arrow"></i>
+          </div>
+
+          <div class="ios-list-item" data-accordion="setting-card-siri">
+            <div class="ios-item-icon amber"><i class="fa-solid fa-key"></i></div>
+            <div class="ios-item-info">
+              <div class="ios-item-title">Siri Shortcuts & API</div>
+              <div class="ios-item-sub">Manage voice commands</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ios-item-arrow"></i>
+          </div>
+
+          <div class="ios-list-item" data-accordion="setting-card-cloud">
+            <div class="ios-item-icon cyan"><i class="fa-solid fa-cloud"></i></div>
+            <div class="ios-item-info">
+              <div class="ios-item-title">Cloud Backend (Vercel)</div>
+              <div class="ios-item-sub" id="settings-display-backend-url">https://luphonix-web.vercel.app</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ios-item-arrow"></i>
+          </div>
+
+          <div class="ios-list-item" data-accordion="setting-card-prefs">
+            <div class="ios-item-icon emerald"><i class="fa-solid fa-sliders"></i></div>
+            <div class="ios-item-info">
+              <div class="ios-item-title">Preferences</div>
+              <div class="ios-item-sub">Water goal, audio, haptics</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ios-item-arrow"></i>
+          </div>
+
+          <div class="ios-list-item" data-accordion="setting-card-storage">
+            <div class="ios-item-icon rose"><i class="fa-solid fa-database"></i></div>
+            <div class="ios-item-info">
+              <div class="ios-item-title">Data & Storage</div>
+              <div class="ios-item-sub">Clear cache, reset data</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ios-item-arrow"></i>
+          </div>
+
+          <div class="ios-list-item" data-accordion="setting-card-about">
+            <div class="ios-item-icon cyan"><i class="fa-solid fa-circle-info"></i></div>
+            <div class="ios-item-info">
+              <div class="ios-item-title">About</div>
+              <div class="ios-item-sub">Version 1.0.0</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ios-item-arrow"></i>
+          </div>
+        </div>
+
+        <!-- Expandable Detail Cards (Retains 100% of Existing Forms & Inputs) -->
+        <div class="settings-detail-sections" style="margin-top: 16px;">
+          <!-- Card: iPhone Install -->
+          <div class="glass-card setting-expand-card" id="setting-card-install">
+            <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; margin-bottom: 6px;">
+              <i class="fa-solid fa-mobile-screen-button" style="color: #00D2FF; margin-right: 6px;"></i> Install on iPhone 16 Pro
             </h3>
-            <span class="ring-percentage-pill" style="font-size: 10px; background: rgba(56, 189, 248, 0.2); color: #38BDF8;">Active</span>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+              Runs full-screen like a native app with zero Developer Mode or certificates required.
+            </p>
+            <button class="btn-primary" id="btn-show-install-guide">
+              Show iPhone Install Steps
+            </button>
           </div>
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
-            Webhook URLs on the Siri tab automatically include this key in the link (<code>?apiKey=...</code>). You can also copy it directly for your shortcuts!
-          </p>
-          <div class="form-group" style="margin-bottom: 10px;">
-            <label class="form-label" for="setting-webhook-api-key">API Token / Secret Key</label>
-            <div style="display: flex; gap: 8px;">
-              <input type="text" class="form-input" id="setting-webhook-api-key" readonly style="font-family: monospace; font-size: 11px; letter-spacing: 0.5px;" value="Loading...">
-              <button class="btn-secondary" id="btn-copy-token" style="width: auto; padding: 0 16px; white-space: nowrap; font-weight: 600;">
-                <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy
-              </button>
+
+          <!-- Card: Siri & Webhook API Key -->
+          <div class="glass-card setting-expand-card" id="setting-card-siri">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; color: #00D2FF;">
+                <i class="fa-solid fa-key" style="color: #F59E0B; margin-right: 6px;"></i> Siri Shortcuts & Webhook API Key
+              </h3>
+              <span class="ring-percentage-pill" style="font-size: 10px; background: rgba(0, 210, 255, 0.2); color: #00D2FF;">Active</span>
             </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
+              Webhook URLs automatically include this key in the link.
+            </p>
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label" for="setting-webhook-api-key">API Token / Secret Key</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" class="form-input" id="setting-webhook-api-key" readonly style="font-family: monospace; font-size: 11px; letter-spacing: 0.5px;" value="Loading...">
+                <button class="btn-secondary" id="btn-copy-token" style="width: auto; padding: 0 16px; white-space: nowrap; font-weight: 600;">
+                  <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy
+                </button>
+              </div>
+            </div>
+            <button class="btn-secondary" id="btn-regenerate-token" style="padding: 8px 12px; font-size: 12px; opacity: 0.85;">
+              <i class="fa-solid fa-arrows-rotate" style="margin-right: 6px;"></i> Refresh / Re-fetch Key
+            </button>
           </div>
-          <button class="btn-secondary" id="btn-regenerate-token" style="padding: 8px 12px; font-size: 12px; opacity: 0.85;">
-            <i class="fa-solid fa-arrows-rotate" style="margin-right: 6px;"></i> Refresh / Re-fetch Key
-          </button>
-        </div>
 
-        <!-- Backend Configuration -->
-        <div class="glass-card">
-          <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; margin-bottom: 12px;">
-            <i class="fa-solid fa-cloud" style="color: #38BDF8; margin-right: 6px;"></i> Cloud Backend API (Vercel)
-          </h3>
-          <div class="form-group">
-            <label class="form-label" for="setting-backend-url">Backend Base URL</label>
-            <input type="url" class="form-input" id="setting-backend-url" placeholder="https://your-app.vercel.app" autocomplete="off">
+          <!-- Card: Cloud Backend API -->
+          <div class="glass-card setting-expand-card" id="setting-card-cloud">
+            <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; margin-bottom: 12px;">
+              <i class="fa-solid fa-cloud" style="color: #00D2FF; margin-right: 6px;"></i> Cloud Backend API (Vercel)
+            </h3>
+            <div class="form-group">
+              <label class="form-label" for="setting-backend-url">Backend Base URL</label>
+              <input type="url" class="form-input" id="setting-backend-url" placeholder="https://your-app.vercel.app" autocomplete="off">
+            </div>
+            <button class="btn-secondary" id="btn-test-backend-ping" style="padding: 10px; font-size: 13px;">
+              <i class="fa-solid fa-bolt" style="margin-right: 6px;"></i> Test Connection & Latency
+            </button>
+            <div id="backend-ping-result" style="font-size: 12px; margin-top: 8px; font-weight: 600;"></div>
           </div>
-          <button class="btn-secondary" id="btn-test-backend-ping" style="padding: 10px; font-size: 13px;">
-            <i class="fa-solid fa-bolt" style="margin-right: 6px;"></i> Test Connection & Latency
-          </button>
-          <div id="backend-ping-result" style="font-size: 12px; margin-top: 8px; font-weight: 600;"></div>
-        </div>
 
-
-        <!-- Preferences -->
-        <div class="glass-card">
-          <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; margin-bottom: 12px;">
-            <i class="fa-solid fa-sliders" style="color: #38BDF8; margin-right: 6px;"></i> Preferences
-          </h3>
-          <div class="form-group">
-            <label class="form-label" for="setting-daily-water-goal">Daily Water Goal (ml)</label>
-            <input type="number" class="form-input" id="setting-daily-water-goal" value="2000" min="500" max="5000" step="100">
+          <!-- Card: Preferences -->
+          <div class="glass-card setting-expand-card" id="setting-card-prefs">
+            <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; margin-bottom: 12px;">
+              <i class="fa-solid fa-sliders" style="color: #00D2FF; margin-right: 6px;"></i> Preferences
+            </h3>
+            <div class="form-group">
+              <label class="form-label" for="setting-daily-water-goal">Daily Water Goal (ml)</label>
+              <input type="number" class="form-input" id="setting-daily-water-goal" value="2000" min="500" max="5000" step="100">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="setting-audio-toggle">Haptic & Audio Effects</label>
+              <select class="form-select" id="setting-audio-toggle">
+                <option value="enabled">Enabled (Tactile audio click)</option>
+                <option value="disabled">Muted / Silent</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="btn-save-settings" style="padding: 12px; font-size: 14px;">
+              Save Preferences
+            </button>
           </div>
-          <div class="form-group">
-            <label class="form-label" for="setting-audio-toggle">Haptic & Audio Effects</label>
-            <select class="form-select" id="setting-audio-toggle">
-              <option value="enabled">Enabled (Tactile audio click)</option>
-              <option value="disabled">Muted / Silent</option>
-            </select>
-          </div>
-          <button class="btn-primary" id="btn-save-settings" style="padding: 12px; font-size: 14px;">
-            Save Preferences
-          </button>
-        </div>
 
-        <!-- Data Reset -->
-        <div class="glass-card" style="border-color: rgba(244, 63, 94, 0.2);">
-          <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 700; color: var(--accent-rose); margin-bottom: 8px;">
-            <i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-rose); margin-right: 6px;"></i> Danger Zone
-          </h3>
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
-            Clears local cache and resets task and water sample logs.
-          </p>
-          <button class="btn-secondary" id="btn-reset-data" style="color: var(--accent-rose); border-color: rgba(244, 63, 94, 0.3);">
-            Reset All Local Data
-          </button>
+          <!-- Card: Data Reset -->
+          <div class="glass-card setting-expand-card" id="setting-card-storage" style="border-color: rgba(244, 63, 94, 0.2);">
+            <h3 style="font-family: var(--font-heading); font-size: 15px; font-weight: 700; color: var(--accent-rose); margin-bottom: 8px;">
+              <i class="fa-solid fa-triangle-exclamation" style="color: var(--accent-rose); margin-right: 6px;"></i> Danger Zone
+            </h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">
+              Clears local cache and resets task and water sample logs.
+            </p>
+            <button class="btn-secondary" id="btn-reset-data" style="color: var(--accent-rose); border-color: rgba(244, 63, 94, 0.3);">
+              Reset All Local Data
+            </button>
+          </div>
+
+          <!-- Card: About -->
+          <div class="glass-card setting-expand-card" id="setting-card-about">
+            <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; margin-bottom: 8px;">
+              <i class="fa-solid fa-circle-info" style="color: #00D2FF; margin-right: 6px;"></i> Luphonix Assistant
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+              Version 1.0.0 (Production Release)<br>
+              Engineered with Obsidian &amp; Blue Glassmorphism for iOS 18 &amp; Web.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -520,289 +727,295 @@
     </main>
   </div> <!-- /#app-container -->
 
-  <!-- Floating Glass Bottom Navigation (Always dynamically fixed to bottom) -->
+  <!-- Floating Radiant Blue FAB Button (+) -->
+  <button class="global-fab-btn" id="btn-global-fab" aria-label="Add" title="Add item">
+    <i class="fa-solid fa-plus"></i>
+  </button>
+
+  <!-- Floating Glass Bottom Navigation Menu (Modern, Unique & Interactive) -->
   <nav class="app-navbar" id="bottom-navbar">
-      <button class="nav-item active" data-view="dashboard" id="nav-btn-dashboard">
-        <i class="fa-solid fa-house"></i>
-        <span>Today</span>
-      </button>
+    <button class="nav-item active" data-view="dashboard" id="nav-btn-dashboard" title="Home / Dashboard">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </button>
 
-      <button class="nav-item" data-view="tasks" id="nav-btn-tasks">
-        <i class="fa-solid fa-list-check"></i>
-        <span>Tasks</span>
-      </button>
+    <button class="nav-item" data-view="tasks" id="nav-btn-tasks" title="Tasks">
+      <i class="fa-solid fa-list-check"></i>
+      <span>Tasks</span>
+    </button>
 
-      <button class="nav-item" data-view="hydration" id="nav-btn-hydration">
-        <i class="fa-solid fa-droplet"></i>
-        <span>Hydration</span>
-      </button>
+    <button class="nav-item" data-view="hydration" id="nav-btn-hydration" title="Hydration">
+      <i class="fa-solid fa-droplet"></i>
+      <span>Hydration</span>
+    </button>
 
-      <button class="nav-item" data-view="reminders" id="nav-btn-reminders">
-        <i class="fa-solid fa-bell"></i>
-        <span>Reminders</span>
-      </button>
+    <button class="nav-item" data-view="reminders" id="nav-btn-reminders" title="Reminders">
+      <i class="fa-solid fa-bell"></i>
+      <span>Reminders</span>
+    </button>
 
-      <button class="nav-item" data-view="siri" id="nav-btn-siri">
-        <i class="fa-solid fa-microphone-lines"></i>
-        <span>Siri</span>
-      </button>
+    <button class="nav-item" data-view="siri" id="nav-btn-siri" title="Siri Voice Assistant">
+      <i class="fa-solid fa-microphone-lines"></i>
+      <span>Siri</span>
+    </button>
 
-      <button class="nav-item" data-view="devices" id="nav-btn-devices">
-        <i class="fa-solid fa-mobile-screen-button"></i>
-        <span>Devices</span>
-      </button>
+    <button class="nav-item" data-view="devices" id="nav-btn-devices" title="Connected Devices">
+      <i class="fa-solid fa-mobile-screen-button"></i>
+      <span>Devices</span>
+    </button>
 
-      <button class="nav-item" data-view="settings" id="nav-btn-settings">
-        <i class="fa-solid fa-gear"></i>
-        <span>Settings</span>
-      </button>
-    </nav>
+    <button class="nav-item" data-view="settings" id="nav-btn-settings" title="Settings">
+      <i class="fa-solid fa-gear"></i>
+      <span>Settings</span>
+    </button>
+  </nav>
 
-    <!-- ================= MODALS ================= -->
+  <!-- ================= MODALS ================= -->
 
-    <!-- Modal 1: Add Task -->
-    <div class="modal-overlay" id="modal-task">
-      <div class="modal-sheet">
-        <div class="modal-handle"></div>
-        <h3 class="modal-title">New Task</h3>
-        <form id="form-add-task">
-          <div class="form-group">
-            <label class="form-label" for="task-title-input">Task Title *</label>
-            <input type="text" class="form-input" id="task-title-input" placeholder="e.g. Finish client presentation" required autofocus>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="task-category-select">Category</label>
-            <select class="form-select" id="task-category-select">
-              <option value="work">Work</option>
-              <option value="personal">Personal</option>
-              <option value="study">Study</option>
-              <option value="health">Health</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="task-priority-select">Priority</label>
-            <select class="form-select" id="task-priority-select">
-              <option value="medium">Medium Priority</option>
-              <option value="high">High Priority</option>
-              <option value="low">Low Priority</option>
-            </select>
-          </div>
-          <button type="submit" class="btn-primary" id="btn-save-task">Create Task</button>
-          <button type="button" class="btn-secondary modal-close-btn">Cancel</button>
-        </form>
-      </div>
+  <!-- Modal 1: Add Task -->
+  <div class="modal-overlay" id="modal-task">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 class="modal-title">New Task</h3>
+      <form id="form-add-task">
+        <div class="form-group">
+          <label class="form-label" for="task-title-input">Task Title *</label>
+          <input type="text" class="form-input" id="task-title-input" placeholder="e.g. Finish project UI design" required autofocus>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="task-category-select">Category</label>
+          <select class="form-select" id="task-category-select">
+            <option value="work">Work</option>
+            <option value="personal">Personal</option>
+            <option value="study">Study</option>
+            <option value="health">Health</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="task-priority-select">Priority</label>
+          <select class="form-select" id="task-priority-select">
+            <option value="medium">Medium Priority</option>
+            <option value="high">High Priority</option>
+            <option value="low">Low Priority</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" id="btn-save-task">Create Task</button>
+        <button type="button" class="btn-secondary modal-close-btn">Cancel</button>
+      </form>
     </div>
+  </div>
 
-    <!-- Modal 2: Add Reminder -->
-    <div class="modal-overlay" id="modal-reminder">
-      <div class="modal-sheet">
-        <div class="modal-handle"></div>
-        <h3 class="modal-title">New Reminder</h3>
-        <form id="form-add-reminder">
-          <div class="form-group">
-            <label class="form-label" for="reminder-title-input">Reminder Title *</label>
-            <input type="text" class="form-input" id="reminder-title-input" placeholder="e.g. Drink glass of water" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="reminder-time-input">Time</label>
-            <input type="time" class="form-input" id="reminder-time-input" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="reminder-recurring-select">Recurrence</label>
-            <select class="form-select" id="reminder-recurring-select">
-              <option value="daily">Daily</option>
-              <option value="weekly">Weekly</option>
-              <option value="once">Once</option>
-            </select>
-          </div>
-          <button type="submit" class="btn-primary" id="btn-save-reminder">Create Reminder</button>
-          <button type="button" class="btn-secondary modal-close-btn">Cancel</button>
-        </form>
-      </div>
+  <!-- Modal 2: Add Reminder -->
+  <div class="modal-overlay" id="modal-reminder">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 class="modal-title">New Reminder</h3>
+      <form id="form-add-reminder">
+        <div class="form-group">
+          <label class="form-label" for="reminder-title-input">Reminder Title *</label>
+          <input type="text" class="form-input" id="reminder-title-input" placeholder="e.g. Plan Tomorrow Priorities" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reminder-time-input">Time</label>
+          <input type="time" class="form-input" id="reminder-time-input" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reminder-recurring-select">Recurrence</label>
+          <select class="form-select" id="reminder-recurring-select">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="once">Once</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" id="btn-save-reminder">Create Reminder</button>
+        <button type="button" class="btn-secondary modal-close-btn">Cancel</button>
+      </form>
     </div>
+  </div>
 
-    <!-- Modal 3: Custom Water Intake -->
-    <div class="modal-overlay" id="modal-water">
-      <div class="modal-sheet">
-        <div class="modal-handle"></div>
-        <h3 class="modal-title">Custom Water Intake</h3>
-        <form id="form-custom-water">
-          <div class="form-group">
-            <label class="form-label" for="custom-water-amount">Amount (ml) *</label>
-            <input type="number" class="form-input" id="custom-water-amount" min="50" max="2500" step="50" value="350" required>
-          </div>
-          <button type="submit" class="btn-primary" id="btn-save-custom-water">Log Water</button>
-          <button type="button" class="btn-secondary modal-close-btn">Cancel</button>
-        </form>
-      </div>
+  <!-- Modal 3: Custom Water Intake -->
+  <div class="modal-overlay" id="modal-water">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 class="modal-title">Custom Water Intake</h3>
+      <form id="form-custom-water">
+        <div class="form-group">
+          <label class="form-label" for="custom-water-amount">Amount (ml) *</label>
+          <input type="number" class="form-input" id="custom-water-amount" min="50" max="2500" step="50" value="350" required>
+        </div>
+        <button type="submit" class="btn-primary" id="btn-save-custom-water">Log Water</button>
+        <button type="button" class="btn-secondary modal-close-btn">Cancel</button>
+      </form>
     </div>
+  </div>
 
-    <!-- Modal 4: Install PWA Guide (iPhone 16 Pro) -->
-    <div class="modal-overlay" id="modal-install">
-      <div class="modal-sheet">
-        <div class="modal-handle"></div>
-        <h3 class="modal-title">Install on iPhone (No Developer Mode)</h3>
-        <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px;">
-          <p style="margin-bottom: 10px;">
-            1. Open this link in <strong>Safari</strong> on your iPhone 16 Pro.
-          </p>
-          <p style="margin-bottom: 10px;">
-            2. Tap the <strong>Share</strong> button at the bottom of the screen (the square with an arrow pointing up 📤).
-          </p>
-          <p style="margin-bottom: 10px;">
-            3. Scroll down and tap <strong>"Add to Home Screen"</strong> (➕).
-          </p>
-          <p>
-            4. Tap <strong>Add</strong> in the top right corner.
-          </p>
-        </div>
-        <div class="glass-card" style="margin-bottom: 16px; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3);">
-          <p style="font-size: 13px; color: #34D399; font-weight: 600;">
-            ✅ Zero Developer Mode, zero reboot, zero cables! Opens full-screen with native haptics.
-          </p>
-        </div>
-        <button type="button" class="btn-primary modal-close-btn">Got It!</button>
+  <!-- Modal 4: Install PWA Guide (iPhone 16 Pro) -->
+  <div class="modal-overlay" id="modal-install">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 class="modal-title">Install on iPhone (No Developer Mode)</h3>
+      <div style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px;">
+        <p style="margin-bottom: 10px;">
+          1. Open this link in <strong>Safari</strong> on your iPhone 16 Pro.
+        </p>
+        <p style="margin-bottom: 10px;">
+          2. Tap the <strong>Share</strong> button at the bottom of the screen (the square with an arrow pointing up 📤).
+        </p>
+        <p style="margin-bottom: 10px;">
+          3. Scroll down and tap <strong>"Add to Home Screen"</strong> (➕).
+        </p>
+        <p>
+          4. Tap <strong>Add</strong> in the top right corner.
+        </p>
       </div>
-    </div>
-    <!-- Modal 5: Authentication (Sign In & Sign Up) -->
-    <div class="modal-overlay" id="modal-auth">
-      <div class="modal-sheet auth-modal-sheet">
-        <div class="modal-handle"></div>
-        
-        <div class="auth-header-wrapper">
-          <div class="auth-header-badge">
-            <span id="auth-header-icon">✨</span>
-          </div>
-          <h3 class="auth-main-title" id="auth-modal-title">Welcome to Luphonix</h3>
-          <p class="auth-subtitle" id="auth-modal-subtitle">Sync your tasks, hydration, and Siri voice shortcuts across all devices.</p>
-        </div>
-
-        <!-- iOS Segmented Control Tabs -->
-        <div class="auth-segmented-control">
-          <button type="button" class="auth-segment-btn active" id="tab-btn-login">
-            <span>Sign In</span>
-          </button>
-          <button type="button" class="auth-segment-btn" id="tab-btn-signup">
-            <span>Create Account</span>
-          </button>
-        </div>
-
-        <!-- Error Feedback Banner -->
-        <div id="auth-error-msg" class="auth-error-banner" style="display: none;">
-          <i class="fa-solid fa-circle-exclamation" style="margin-right: 6px;"></i>
-          <span id="auth-error-text">Authentication failed</span>
-        </div>
-
-        <!-- Form: Sign In -->
-        <form id="form-auth-login">
-          <div class="form-group">
-            <label class="form-label" for="login-email">
-              <span>Email Address</span>
-            </label>
-            <div class="input-icon-wrapper">
-              <span class="input-leading-icon"><i class="fa-solid fa-envelope"></i></span>
-              <input type="email" class="form-input with-icon" id="login-email" placeholder="name@example.com" required autocomplete="email">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="login-password">
-              <span>Password</span>
-            </label>
-            <div class="input-icon-wrapper">
-              <span class="input-leading-icon"><i class="fa-solid fa-lock"></i></span>
-              <input type="password" class="form-input with-icon with-trailing" id="login-password" placeholder="••••••••" required autocomplete="current-password">
-              <button type="button" class="pwd-toggle-btn" data-target="login-password" aria-label="Toggle password visibility"><i class="fa-regular fa-eye"></i></button>
-            </div>
-          </div>
-          <button type="submit" class="btn-primary auth-submit-btn" id="btn-submit-login">
-            <span class="btn-text">Sign In to Luphonix</span>
-            <span class="btn-spinner hidden"></span>
-          </button>
-          <div class="auth-switch-footer">
-            Don't have an account? <a href="#" id="link-switch-to-signup" class="auth-switch-link">Create one free →</a>
-          </div>
-          <button type="button" class="btn-ghost-cancel modal-close-btn">Continue as Guest</button>
-        </form>
-
-        <!-- Form: Create Account -->
-        <form id="form-auth-signup" style="display: none;">
-          <div class="form-group">
-            <label class="form-label" for="signup-name">
-              <span>Your Full Name</span>
-            </label>
-            <div class="input-icon-wrapper">
-              <span class="input-leading-icon"><i class="fa-solid fa-user"></i></span>
-              <input type="text" class="form-input with-icon" id="signup-name" placeholder="Dhyey Khanpara" required autocomplete="name">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-email">
-              <span>Email Address</span>
-            </label>
-            <div class="input-icon-wrapper">
-              <span class="input-leading-icon"><i class="fa-solid fa-envelope"></i></span>
-              <input type="email" class="form-input with-icon" id="signup-email" placeholder="name@example.com" required autocomplete="email">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="signup-password">
-              <span>Password (min. 6 characters)</span>
-            </label>
-            <div class="input-icon-wrapper">
-              <span class="input-leading-icon"><i class="fa-solid fa-lock"></i></span>
-              <input type="password" class="form-input with-icon with-trailing" id="signup-password" minlength="6" placeholder="••••••••" required autocomplete="new-password">
-              <button type="button" class="pwd-toggle-btn" data-target="signup-password" aria-label="Toggle password visibility"><i class="fa-regular fa-eye"></i></button>
-            </div>
-          </div>
-          <button type="submit" class="btn-primary auth-submit-btn" id="btn-submit-signup">
-            <span class="btn-text">Create My Account</span>
-            <span class="btn-spinner hidden"></span>
-          </button>
-          <div class="auth-switch-footer">
-            Already have an account? <a href="#" id="link-switch-to-login" class="auth-switch-link">Sign In instead →</a>
-          </div>
-          <button type="button" class="btn-ghost-cancel modal-close-btn">Cancel</button>
-        </form>
+      <div class="glass-card" style="margin-bottom: 16px; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3);">
+        <p style="font-size: 13px; color: #34D399; font-weight: 600;">
+          ✅ Zero Developer Mode, zero reboot, zero cables! Opens full-screen with native haptics.
+        </p>
       </div>
+      <button type="button" class="btn-primary modal-close-btn">Got It!</button>
     </div>
+  </div>
 
-    <!-- Modal 6: User Profile & Session -->
-    <div class="modal-overlay" id="modal-account">
-      <div class="modal-sheet auth-modal-sheet">
-        <div class="modal-handle"></div>
-        <div class="auth-header-wrapper" style="margin-bottom: 14px;">
-          <div class="auth-header-badge" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%); border-color: rgba(16, 185, 129, 0.4);">
-            <span id="account-avatar-char" style="font-size: 22px; font-weight: 800; color: #34D399;">D</span>
-          </div>
-          <h3 class="auth-main-title" id="account-name-val">Luphonix User</h3>
-          <p class="auth-subtitle" id="account-email-val">user@luphonix.local</p>
+  <!-- Modal 5: Authentication (Sign In & Sign Up) -->
+  <div class="modal-overlay" id="modal-auth">
+    <div class="modal-sheet auth-modal-sheet">
+      <div class="modal-handle"></div>
+      
+      <div class="auth-header-wrapper">
+        <div class="auth-header-badge">
+          <span id="auth-header-icon">✨</span>
         </div>
+        <h3 class="auth-main-title" id="auth-modal-title">Welcome to Luphonix</h3>
+        <p class="auth-subtitle" id="auth-modal-subtitle">Sync your tasks, hydration, and Siri voice shortcuts across all devices.</p>
+      </div>
 
-        <div class="glass-card" style="margin-bottom: 16px; background: rgba(15, 23, 42, 0.6); border-color: rgba(255, 255, 255, 0.08);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Cloud Synchronization</span>
-            <span class="ring-percentage-pill" style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3);">
-              ● Active (Turso DB)
-            </span>
-          </div>
-          <div style="font-size: 11px; color: var(--text-sub); border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; display: flex; justify-content: space-between;">
-            <span>Account ID:</span>
-            <span id="account-id-val" style="font-family: monospace; color: #94A3B8;">default</span>
-          </div>
-        </div>
-
-        <button type="button" class="btn-secondary" id="btn-logout" style="width: 100%; height: 44px; border-radius: 14px; color: #FB7185; border-color: rgba(251, 113, 133, 0.35); background: rgba(251, 113, 133, 0.08); font-weight: 700; font-size: 14px; margin-bottom: 8px; cursor: pointer;">
-          Sign Out of Account
+      <!-- iOS Segmented Control Tabs -->
+      <div class="auth-segmented-control">
+        <button type="button" class="auth-segment-btn active" id="tab-btn-login">
+          <span>Sign In</span>
         </button>
-        <button type="button" class="btn-ghost-cancel modal-close-btn">Close</button>
+        <button type="button" class="auth-segment-btn" id="tab-btn-signup">
+          <span>Create Account</span>
+        </button>
       </div>
+
+      <!-- Error Feedback Banner -->
+      <div id="auth-error-msg" class="auth-error-banner" style="display: none;">
+        <i class="fa-solid fa-circle-exclamation" style="margin-right: 6px;"></i>
+        <span id="auth-error-text">Authentication failed</span>
+      </div>
+
+      <!-- Form: Sign In -->
+      <form id="form-auth-login">
+        <div class="form-group">
+          <label class="form-label" for="login-email">
+            <span>Email Address</span>
+          </label>
+          <div class="input-icon-wrapper">
+            <span class="input-leading-icon"><i class="fa-solid fa-envelope"></i></span>
+            <input type="email" class="form-input with-icon" id="login-email" placeholder="name@example.com" required autocomplete="email">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">
+            <span>Password</span>
+          </label>
+          <div class="input-icon-wrapper">
+            <span class="input-leading-icon"><i class="fa-solid fa-lock"></i></span>
+            <input type="password" class="form-input with-icon with-trailing" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="pwd-toggle-btn" data-target="login-password" aria-label="Toggle password visibility"><i class="fa-regular fa-eye"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary auth-submit-btn" id="btn-submit-login">
+          <span class="btn-text">Sign In to Luphonix</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+        <div class="auth-switch-footer">
+          Don't have an account? <a href="#" id="link-switch-to-signup" class="auth-switch-link">Create one free →</a>
+        </div>
+        <button type="button" class="btn-ghost-cancel modal-close-btn">Continue as Guest</button>
+      </form>
+
+      <!-- Form: Create Account -->
+      <form id="form-auth-signup" style="display: none;">
+        <div class="form-group">
+          <label class="form-label" for="signup-name">
+            <span>Your Full Name</span>
+          </label>
+          <div class="input-icon-wrapper">
+            <span class="input-leading-icon"><i class="fa-solid fa-user"></i></span>
+            <input type="text" class="form-input with-icon" id="signup-name" placeholder="Dhyey" required autocomplete="name">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signup-email">
+            <span>Email Address</span>
+          </label>
+          <div class="input-icon-wrapper">
+            <span class="input-leading-icon"><i class="fa-solid fa-envelope"></i></span>
+            <input type="email" class="form-input with-icon" id="signup-email" placeholder="name@example.com" required autocomplete="email">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signup-password">
+            <span>Password (min. 6 characters)</span>
+          </label>
+          <div class="input-icon-wrapper">
+            <span class="input-leading-icon"><i class="fa-solid fa-lock"></i></span>
+            <input type="password" class="form-input with-icon with-trailing" id="signup-password" minlength="6" placeholder="••••••••" required autocomplete="new-password">
+            <button type="button" class="pwd-toggle-btn" data-target="signup-password" aria-label="Toggle password visibility"><i class="fa-regular fa-eye"></i></button>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary auth-submit-btn" id="btn-submit-signup">
+          <span class="btn-text">Create My Account</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+        <div class="auth-switch-footer">
+          Already have an account? <a href="#" id="link-switch-to-login" class="auth-switch-link">Sign In instead →</a>
+        </div>
+        <button type="button" class="btn-ghost-cancel modal-close-btn">Cancel</button>
+      </form>
     </div>
+  </div>
 
-    <!-- Toast Notification Container -->
-    <div id="toast-container"></div>
+  <!-- Modal 6: User Profile & Session -->
+  <div class="modal-overlay" id="modal-account">
+    <div class="modal-sheet auth-modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="auth-header-wrapper" style="margin-bottom: 14px;">
+        <div class="auth-header-badge" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(0, 210, 255, 0.2) 100%); border-color: rgba(0, 210, 255, 0.4);">
+          <span id="account-avatar-char" style="font-size: 22px; font-weight: 800; color: #00D2FF;">D</span>
+        </div>
+        <h3 class="auth-main-title" id="account-name-val">Dhyey</h3>
+        <p class="auth-subtitle" id="account-email-val">dhyey@luphonix.local</p>
+      </div>
 
-    <!-- Main JavaScript Logic -->
-    <script src="/app.js?v=4.0"></script>
-  </body>
-  </html>
+      <div class="glass-card" style="margin-bottom: 16px; background: rgba(15, 23, 42, 0.6); border-color: rgba(255, 255, 255, 0.08);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Cloud Synchronization</span>
+          <span class="ring-percentage-pill" style="font-size: 11px; background: rgba(16, 185, 129, 0.15); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.3);">
+            ● Active (Turso DB)
+          </span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-sub); border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; display: flex; justify-content: space-between;">
+          <span>Account ID:</span>
+          <span id="account-id-val" style="font-family: monospace; color: #94A3B8;">dhyey</span>
+        </div>
+      </div>
+
+      <button type="button" class="btn-secondary" id="btn-logout" style="width: 100%; height: 44px; border-radius: 14px; color: #FB7185; border-color: rgba(251, 113, 133, 0.35); background: rgba(251, 113, 133, 0.08); font-weight: 700; font-size: 14px; margin-bottom: 8px; cursor: pointer;">
+        Sign Out of Account
+      </button>
+      <button type="button" class="btn-ghost-cancel modal-close-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Main JavaScript Logic -->
+  <script src="/app.js?v=5.0"></script>
+</body>
+</html>

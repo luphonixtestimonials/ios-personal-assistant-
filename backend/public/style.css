@@ -211,6 +211,47 @@ header.app-header {
   white-space: nowrap;
 }
 
+.header-left-user {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-greeting-sub {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #9497B0;
+  letter-spacing: 0.2px;
+  line-height: 1.2;
+}
+
+.user-greeting-name {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.notification-bell-btn {
+  position: relative;
+}
+
+.notification-indicator-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #00D2FF;
+  box-shadow: 0 0 8px #00D2FF;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
@@ -1758,4 +1799,646 @@ nav.app-navbar {
   border: 1px solid rgba(16, 185, 129, 0.35);
   color: #A7F3D0;
 }
+
+/* ==========================================================================
+   MOCKUP DESIGN SYSTEM COMPONENTS (7-SCREEN FIDELITY & BLUE PALETTE)
+   ========================================================================== */
+
+/* 1. Motivational Quote Banner */
+.quote-banner-card {
+  background: rgba(18, 22, 38, 0.65);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.quote-banner-card:hover {
+  border-color: rgba(0, 210, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.quote-quote-icon {
+  color: #00D2FF;
+  font-size: 15px;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.quote-text-p {
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 500;
+  color: #E2E8F0;
+  line-height: 1.4;
+  margin: 0;
+  flex: 1;
+}
+
+.quote-rotator-line {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: linear-gradient(90deg, #0284C7, #00D2FF, #0EA5E9);
+  opacity: 0.8;
+}
+
+/* 2. Today's Water Hero Card with Mountain Silhouette */
+.today-water-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(160deg, #091326 0%, #060c1a 60%, #050811 100%) !important;
+  border: 1px solid rgba(0, 210, 255, 0.35) !important;
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 210, 255, 0.2) !important;
+}
+
+.card-ambient-backdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.mountain-silhouette-svg {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.65;
+}
+
+.today-water-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.card-water-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.water-header-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 700;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+}
+
+.btn-keep-going-pill {
+  background: linear-gradient(135deg, #0284C7 0%, #0EA5E9 50%, #00D2FF 100%);
+  border: none;
+  border-radius: 20px;
+  color: #FFFFFF;
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 210, 255, 0.45);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-keep-going-pill:hover {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 14px rgba(0, 210, 255, 0.65);
+}
+
+.btn-keep-going-pill:active {
+  transform: scale(0.96);
+}
+
+/* 3. 4-Button Quick Action Grid (Screen 1) */
+.quick-actions-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.qa-item-btn {
+  background: transparent;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.qa-icon-box {
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.qa-icon-box.blue {
+  background: rgba(14, 165, 233, 0.16);
+  color: #38BDF8;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 16px rgba(14, 165, 233, 0.2);
+}
+
+.qa-icon-box.cyan {
+  background: rgba(0, 210, 255, 0.16);
+  color: #00D2FF;
+  border: 1px solid rgba(0, 210, 255, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 16px rgba(0, 210, 255, 0.25);
+}
+
+.qa-icon-box.amber {
+  background: rgba(245, 158, 11, 0.16);
+  color: #FBBF24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4), 0 0 16px rgba(245, 158, 11, 0.2);
+}
+
+.qa-item-btn:hover .qa-icon-box {
+  transform: translateY(-3px) scale(1.05);
+  filter: brightness(1.15);
+}
+
+.qa-item-btn:active .qa-icon-box {
+  transform: scale(0.93);
+}
+
+.qa-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #CBD5E1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 4. Screen Header Bar with Back Arrow */
+.view-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  min-height: 40px;
+}
+
+.view-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.view-back-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-glass);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+.view-back-btn:hover {
+  background: rgba(0, 210, 255, 0.15);
+  color: #00D2FF;
+  border-color: rgba(0, 210, 255, 0.35);
+}
+
+.view-back-btn:active {
+  transform: scale(0.92);
+}
+
+.view-screen-title {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #FFFFFF;
+}
+
+.view-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 5. Search Bar Wrapper */
+.search-input-wrapper {
+  position: relative;
+  margin-bottom: 14px;
+  width: 100%;
+}
+
+.search-leading-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748B;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.form-input.search-input {
+  padding-left: 40px !important;
+  border-radius: 16px;
+  background: rgba(14, 18, 30, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 14px;
+}
+
+/* 6. Interactive iOS Toggle Switch (Screen 4) */
+.ios-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 26px;
+  flex-shrink: 0;
+}
+
+.ios-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.ios-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.15);
+  transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ios-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 2px;
+  bottom: 2px;
+  background-color: #FFFFFF;
+  transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.ios-switch input:checked + .ios-slider {
+  background: linear-gradient(135deg, #0284C7 0%, #00D2FF 100%);
+  border-color: rgba(0, 210, 255, 0.5);
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.55);
+}
+
+.ios-switch input:checked + .ios-slider:before {
+  transform: translateX(18px);
+}
+
+/* 7. Siri Voice Assistant Screen 5 Styles */
+.siri-orb-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.siri-orb {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #00D2FF 0%, #0EA5E9 40%, #0284C7 80%, #08162e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 26px;
+  box-shadow: 0 0 35px rgba(0, 210, 255, 0.75), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  animation: siriPulse 3s ease-in-out infinite;
+}
+
+@keyframes siriPulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 25px rgba(0, 210, 255, 0.65); }
+  50% { transform: scale(1.08); box-shadow: 0 0 45px rgba(0, 210, 255, 0.95); }
+}
+
+.siri-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.siri-action-row {
+  background: rgba(18, 22, 36, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: #FFFFFF;
+  text-align: left;
+  width: 100%;
+}
+
+.siri-action-row:hover {
+  background: rgba(28, 34, 54, 0.92);
+  border-color: rgba(0, 210, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.siri-action-row:active {
+  transform: scale(0.98);
+}
+
+.siri-act-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.siri-act-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.siri-act-icon.blue {
+  background: rgba(14, 165, 233, 0.2);
+  color: #38BDF8;
+}
+
+.siri-act-icon.cyan {
+  background: rgba(0, 210, 255, 0.2);
+  color: #00D2FF;
+}
+
+.siri-act-icon.emerald {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+}
+
+.siri-act-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.siri-act-chevron {
+  color: #64748B;
+  font-size: 13px;
+}
+
+.popular-commands-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.popular-cmd-bubble {
+  background: rgba(15, 20, 32, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #BAE6FD;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.popular-cmd-bubble:hover {
+  border-color: rgba(0, 210, 255, 0.45);
+  background: rgba(22, 30, 48, 0.85);
+  transform: translateX(3px);
+}
+
+.popular-cmd-bubble:active {
+  transform: scale(0.98);
+}
+
+.cmd-quote-icon {
+  color: #00D2FF;
+  font-weight: 800;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.cmd-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.cmd-trailing-icon {
+  font-size: 15px;
+}
+
+/* 8. Screen 7 iOS Grouped Menu Layout */
+.ios-grouped-list {
+  background: rgba(18, 22, 36, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
+.ios-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.ios-list-item:last-child {
+  border-bottom: none;
+}
+
+.ios-list-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.ios-list-item:active {
+  background: rgba(0, 210, 255, 0.08);
+}
+
+.ios-item-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.ios-item-icon.blue {
+  background: rgba(14, 165, 233, 0.2);
+  color: #38BDF8;
+}
+
+.ios-item-icon.cyan {
+  background: rgba(0, 210, 255, 0.2);
+  color: #00D2FF;
+}
+
+.ios-item-icon.amber {
+  background: rgba(245, 158, 11, 0.2);
+  color: #FBBF24;
+}
+
+.ios-item-icon.emerald {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34D399;
+}
+
+.ios-item-icon.rose {
+  background: rgba(244, 63, 94, 0.2);
+  color: #FB7185;
+}
+
+.ios-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ios-item-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.ios-item-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ios-item-arrow {
+  color: #64748B;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.setting-expand-card {
+  display: block;
+  margin-bottom: 12px;
+  animation: fadeInView 0.25s ease;
+}
+
+/* 9. Global Floating Action Button (FAB) */
+.global-fab-btn {
+  position: fixed !important;
+  bottom: calc(var(--safe-bottom) + 84px) !important;
+  right: max(calc((100vw - 480px) / 2 + 18px), 18px) !important;
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 50% !important;
+  background: linear-gradient(135deg, #00D2FF 0%, #0EA5E9 50%, #0284C7 100%) !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  font-size: 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 8px 25px rgba(0, 210, 255, 0.55), 0 0 15px rgba(0, 210, 255, 0.35) !important;
+  cursor: pointer !important;
+  z-index: 999 !important;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease !important;
+}
+
+.global-fab-btn:hover {
+  transform: scale(1.08) !important;
+  box-shadow: 0 12px 32px rgba(0, 210, 255, 0.75) !important;
+}
+
+.global-fab-btn:active {
+  transform: scale(0.92) !important;
+}
+
+/* 10. Reminder Item with Squircle Icon & iOS Switch */
+.reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(18, 22, 36, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 6px 20px -4px rgba(0, 0, 0, 0.4);
+  transition: all 0.25s ease;
+}
+
+.reminder-item:hover {
+  background: rgba(28, 34, 54, 0.88);
+  border-color: rgba(0, 210, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.reminder-icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  background: rgba(0, 210, 255, 0.12);
+  color: #00D2FF;
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  flex-shrink: 0;
+}
+
 

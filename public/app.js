@@ -15,14 +15,16 @@
   const STORAGE_KEY_AUTH_TOKEN = 'luphonix_auth_token_v1';
   const STORAGE_KEY_AUTH_USER = 'luphonix_auth_user_v1';
 
-  // Default sample data for instant wow effect on first open
+  // Default sample data for instant wow effect matching mockup
   const DEFAULT_TASKS = [
-    { id: '1', title: 'Review Luphonix project architecture', category: 'work', priority: 'high', is_completed: true, created_at: new Date().toISOString() },
-    { id: '2', title: 'Drink 500ml fresh water with electrolytes', category: 'health', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
-    { id: '3', title: 'Sync tasks with iPhone Siri shortcuts', category: 'study', priority: 'high', is_completed: false, created_at: new Date().toISOString() },
-    { id: '4', title: 'Evening meditation or 20-min brisk walk', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() }
+    { id: '1', title: 'Luphonix or...', category: 'work', priority: 'medium', is_completed: true, created_at: new Date().toISOString() },
+    { id: '2', title: 'Make Keval wish per', category: 'work', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
+    { id: '3', title: 'Complete project UI', category: 'work', priority: 'high', is_completed: false, created_at: new Date().toISOString() },
+    { id: '4', title: 'Read 10 pages', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() },
+    { id: '5', title: 'Gym Exercise', category: 'health', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
+    { id: '6', title: 'Plan tomorrow', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() }
   ];
-  const SAMPLE_TASK_IDS = new Set(['1', '2', '3', '4']);
+  const SAMPLE_TASK_IDS = new Set(['1', '2', '3', '4', '5', '6']);
 
   const DEFAULT_WATER = [
     { id: 'w1', amount_ml: 250, timestamp: new Date(Date.now() - 4 * 3600000).toISOString() },
@@ -31,7 +33,9 @@
 
   const DEFAULT_REMINDERS = [
     { id: 'r1', title: 'Hydration Check-in', time: '14:00', recurrence: 'daily', is_enabled: true },
-    { id: 'r2', title: 'Plan Tomorrow Priorities', time: '20:30', recurrence: 'daily', is_enabled: true }
+    { id: 'r2', title: 'Plan Tomorrow Priorities', time: '20:30', recurrence: 'daily', is_enabled: true },
+    { id: 'r3', title: 'Take Medicine', time: '09:00', recurrence: 'health', is_enabled: false },
+    { id: 'r4', title: 'Study Session', time: '18:00', recurrence: 'study', is_enabled: true }
   ];
 
   const DEFAULT_PREFS = {
@@ -60,6 +64,7 @@
     token: loadStorage(STORAGE_KEY_AUTH_TOKEN, null),
     user: loadStorage(STORAGE_KEY_AUTH_USER, null),
     currentFilter: 'all',
+    currentRemFilter: 'all',
     currentReqFilter: 'all',
     searchQuery: '',
     activeView: 'dashboard',
@@ -176,7 +181,9 @@
     else if (hour >= 22 || hour < 5) timeText = 'Good Night';
 
     timeEl.textContent = timeText;
-    titleEl.textContent = hour < 12 ? 'Start Your Day Strong' : 'Today at a Glance';
+    const userName = (state.user && state.user.name) ? state.user.name.split(' ')[0] : 'Dhyey';
+    const emoji = hour < 12 ? '🌤️' : hour < 18 ? '☀️' : '🌙';
+    titleEl.innerHTML = `${escapeHTML(userName)} <span class="greeting-emoji">${emoji}</span>`;
   }
 
   // --- Hydration Calculation & Ring Animation ---
@@ -392,7 +399,7 @@
             <span class="category-tag">${categoryName}</span>
           </div>
         </div>
-        <button class="task-delete-btn" data-delete-task="${task.id}" title="Delete task"><i class="fa-solid fa-xmark" style="font-size: 12px;"></i></button>
+        <button class="task-delete-btn" data-delete-task="${task.id}" title="Task menu / delete"><i class="fa-solid fa-ellipsis-vertical" style="font-size: 14px;"></i></button>
       </div>
     `;
   }
@@ -474,29 +481,54 @@
     const container = document.getElementById('reminders-full-list');
     if (!container) return;
 
-    if (state.reminders.length === 0) {
+    let filtered = [...state.reminders];
+    if (state.currentRemFilter === 'today') {
+      filtered = filtered.filter((r) => r.is_enabled);
+    } else if (state.currentRemFilter === 'upcoming') {
+      filtered = filtered.filter((r) => r.is_enabled);
+    } else if (state.currentRemFilter === 'completed') {
+      filtered = filtered.filter((r) => !r.is_enabled);
+    }
+
+    if (filtered.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
           <div class="empty-state-icon">🔔</div>
-          <p>No reminders scheduled. Tap + to set one!</p>
+          <p>No reminders found. Tap + to set one!</p>
         </div>
       `;
       return;
     }
 
-    container.innerHTML = state.reminders
+    container.innerHTML = filtered
       .map((r) => {
+        let icon = '<i class="fa-solid fa-bell"></i>';
+        const tLower = r.title.toLowerCase();
+        if (tLower.includes('water') || tLower.includes('hydrat')) {
+          icon = '<i class="fa-solid fa-droplet" style="color: #00D2FF;"></i>';
+        } else if (tLower.includes('medicine') || tLower.includes('pill') || tLower.includes('health')) {
+          icon = '<i class="fa-solid fa-capsules" style="color: #F43F5E;"></i>';
+        } else if (tLower.includes('study') || tLower.includes('read') || tLower.includes('book')) {
+          icon = '<i class="fa-solid fa-book-open" style="color: #38BDF8;"></i>';
+        } else if (tLower.includes('priority') || tLower.includes('plan')) {
+          icon = '<i class="fa-regular fa-clock" style="color: #F59E0B;"></i>';
+        }
+
         return `
-        <div class="task-item">
-          <span style="font-size: 22px;">⏰</span>
+        <div class="reminder-item" data-reminder-id="${r.id}">
+          <div class="reminder-icon-box">${icon}</div>
           <div class="task-content">
             <div class="task-title" style="text-decoration: none; color: #FFFFFF;">${escapeHTML(r.title)}</div>
             <div class="task-meta">
               <span class="priority-tag low">${r.time}</span>
-              <span class="category-tag">${(r.recurrence || 'ONCE').toUpperCase()}</span>
+              <span class="category-tag">${(r.recurrence || 'DAILY').toUpperCase()}</span>
             </div>
           </div>
-          <button class="task-delete-btn" data-delete-reminder="${r.id}" title="Delete reminder">✕</button>
+          <label class="ios-switch" title="Toggle reminder on/off">
+            <input type="checkbox" class="reminder-toggle-switch" data-reminder-id="${r.id}" ${r.is_enabled ? 'checked' : ''}>
+            <span class="ios-slider"></span>
+          </label>
+          <button class="task-delete-btn" data-delete-reminder="${r.id}" title="Delete reminder" style="margin-left: 6px;"><i class="fa-solid fa-xmark" style="font-size: 13px;"></i></button>
         </div>
       `;
       })
@@ -1394,6 +1426,180 @@
         }
       });
     }
+
+    // Back Button on all sub-screens
+    document.querySelectorAll('.view-back-btn').forEach((btn) => {
+      btn.addEventListener('click', () => switchView('dashboard'));
+    });
+
+    // Motivational Quote Banner Rotator
+    const MOTIVATIONAL_QUOTES = [
+      'Stay consistent, your future self will thank you.',
+      'Small habits, big changes.',
+      'Stay consistent, progress takes time but it is always worth it.',
+      'Discipline is choosing between what you want now and what you want most.',
+      'Every healthy choice counts towards your highest potential.'
+    ];
+    let quoteIdx = 0;
+    const quoteBanner = document.getElementById('quote-banner');
+    const quoteTextEl = document.getElementById('quote-text');
+    if (quoteBanner && quoteTextEl) {
+      const cycleQuote = () => {
+        quoteIdx = (quoteIdx + 1) % MOTIVATIONAL_QUOTES.length;
+        quoteTextEl.style.opacity = '0';
+        setTimeout(() => {
+          quoteTextEl.textContent = MOTIVATIONAL_QUOTES[quoteIdx];
+          quoteTextEl.style.opacity = '1';
+        }, 220);
+      };
+      quoteBanner.addEventListener('click', cycleQuote);
+      setInterval(cycleQuote, 8500);
+    }
+
+    // Keep Going Button inside Today's Water card
+    const btnKeepGoing = document.getElementById('btn-keep-going');
+    if (btnKeepGoing) {
+      btnKeepGoing.addEventListener('click', () => {
+        logWater(250);
+      });
+    }
+
+    // 4 Squircle Quick Action Buttons (Dashboard Screen 1)
+    const qaWater = document.getElementById('btn-qa-water');
+    if (qaWater) qaWater.addEventListener('click', () => openModal('modal-water'));
+
+    const qaTask = document.getElementById('btn-qa-task');
+    if (qaTask) qaTask.addEventListener('click', () => openModal('modal-task'));
+
+    const qaSiri = document.getElementById('btn-qa-siri');
+    if (qaSiri) qaSiri.addEventListener('click', () => switchView('siri'));
+
+    const qaNote = document.getElementById('btn-qa-note');
+    if (qaNote) qaNote.addEventListener('click', () => openModal('modal-reminder'));
+
+    // Global Floating Action Button (FAB)
+    const globalFab = document.getElementById('btn-global-fab');
+    if (globalFab) {
+      globalFab.addEventListener('click', () => {
+        if (state.activeView === 'reminders') openModal('modal-reminder');
+        else if (state.activeView === 'hydration') openModal('modal-water');
+        else openModal('modal-task');
+      });
+    }
+
+    // Notification Bell Button
+    const headerBell = document.getElementById('btn-header-bell');
+    if (headerBell) {
+      headerBell.addEventListener('click', () => {
+        playSound('check');
+        showToast('All notifications & habit schedules are active! 🔔', 'info');
+      });
+    }
+
+    // Reminders Filter Pills Bar
+    const remFilterBar = document.getElementById('reminders-filter-bar');
+    if (remFilterBar) {
+      remFilterBar.querySelectorAll('.filter-pill').forEach((pill) => {
+        pill.addEventListener('click', () => {
+          remFilterBar.querySelectorAll('.filter-pill').forEach((p) => p.classList.remove('active'));
+          pill.classList.add('active');
+          state.currentRemFilter = pill.dataset.remFilter || 'all';
+          renderReminders();
+        });
+      });
+    }
+
+    // Interactive iOS Switch Toggle for Reminders
+    document.addEventListener('change', (e) => {
+      if (e.target && e.target.classList.contains('reminder-toggle-switch')) {
+        const remId = e.target.dataset.reminderId;
+        const rem = state.reminders.find((r) => r.id === remId);
+        if (rem) {
+          rem.is_enabled = e.target.checked;
+          saveStorage(STORAGE_KEY_REMINDERS, state.reminders);
+          playSound(rem.is_enabled ? 'check' : 'click');
+          showToast(rem.is_enabled ? `Reminder "${rem.title}" active` : `Reminder "${rem.title}" paused`, 'info');
+        }
+      }
+    });
+
+    // Siri 3 Action Buttons (Screen 5)
+    const btnSiriView = document.getElementById('btn-siri-action-view');
+    if (btnSiriView) {
+      btnSiriView.addEventListener('click', () => {
+        document.querySelector('.siri-shortcut-card')?.scrollIntoView({ behavior: 'smooth' });
+      });
+    }
+
+    const btnSiriCopy = document.getElementById('btn-siri-action-copy');
+    if (btnSiriCopy) {
+      btnSiriCopy.addEventListener('click', async () => {
+        const base = getBackendBaseUrl();
+        const key = await ensureApiKey();
+        const url = `${base}/api/water/add?apiKey=${encodeURIComponent(key)}&amount=250`;
+        navigator.clipboard.writeText(url).then(() => {
+          showToast('Siri API Webhook URL copied! 📋', 'success');
+        }).catch(() => {
+          showToast('Webhook: ' + url, 'info');
+        });
+      });
+    }
+
+    const btnSiriTest = document.getElementById('btn-siri-action-test');
+    if (btnSiriTest) {
+      btnSiriTest.addEventListener('click', () => {
+        playSound('water');
+        showToast('🎙️ Siri Voice Simulation: "Logged 250ml water in Luphonix!"', 'water');
+        logWater(250);
+      });
+    }
+
+    const btnSiriHelp = document.getElementById('btn-siri-help');
+    if (btnSiriHelp) {
+      btnSiriHelp.addEventListener('click', () => openModal('modal-install'));
+    }
+
+    // Popular Voice Command Pills (Screen 5)
+    document.querySelectorAll('.popular-cmd-bubble').forEach((pill) => {
+      pill.addEventListener('click', () => {
+        const id = pill.id;
+        if (id === 'pill-cmd-water') {
+          logWater(250);
+        } else if (id === 'pill-cmd-tasks') {
+          switchView('tasks');
+          showToast('Siri: "Here are your tasks for today"', 'info');
+        } else if (id === 'pill-cmd-complete') {
+          const firstUncompleted = state.tasks.find((t) => !t.is_completed);
+          if (firstUncompleted) {
+            toggleTask(firstUncompleted.id);
+          } else {
+            showToast('All tasks are already completed!', 'success');
+          }
+        } else if (id === 'pill-cmd-progress') {
+          switchView('dashboard');
+          showToast('Siri: "Showing your today\'s progress"', 'info');
+        } else if (id === 'pill-cmd-add') {
+          openModal('modal-task');
+        }
+      });
+    });
+
+    // Settings iOS Grouped Menu Item Accordion
+    document.querySelectorAll('.ios-list-item[data-accordion]').forEach((item) => {
+      item.addEventListener('click', () => {
+        const targetId = item.dataset.accordion;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          targetEl.style.borderColor = 'rgba(0, 210, 255, 0.8)';
+          targetEl.style.boxShadow = '0 0 25px rgba(0, 210, 255, 0.4)';
+          setTimeout(() => {
+            targetEl.style.borderColor = '';
+            targetEl.style.boxShadow = '';
+          }, 1500);
+        }
+      });
+    });
 
     // Settings View Triggers
     const linkViewAllTasks = document.getElementById('link-view-all-tasks');
