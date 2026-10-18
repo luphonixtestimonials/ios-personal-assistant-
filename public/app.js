@@ -1594,6 +1594,10 @@
           switchView(view);
         } else if (action === 'quick-add') {
           openModal('modal-task');
+        } else if (action === 'friends') {
+          renderFriendsList();
+          openModal('modal-friends');
+          fetchFriendsFromCloud();
         }
       });
     });
