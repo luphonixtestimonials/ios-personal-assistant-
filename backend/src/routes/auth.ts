@@ -67,13 +67,14 @@ authApp.post('/webhook-key', async (c) => {
 
 const registerSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100),
+  username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores').optional(),
   email: z.string().email('Invalid email address').toLowerCase(),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   timezone: z.string().optional().default('UTC'),
 });
 
 const loginSchema = z.object({
-  email: z.string().email().toLowerCase(),
+  email: z.string().min(1, 'Email or username required').toLowerCase(),
   password: z.string().min(1),
 });
 
@@ -103,7 +104,7 @@ authApp.post('/register', async (c) => {
 
   const { name, email, password, timezone } = parsed.data;
 
-  // Check if user already exists
+  // Check if email already exists
   const existing = await db.execute({
     sql: 'SELECT id FROM users WHERE email = ?',
     args: [email],
@@ -113,6 +114,27 @@ authApp.post('/register', async (c) => {
     return c.json({ success: false, error: 'A user with this email already exists' }, 409);
   }
 
+  // Derive unique username
+  let username = (parsed.data.username || email.split('@')[0])
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '');
+  if (!username || username.length < 3) {
+    username = `user_${Math.floor(1000 + Math.random() * 9000)}`;
+  }
+
+  // Check username collision
+  const checkUser = await db.execute({
+    sql: 'SELECT id FROM users WHERE LOWER(username) = LOWER(?)',
+    args: [username],
+  });
+  if (checkUser.rows.length > 0) {
+    if (parsed.data.username) {
+      return c.json({ success: false, error: 'This unique username is already taken. Please choose another.' }, 409);
+    } else {
+      username = `${username}_${Math.floor(100 + Math.random() * 900)}`;
+    }
+  }
+
   const userId = randomUUID();
   const passwordHash = await bcrypt.hash(password, 10);
   const now = new Date().toISOString();
@@ -120,8 +142,8 @@ authApp.post('/register', async (c) => {
   // Create user, default preferences, and adopt any guest/default tasks
   await db.batch([
     {
-      sql: 'INSERT INTO users (id, name, email, password_hash, timezone, created_at) VALUES (?, ?, ?, ?, ?, ?)',
-      args: [userId, name, email, passwordHash, timezone, now],
+      sql: 'INSERT INTO users (id, name, username, email, password_hash, timezone, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      args: [userId, name, username, email, passwordHash, timezone, now],
     },
     {
       sql: `INSERT INTO user_preferences (
@@ -155,6 +177,7 @@ authApp.post('/register', async (c) => {
       user: {
         id: userId,
         name,
+        username,
         email,
         timezone,
         created_at: now,
@@ -173,9 +196,11 @@ authApp.post('/login', async (c) => {
 
   const { email, password } = parsed.data;
 
+  // Allow login with either email OR unique username
+  const cleanIdentifier = email.startsWith('@') ? email.substring(1) : email;
   const result = await db.execute({
-    sql: 'SELECT id, name, email, password_hash, timezone, created_at FROM users WHERE email = ?',
-    args: [email],
+    sql: 'SELECT id, name, username, email, password_hash, timezone, created_at FROM users WHERE LOWER(email) = LOWER(?) OR LOWER(username) = LOWER(?)',
+    args: [cleanIdentifier, cleanIdentifier],
   });
 
   if (result.rows.length === 0) {
@@ -201,6 +226,7 @@ authApp.post('/login', async (c) => {
       user: {
         id: row.id,
         name: row.name,
+        username: row.username || String(row.email).split('@')[0],
         email: row.email,
         timezone: row.timezone,
         created_at: row.created_at,
@@ -214,13 +240,19 @@ authApp.get('/me', authMiddleware, async (c) => {
   const userId = c.get('userId');
 
   const userResult = await db.execute({
-    sql: 'SELECT id, name, email, timezone, created_at FROM users WHERE id = ?',
+    sql: 'SELECT id, name, username, email, timezone, created_at FROM users WHERE id = ?',
     args: [userId],
   });
 
   if (userResult.rows.length === 0) {
     return c.json({ success: false, error: 'User not found' }, 404);
   }
+
+  const userRow = userResult.rows[0];
+  const user = {
+    ...userRow,
+    username: userRow.username || String(userRow.email).split('@')[0],
+  };
 
   const prefResult = await db.execute({
     sql: 'SELECT * FROM user_preferences WHERE user_id = ?',
@@ -232,7 +264,7 @@ authApp.get('/me', authMiddleware, async (c) => {
   return c.json({
     success: true,
     data: {
-      user: userResult.rows[0],
+      user,
       preferences: prefs
         ? {
             ...prefs,
@@ -244,6 +276,62 @@ authApp.get('/me', authMiddleware, async (c) => {
           }
         : null,
     },
+  });
+});
+
+// PUT /api/auth/profile - Update name or unique username
+authApp.put('/profile', authMiddleware, async (c) => {
+  const userId = c.get('userId');
+  const body = await parseBodySafe(c);
+  const { name, username } = body;
+
+  const updates: string[] = [];
+  const args: any[] = [];
+
+  if (name && typeof name === 'string' && name.trim()) {
+    updates.push('name = ?');
+    args.push(name.trim());
+  }
+
+  if (username && typeof username === 'string' && username.trim()) {
+    let cleanHandle = username.trim().toLowerCase();
+    if (cleanHandle.startsWith('@')) cleanHandle = cleanHandle.substring(1);
+    if (!/^[a-zA-Z0-9_]{3,30}$/.test(cleanHandle)) {
+      return c.json({ success: false, error: 'Username must be 3-30 alphanumeric characters or underscores.' }, 400);
+    }
+
+    const checkTaken = await db.execute({
+      sql: 'SELECT id FROM users WHERE LOWER(username) = LOWER(?) AND id != ?',
+      args: [cleanHandle, userId],
+    });
+
+    if (checkTaken.rows.length > 0) {
+      return c.json({ success: false, error: 'This unique username is already taken.' }, 409);
+    }
+
+    updates.push('username = ?');
+    args.push(cleanHandle);
+  }
+
+  if (updates.length === 0) {
+    return c.json({ success: false, error: 'No valid fields to update.' }, 400);
+  }
+
+  args.push(userId);
+  await db.execute({
+    sql: `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+    args,
+  });
+
+  const refreshed = await db.execute({
+    sql: 'SELECT id, name, username, email, timezone, created_at FROM users WHERE id = ?',
+    args: [userId],
+  });
+
+  return c.json({
+    success: true,
+    message: 'Profile updated successfully!',
+    user: refreshed.rows[0],
   });
 });
 
