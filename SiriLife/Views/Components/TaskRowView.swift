@@ -95,6 +95,31 @@ public struct TaskRowView: View {
                         .foregroundColor(.purple)
                         .clipShape(Capsule())
                     }
+
+                    // Collaboration Assignment badge
+                    if let toUser = task.assignedToUsername, !toUser.isEmpty {
+                        HStack(spacing: 4) {
+                            Image(systemName: "person.crop.circle.badge.plus")
+                            Text("To @\(toUser)")
+                        }
+                        .font(.caption2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.cyan.opacity(0.15))
+                        .foregroundColor(.cyan)
+                        .clipShape(Capsule())
+                    } else if let fromUser = task.assignedByUsername, !fromUser.isEmpty {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down.left.circle")
+                            Text("From @\(fromUser)")
+                        }
+                        .font(.caption2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.cyan.opacity(0.15))
+                        .foregroundColor(.cyan)
+                        .clipShape(Capsule())
+                    }
                 }
             }
         }

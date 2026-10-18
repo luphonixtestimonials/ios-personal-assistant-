@@ -318,6 +318,86 @@ describe('Luphonix Backend API Test Suite', async () => {
     assert.strictEqual(reqBody.success, true);
     assert.ok(Array.isArray(reqBody.requests));
   });
+
+  it('20. POST /api/friends/add should add friend by unique username and GET /api/friends should list them', async () => {
+    // Add friend @keval
+    const addFriendRes = await app.request('/api/friends/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ username: 'keval' }),
+    });
+
+    assert.strictEqual(addFriendRes.status, 201);
+    const addFriendBody = await addFriendRes.json();
+    assert.strictEqual(addFriendBody.success, true);
+    assert.strictEqual(addFriendBody.data.username, 'keval');
+    const friendUserId = addFriendBody.data.id;
+
+    // List friends
+    const listFriendsRes = await app.request('/api/friends', {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    assert.strictEqual(listFriendsRes.status, 200);
+    const listFriendsBody = await listFriendsRes.json();
+    assert.strictEqual(listFriendsBody.success, true);
+    assert.ok(Array.isArray(listFriendsBody.data));
+    const foundKeval = listFriendsBody.data.some((f: any) => f.username === 'keval');
+    assert.strictEqual(foundKeval, true, 'Connected friend @keval must appear in friends list');
+  });
+
+  it('21. POST /api/tasks should allow assigning tasks to a friend by unique username and query via filter=assigned', async () => {
+    const assignedTaskRes = await app.request('/api/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({
+        title: 'Review Siri Collaboration Feature with Keval',
+        priority: 'high',
+        category: 'work',
+        assigned_to_username: 'keval',
+      }),
+    });
+
+    assert.strictEqual(assignedTaskRes.status, 201);
+    const taskBody = await assignedTaskRes.json();
+    assert.strictEqual(taskBody.success, true);
+    assert.strictEqual(taskBody.data.assigned_to_username, 'keval');
+    assert.ok(taskBody.data.assigned_by_user_id);
+
+    // Query assigned tasks
+    const queryRes = await app.request('/api/tasks?filter=assigned', {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    assert.strictEqual(queryRes.status, 200);
+    const queryBody = await queryRes.json();
+    assert.strictEqual(queryBody.success, true);
+    const foundAssignedTask = queryBody.data.some((t: any) => t.title === 'Review Siri Collaboration Feature with Keval');
+    assert.strictEqual(foundAssignedTask, true, 'Task assigned to @keval must be returned with filter=assigned');
+  });
+
+  it('22. DELETE /api/friends/:id should unfriend user', async () => {
+    // Get list of friends first
+    const listRes = await app.request('/api/friends', {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    const listBody = await listRes.json();
+    const kevalFriend = listBody.data.find((f: any) => f.username === 'keval');
+    assert.ok(kevalFriend, 'Keval friend should exist before delete');
+
+    // Delete friend
+    const delRes = await app.request(`/api/friends/${kevalFriend.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    assert.strictEqual(delRes.status, 200);
+    const delBody = await delRes.json();
+    assert.strictEqual(delBody.success, true);
+  });
 });
 
 

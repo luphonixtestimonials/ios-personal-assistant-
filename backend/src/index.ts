@@ -12,6 +12,7 @@ import hydrationApp from './routes/hydration.js';
 import preferencesApp from './routes/preferences.js';
 import syncApp from './routes/sync.js';
 import devicesApp from './routes/devices.js';
+import friendsApp from './routes/friends.js';
 import { requestTrackerMiddleware } from './middleware/requestTracker.js';
 
 const app = new Hono();
@@ -58,6 +59,7 @@ app.route('/api/hydration', hydrationApp);
 app.route('/api/preferences', preferencesApp);
 app.route('/api/sync', syncApp);
 app.route('/api/devices', devicesApp);
+app.route('/api/friends', friendsApp);
 
 // Central Error Handler
 app.onError(errorHandler);

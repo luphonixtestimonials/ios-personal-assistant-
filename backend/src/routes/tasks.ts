@@ -17,12 +17,14 @@ const taskInputSchema = z.object({
   category: z.enum(['personal', 'work', 'study', 'health', 'other']).default('other'),
   is_completed: z.boolean().default(false),
   recurrence_rule: z.string().nullable().optional(),
+  assigned_to_user_id: z.string().nullable().optional(),
+  assigned_to_username: z.string().nullable().optional(),
 });
 
 // GET /api/tasks
 tasksApp.get('/', async (c) => {
   const userId = c.get('userId');
-  const filter = c.req.query('filter'); // 'today', 'upcoming', 'completed', 'overdue', 'all'
+  const filter = c.req.query('filter'); // 'today', 'upcoming', 'completed', 'overdue', 'assigned', 'all'
   const search = c.req.query('q');
   const sortBy = c.req.query('sortBy') || 'due_at'; // 'due_at', 'priority', 'created_at'
   const order = c.req.query('order')?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
@@ -33,26 +35,44 @@ tasksApp.get('/', async (c) => {
   const todayEnd = new Date();
   todayEnd.setHours(23, 59, 59, 999);
 
-  let query = 'SELECT * FROM tasks WHERE (user_id = ? OR user_id = \'user_siri_default\')';
-  const args: any[] = [userId];
+  let query = `
+    SELECT t.*,
+           u_by.name AS assigner_name,
+           u_by.username AS assigner_username,
+           u_to.name AS assignee_name,
+           u_to.username AS assignee_username
+    FROM tasks t
+    LEFT JOIN users u_by ON t.assigned_by_user_id = u_by.id
+    LEFT JOIN users u_to ON t.assigned_to_user_id = u_to.id
+    WHERE (t.user_id = ? OR t.assigned_to_user_id = ? OR (t.user_id = 'user_siri_default' AND t.assigned_to_user_id IS NULL))
+  `;
+  const args: any[] = [userId, userId];
 
   if (filter === 'completed') {
-    query += ' AND is_completed = 1';
+    query += ' AND t.is_completed = 1';
   } else if (filter === 'overdue') {
-    query += ' AND is_completed = 0 AND due_at IS NOT NULL AND due_at < ?';
+    query += ' AND t.is_completed = 0 AND t.due_at IS NOT NULL AND t.due_at < ?';
     args.push(now);
   } else if (filter === 'today') {
     // Uncompleted tasks for today: includes tasks with no due date, or due today, or overdue
-    query += ' AND is_completed = 0 AND (due_at IS NULL OR due_at <= ?)';
+    query += ' AND t.is_completed = 0 AND (t.due_at IS NULL OR t.due_at <= ?)';
     args.push(todayEnd.toISOString());
   } else if (filter === 'upcoming') {
-    query += ' AND is_completed = 0 AND due_at > ?';
+    query += ' AND t.is_completed = 0 AND t.due_at > ?';
     args.push(todayEnd.toISOString());
+  } else if (filter === 'assigned') {
+    query += ' AND (t.assigned_to_user_id IS NOT NULL AND t.assigned_to_user_id != t.user_id)';
+  } else if (filter === 'assigned_to_me') {
+    query += ' AND (t.assigned_to_user_id = ? AND t.user_id != ?)';
+    args.push(userId, userId);
+  } else if (filter === 'assigned_by_me') {
+    query += ' AND (t.user_id = ? AND t.assigned_to_user_id IS NOT NULL AND t.assigned_to_user_id != ?)';
+    args.push(userId, userId);
   } else if (filter === 'all') {
     // Return all tasks without completion filter
   } else {
-    // Default (e.g. general query for active tasks): only return uncompleted tasks
-    query += ' AND is_completed = 0';
+    // Default: return uncompleted tasks
+    query += ' AND t.is_completed = 0';
   }
 
   if (search && search.trim().length > 0) {
@@ -77,6 +97,8 @@ tasksApp.get('/', async (c) => {
     tasks = result.rows.map((row) => ({
       ...row,
       is_completed: Boolean(row.is_completed),
+      assigned_to_username: row.assignee_username || null,
+      assigned_by_username: row.assigner_username || null,
     }));
   } catch (err) {
     console.error('Error fetching tasks from database:', err);
@@ -362,16 +384,61 @@ tasksApp.post('/', async (c) => {
     category,
     is_completed,
     recurrence_rule = null,
+    assigned_to_user_id = null,
+    assigned_to_username = null,
   } = parsed.data;
 
   const now = new Date().toISOString();
+
+  // Resolve assignment
+  let resolvedAssigneeId: string | null = assigned_to_user_id || null;
+  let resolvedAssigneeUsername: string | null = null;
+  if (!resolvedAssigneeId && assigned_to_username) {
+    let cleanHandle = assigned_to_username.trim();
+    if (cleanHandle.startsWith('@')) cleanHandle = cleanHandle.substring(1);
+    const uRes = await db.execute({
+      sql: 'SELECT id, username FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?) LIMIT 1',
+      args: [cleanHandle, cleanHandle],
+    });
+    if (uRes.rows.length > 0) {
+      resolvedAssigneeId = String(uRes.rows[0].id);
+      resolvedAssigneeUsername = String(uRes.rows[0].username || cleanHandle);
+    } else {
+      if (['keval', 'alex', 'sarah'].includes(cleanHandle.toLowerCase())) {
+        const demoId = `user_${cleanHandle.toLowerCase()}_demo`;
+        const demoEmail = `${cleanHandle.toLowerCase()}@luphonix.local`;
+        const demoName = cleanHandle.charAt(0).toUpperCase() + cleanHandle.slice(1);
+        const demoNow = new Date().toISOString();
+        try {
+          await db.execute({
+            sql: `INSERT OR IGNORE INTO users (id, name, username, email, password_hash, timezone, created_at)
+                  VALUES (?, ?, ?, ?, 'demo-hashed-pw', 'UTC', ?)`,
+            args: [demoId, demoName, cleanHandle.toLowerCase(), demoEmail, demoNow],
+          });
+        } catch {}
+        resolvedAssigneeId = demoId;
+        resolvedAssigneeUsername = cleanHandle.toLowerCase();
+      }
+    }
+  } else if (resolvedAssigneeId) {
+    const uRes = await db.execute({
+      sql: 'SELECT username FROM users WHERE id = ? LIMIT 1',
+      args: [resolvedAssigneeId],
+    });
+    if (uRes.rows.length > 0) {
+      resolvedAssigneeUsername = String(uRes.rows[0].username);
+    }
+  }
+
+  const assignedByUserId = userId;
 
   // Insert or Replace (idempotent for offline sync)
   await db.execute({
     sql: `INSERT INTO tasks (
       id, user_id, title, description, due_at, priority, category,
-      is_completed, recurrence_rule, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      is_completed, recurrence_rule, assigned_to_user_id, assigned_by_user_id,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(id) DO UPDATE SET
       title = excluded.title,
       description = excluded.description,
@@ -380,8 +447,10 @@ tasksApp.post('/', async (c) => {
       category = excluded.category,
       is_completed = excluded.is_completed,
       recurrence_rule = excluded.recurrence_rule,
+      assigned_to_user_id = excluded.assigned_to_user_id,
+      assigned_by_user_id = excluded.assigned_by_user_id,
       updated_at = excluded.updated_at
-    WHERE tasks.user_id = excluded.user_id OR tasks.user_id = 'user_siri_default' OR excluded.user_id = 'user_siri_default'`,
+    WHERE tasks.user_id = excluded.user_id OR tasks.assigned_to_user_id = ? OR tasks.user_id = 'user_siri_default' OR excluded.user_id = 'user_siri_default'`,
     args: [
       id,
       userId,
@@ -392,8 +461,11 @@ tasksApp.post('/', async (c) => {
       category,
       is_completed ? 1 : 0,
       recurrence_rule,
+      resolvedAssigneeId,
+      assignedByUserId,
       now,
       now,
+      userId,
     ],
   });
 
@@ -410,6 +482,10 @@ tasksApp.post('/', async (c) => {
         category,
         is_completed,
         recurrence_rule,
+        assigned_to_user_id: resolvedAssigneeId,
+        assigned_by_user_id: assignedByUserId,
+        assigned_to_username: resolvedAssigneeUsername,
+        assignee_username: resolvedAssigneeUsername,
         created_at: now,
         updated_at: now,
       },
@@ -424,8 +500,16 @@ tasksApp.get('/:id', async (c) => {
   const id = c.req.param('id');
 
   const result = await db.execute({
-    sql: 'SELECT * FROM tasks WHERE id = ? AND (user_id = ? OR user_id = \'user_siri_default\')',
-    args: [id, userId],
+    sql: `SELECT t.*,
+                 u_by.name AS assigner_name,
+                 u_by.username AS assigner_username,
+                 u_to.name AS assignee_name,
+                 u_to.username AS assignee_username
+          FROM tasks t
+          LEFT JOIN users u_by ON t.assigned_by_user_id = u_by.id
+          LEFT JOIN users u_to ON t.assigned_to_user_id = u_to.id
+          WHERE t.id = ? AND (t.user_id = ? OR t.assigned_to_user_id = ? OR t.user_id = 'user_siri_default')`,
+    args: [id, userId, userId],
   });
 
   if (result.rows.length === 0) {
@@ -478,9 +562,10 @@ tasksApp.patch('/:id', async (c) => {
     return c.json({ success: false, error: 'Validation failed', details: parsed.error.errors }, 400);
   }
 
+  // Creator OR assigned user can edit/complete
   const existing = await db.execute({
-    sql: 'SELECT * FROM tasks WHERE id = ? AND (user_id = ? OR user_id = \'user_siri_default\')',
-    args: [id, userId],
+    sql: 'SELECT * FROM tasks WHERE id = ? AND (user_id = ? OR assigned_to_user_id = ? OR user_id = \'user_siri_default\')',
+    args: [id, userId, userId],
   });
 
   if (existing.rows.length === 0) {
@@ -521,16 +606,41 @@ tasksApp.patch('/:id', async (c) => {
     fields.push('recurrence_rule = ?');
     args.push(updates.recurrence_rule);
   }
+  if (updates.assigned_to_user_id !== undefined) {
+    fields.push('assigned_to_user_id = ?');
+    args.push(updates.assigned_to_user_id);
+  } else if (updates.assigned_to_username !== undefined) {
+    let cleanHandle = updates.assigned_to_username?.trim() || '';
+    if (cleanHandle.startsWith('@')) cleanHandle = cleanHandle.substring(1);
+    if (cleanHandle) {
+      const uRes = await db.execute({
+        sql: 'SELECT id FROM users WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?) LIMIT 1',
+        args: [cleanHandle, cleanHandle],
+      });
+      fields.push('assigned_to_user_id = ?');
+      args.push(uRes.rows[0] ? String(uRes.rows[0].id) : null);
+    } else {
+      fields.push('assigned_to_user_id = NULL');
+    }
+  }
 
-  args.push(id, userId);
+  args.push(id, userId, userId);
 
   await db.execute({
-    sql: `UPDATE tasks SET ${fields.join(', ')} WHERE id = ? AND (user_id = ? OR user_id = 'user_siri_default')`,
+    sql: `UPDATE tasks SET ${fields.join(', ')} WHERE id = ? AND (user_id = ? OR assigned_to_user_id = ? OR user_id = 'user_siri_default')`,
     args,
   });
 
   const updatedResult = await db.execute({
-    sql: 'SELECT * FROM tasks WHERE id = ?',
+    sql: `SELECT t.*,
+                 u_by.name AS assigner_name,
+                 u_by.username AS assigner_username,
+                 u_to.name AS assignee_name,
+                 u_to.username AS assignee_username
+          FROM tasks t
+          LEFT JOIN users u_by ON t.assigned_by_user_id = u_by.id
+          LEFT JOIN users u_to ON t.assigned_to_user_id = u_to.id
+          WHERE t.id = ?`,
     args: [id],
   });
 
@@ -564,8 +674,8 @@ tasksApp.delete('/:id', async (c) => {
   const id = c.req.param('id');
 
   const result = await db.execute({
-    sql: 'DELETE FROM tasks WHERE id = ? AND (user_id = ? OR user_id = \'user_siri_default\')',
-    args: [id, userId],
+    sql: 'DELETE FROM tasks WHERE id = ? AND (user_id = ? OR assigned_to_user_id = ? OR user_id = \'user_siri_default\')',
+    args: [id, userId, userId],
   });
 
   if (result.rowsAffected === 0) {

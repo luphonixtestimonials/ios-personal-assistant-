@@ -14,6 +14,14 @@
   const STORAGE_KEY_API_KEY = 'luphonix_api_key_v1';
   const STORAGE_KEY_AUTH_TOKEN = 'luphonix_auth_token_v1';
   const STORAGE_KEY_AUTH_USER = 'luphonix_auth_user_v1';
+  const STORAGE_KEY_FRIENDS = 'luphonix_friends_v1';
+
+  // Default sample friends
+  const DEFAULT_FRIENDS = [
+    { id: 'usr_alex', username: 'alex', name: 'Alex Rivera' },
+    { id: 'usr_keval', username: 'keval', name: 'Keval Patel' },
+    { id: 'usr_sarah', username: 'sarah', name: 'Sarah Chen' }
+  ];
 
   // Default sample data for instant wow effect matching mockup
   const DEFAULT_TASKS = [
@@ -63,6 +71,7 @@
     prefs: loadStorage(STORAGE_KEY_PREFS, DEFAULT_PREFS),
     token: loadStorage(STORAGE_KEY_AUTH_TOKEN, null),
     user: loadStorage(STORAGE_KEY_AUTH_USER, null),
+    friends: loadStorage(STORAGE_KEY_FRIENDS, DEFAULT_FRIENDS),
     currentFilter: 'all',
     currentRemFilter: 'all',
     currentReqFilter: 'all',
@@ -345,6 +354,8 @@
       filtered = filtered.filter((t) => t.is_completed);
     } else if (state.currentFilter === 'today') {
       filtered = filtered.filter((t) => !t.is_completed);
+    } else if (state.currentFilter === 'assigned') {
+      filtered = filtered.filter((t) => Boolean(t.assigned_to_user_id || t.assigned_by_user_id || t.assigned_to_username || t.assigned_by_username));
     } else if (state.currentFilter !== 'all') {
       filtered = filtered.filter((t) => t.category.toLowerCase() === state.currentFilter.toLowerCase());
     }
@@ -387,6 +398,24 @@
     const priorityClass = task.priority ? task.priority.toLowerCase() : 'medium';
     const categoryName = task.category ? task.category.toUpperCase() : 'GENERAL';
 
+    // Collaboration Assignment Badges
+    let assignmentBadge = '';
+    const myUsername = (state.user && state.user.username) ? state.user.username.toLowerCase() : 'dhyey';
+    const myUserId = state.user ? state.user.id : 'dhyey';
+
+    if (task.assigned_to_username || task.assigned_to_user_id) {
+      const isAssignedToMe = (task.assigned_to_username && task.assigned_to_username.toLowerCase() === myUsername) || 
+                             (task.assigned_to_user_id && task.assigned_to_user_id === myUserId);
+      const assigner = task.assigned_by_username || 'Friend';
+      const assignee = task.assigned_to_username || 'Friend';
+
+      if (isAssignedToMe && task.assigned_by_username && task.assigned_by_username.toLowerCase() !== myUsername) {
+        assignmentBadge = `<span class="task-badge assigned-to-me" title="Assigned to you by @${escapeHTML(assigner)}"><i class="fa-solid fa-arrow-down-left"></i> From @${escapeHTML(assigner)}</span>`;
+      } else {
+        assignmentBadge = `<span class="task-badge assigned-to-other" title="Assigned to @${escapeHTML(assignee)}"><i class="fa-solid fa-arrow-up-right-from-square"></i> To @${escapeHTML(assignee)}</span>`;
+      }
+    }
+
     return `
       <div class="task-item ${task.is_completed ? 'completed' : ''}" data-task-id="${task.id}">
         <button class="task-checkbox-btn" data-toggle-task="${task.id}" aria-label="Toggle task">
@@ -397,6 +426,7 @@
           <div class="task-meta">
             <span class="priority-tag ${priorityClass}">${priorityClass}</span>
             <span class="category-tag">${categoryName}</span>
+            ${assignmentBadge}
           </div>
         </div>
         <button class="task-delete-btn" data-delete-task="${task.id}" title="Task menu / delete"><i class="fa-solid fa-ellipsis-vertical" style="font-size: 14px;"></i></button>
@@ -457,13 +487,20 @@
     deleteTaskFromCloud(id);
   }
 
-  function addTask(title, category, priority) {
+  function addTask(title, category, priority, assignedToUserId, assignedToUsername) {
+    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
+    const myUserId = (state.user && state.user.id) ? state.user.id : 'dhyey';
+
     const newTask = {
       id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 't_' + Date.now(),
       title: title.trim(),
       category: category || 'work',
       priority: priority || 'medium',
       is_completed: false,
+      assigned_to_user_id: assignedToUserId || null,
+      assigned_to_username: assignedToUsername || null,
+      assigned_by_user_id: myUserId,
+      assigned_by_username: myUsername,
       due_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
       _needsCloudSync: true
@@ -471,7 +508,11 @@
     state.tasks.unshift(newTask);
     saveStorage(STORAGE_KEY_TASKS, state.tasks);
     renderTasks();
-    showToast('New task added!', 'success');
+    if (assignedToUsername) {
+      showToast(`Task assigned to @${assignedToUsername}! 🤝`, 'success');
+    } else {
+      showToast('New task added!', 'success');
+    }
 
     syncTaskToCloud(newTask);
   }
@@ -710,6 +751,8 @@
         category: task.category || 'work',
         priority: task.priority || 'medium',
         is_completed: Boolean(task.is_completed),
+        assigned_to_user_id: task.assigned_to_user_id || undefined,
+        assigned_to_username: task.assigned_to_username || undefined,
         due_at: task.due_at || new Date().toISOString()
       };
 
@@ -796,6 +839,9 @@
       for (const t of pendingPush) {
         syncTaskToCloud(t).catch(() => {});
       }
+
+      // 3. Fetch friends list
+      fetchFriendsFromCloud().catch(() => {});
     } catch (e) {
       console.warn('Cloud sync error:', e);
     }
@@ -810,6 +856,12 @@
     const accountEmail = document.getElementById('account-email-val');
     const accountId = document.getElementById('account-id-val');
     const accountAvatarChar = document.getElementById('account-avatar-char');
+    const myHandleEl = document.getElementById('my-unique-handle');
+    const accountHandleEl = document.getElementById('account-handle-val');
+    const username = (state.user && state.user.username) ? state.user.username : 'dhyey';
+
+    if (myHandleEl) myHandleEl.textContent = `@${username}`;
+    if (accountHandleEl) accountHandleEl.textContent = `@${username}`;
 
     if (state.user && state.token) {
       if (userAuthPill) userAuthPill.classList.add('logged-in');
@@ -887,7 +939,7 @@
     }
   }
 
-  async function registerUser(name, email, password) {
+  async function registerUser(name, email, password, username) {
     const base = getBackendBaseUrl();
     const errorDiv = document.getElementById('auth-error-msg');
     const errorText = document.getElementById('auth-error-text');
@@ -909,7 +961,7 @@
       const res = await fetch(`${base}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, timezone }),
+        body: JSON.stringify({ name, email, password, username: username || undefined, timezone }),
         signal: controller.signal,
       });
       clearTimeout(timeoutTimer);
@@ -1278,6 +1330,170 @@
       .replace(/'/g, '&#039;');
   }
 
+  // --- Friends & Task Collaboration Engine ---
+  async function fetchFriendsFromCloud() {
+    const base = getBackendBaseUrl();
+    try {
+      let key = await ensureApiKey();
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 5000);
+      let res = await fetch(`${base}/api/friends`, {
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      }).catch(() => null);
+      clearTimeout(timer);
+
+      if (res && res.status === 401) {
+        key = await ensureApiKey(true);
+        res = await fetch(`${base}/api/friends`, {
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Accept': 'application/json'
+          }
+        }).catch(() => null);
+      }
+
+      if (res && res.ok) {
+        const body = await res.json().catch(() => null);
+        if (body && Array.isArray(body.data)) {
+          state.friends = body.data;
+          saveStorage(STORAGE_KEY_FRIENDS, state.friends);
+          renderFriendsList();
+          populateAssignDropdown();
+        }
+      }
+    } catch (e) {
+      console.warn('Friends fetch error:', e);
+    }
+  }
+
+  function renderFriendsList() {
+    const container = document.getElementById('friends-list-container');
+    const countEl = document.getElementById('friends-count');
+    const myHandleEl = document.getElementById('my-unique-handle');
+    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
+
+    if (myHandleEl) {
+      myHandleEl.textContent = `@${myUsername}`;
+    }
+    if (countEl) {
+      countEl.textContent = state.friends ? state.friends.length : 0;
+    }
+    if (!container) return;
+
+    if (!state.friends || state.friends.length === 0) {
+      container.innerHTML = `
+        <div style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 20px 0;">
+          <div style="font-size: 24px; margin-bottom: 6px;">👥</div>
+          No friends connected yet.<br>Add a friend above using their unique username to share & assign tasks!
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = state.friends.map((f) => {
+      const initial = (f.name || f.username || 'F').charAt(0).toUpperCase();
+      return `
+        <div class="friend-item-card" data-friend-id="${f.id}">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(59, 130, 246, 0.25)); border: 1px solid rgba(0, 210, 255, 0.35); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #00D2FF; font-size: 14px;">
+              ${initial}
+            </div>
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #F8FAFC;">${escapeHTML(f.name || f.username)}</div>
+              <div style="font-size: 12px; color: var(--accent-cyan); font-family: monospace;">@${escapeHTML(f.username)}</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <button type="button" class="btn-secondary" data-quick-assign-friend="${f.id}" data-friend-username="${f.username}" style="padding: 5px 10px; font-size: 11px; height: 28px; border-radius: 8px; cursor: pointer;" title="Assign task to ${f.username}">
+              <i class="fa-solid fa-plus"></i> Task
+            </button>
+            <button type="button" class="task-delete-btn" data-remove-friend="${f.id}" title="Remove friend" style="color: #FB7185; cursor: pointer;">
+              <i class="fa-solid fa-trash-can" style="font-size: 12px;"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function populateAssignDropdown() {
+    const select = document.getElementById('task-assign-select');
+    if (!select) return;
+
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">Myself (Personal Task)</option>';
+
+    if (state.friends && state.friends.length > 0) {
+      state.friends.forEach((f) => {
+        const opt = document.createElement('option');
+        opt.value = f.id;
+        opt.dataset.username = f.username;
+        opt.textContent = `${f.name || f.username} (@${f.username})`;
+        if (f.id === currentVal) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+  }
+
+  async function addFriendByUsername(username) {
+    if (!username || !username.trim()) return;
+    const cleanHandle = username.trim().replace(/^@/, '');
+    const base = getBackendBaseUrl();
+
+    try {
+      let key = await ensureApiKey();
+      const res = await fetch(`${base}/api/friends/add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({ username: cleanHandle })
+      });
+
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.success) {
+        throw new Error(body.error || 'Could not add friend');
+      }
+
+      const newFriend = body.data;
+      state.friends = state.friends.filter(f => f.id !== newFriend.id);
+      state.friends.unshift(newFriend);
+      saveStorage(STORAGE_KEY_FRIENDS, state.friends);
+
+      renderFriendsList();
+      populateAssignDropdown();
+      showToast(`Added @${newFriend.username} as friend! 🎉`, 'success');
+      return newFriend;
+    } catch (err) {
+      showToast(err.message || 'Failed to add friend', 'error');
+    }
+  }
+
+  async function removeFriend(friendId) {
+    const friend = state.friends.find(f => f.id === friendId);
+    state.friends = state.friends.filter(f => f.id !== friendId);
+    saveStorage(STORAGE_KEY_FRIENDS, state.friends);
+    renderFriendsList();
+    populateAssignDropdown();
+    showToast(`Removed friend ${friend ? '@' + friend.username : ''}`, 'info');
+
+    const base = getBackendBaseUrl();
+    try {
+      const key = await ensureApiKey();
+      await fetch(`${base}/api/friends/${encodeURIComponent(friendId)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${key}` }
+      }).catch(() => {});
+    } catch (e) {
+      console.warn('Remove friend sync error:', e);
+    }
+  }
+
   // --- Event Bindings & Init ---
   function initEvents() {
     // Bottom Nav Tabs
@@ -1518,14 +1734,89 @@
         const titleInput = document.getElementById('task-title-input');
         const catSelect = document.getElementById('task-category-select');
         const prioSelect = document.getElementById('task-priority-select');
+        const assignSelect = document.getElementById('task-assign-select');
 
         if (titleInput && titleInput.value.trim().length > 0) {
-          addTask(titleInput.value, catSelect ? catSelect.value : 'work', prioSelect ? prioSelect.value : 'medium');
+          const assignedId = assignSelect ? assignSelect.value : '';
+          const selectedOpt = assignSelect ? assignSelect.options[assignSelect.selectedIndex] : null;
+          const assignedUsername = selectedOpt ? selectedOpt.dataset.username : null;
+
+          addTask(
+            titleInput.value,
+            catSelect ? catSelect.value : 'work',
+            prioSelect ? prioSelect.value : 'medium',
+            assignedId || null,
+            assignedUsername || null
+          );
           titleInput.value = '';
+          if (assignSelect) assignSelect.value = '';
           closeAllModals();
         }
       });
     }
+
+    // Friends Modal & Actions
+    const btnFriendsModal = document.getElementById('btn-friends-modal');
+    if (btnFriendsModal) {
+      btnFriendsModal.addEventListener('click', () => {
+        playSound('check');
+        renderFriendsList();
+        openModal('modal-friends');
+        fetchFriendsFromCloud();
+      });
+    }
+
+    const btnCopyHandle = document.getElementById('btn-copy-my-handle');
+    if (btnCopyHandle) {
+      btnCopyHandle.addEventListener('click', () => {
+        const username = (state.user && state.user.username) ? state.user.username : 'dhyey';
+        const handle = `@${username}`;
+        navigator.clipboard.writeText(handle).then(() => {
+          showToast(`Copied ${handle} to clipboard! 📋`, 'success');
+        }).catch(() => {
+          showToast(`Your handle: ${handle}`, 'info');
+        });
+      });
+    }
+
+    const formAddFriend = document.getElementById('form-add-friend');
+    if (formAddFriend) {
+      formAddFriend.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('friend-username-input');
+        if (input && input.value.trim().length > 0) {
+          await addFriendByUsername(input.value.trim());
+          input.value = '';
+        }
+      });
+    }
+
+    document.querySelectorAll('.quick-add-friend-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const username = chip.dataset.username;
+        if (username) {
+          addFriendByUsername(username);
+        }
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      const removeBtn = e.target.closest('[data-remove-friend]');
+      if (removeBtn) {
+        const friendId = removeBtn.dataset.removeFriend;
+        if (friendId) removeFriend(friendId);
+        return;
+      }
+
+      const quickAssignBtn = e.target.closest('[data-quick-assign-friend]');
+      if (quickAssignBtn) {
+        const friendId = quickAssignBtn.dataset.quickAssignFriend;
+        closeAllModals();
+        openModal('modal-task');
+        const assignSelect = document.getElementById('task-assign-select');
+        if (assignSelect) assignSelect.value = friendId;
+      }
+    });
 
     // Add Reminder Button & Form
     const addReminderBtn = document.getElementById('btn-add-reminder-modal');
@@ -1934,10 +2225,11 @@
       formSignup.addEventListener('submit', (e) => {
         e.preventDefault();
         const name = document.getElementById('signup-name')?.value.trim();
+        const username = document.getElementById('signup-username')?.value.trim();
         const email = document.getElementById('signup-email')?.value.trim();
         const password = document.getElementById('signup-password')?.value;
         if (name && email && password) {
-          registerUser(name, email, password);
+          registerUser(name, email, password, username);
         }
       });
     }
@@ -2015,6 +2307,8 @@
     updateHydrationRings();
     renderTasks();
     renderReminders();
+    renderFriendsList();
+    populateAssignDropdown();
     initEvents();
     updateAuthUI();
     ensureApiKey();
@@ -2025,6 +2319,9 @@
 
     // Initial devices & requests pre-fetch
     setTimeout(fetchDevicesAndRequests, 400);
+
+    // Initial friends fetch
+    setTimeout(fetchFriendsFromCloud, 600);
 
     // Health ping test on load
     setTimeout(testBackendPing, 800);
