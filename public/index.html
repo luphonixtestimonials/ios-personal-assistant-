@@ -63,7 +63,8 @@
         </div>
         <button class="header-icon-btn notification-bell-btn" id="btn-header-bell" aria-label="Notifications" title="Notifications">
           <i class="fa-regular fa-bell"></i>
-          <span class="notification-indicator-dot"></span>
+          <span class="notification-indicator-dot" id="notif-indicator-dot"></span>
+          <span class="notification-badge-count" id="notif-badge-count" style="display: none;">0</span>
         </button>
         <button class="header-icon-btn" id="btn-header-settings" aria-label="Settings" title="Settings">
           <i class="fa-solid fa-gear"></i>
@@ -1200,6 +1201,62 @@
         <div style="font-size: 12px; color: var(--text-muted); text-align: center; padding: 16px 0;">
           No friends added yet. Add someone above using their @username!
         </div>
+      </div>
+
+      <button type="button" class="btn-ghost-cancel modal-close-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- Modal 8: Notification Center & Phone Push Alerts -->
+  <div class="modal-overlay" id="modal-notifications">
+    <div class="modal-sheet" style="max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-handle"></div>
+
+      <div class="auth-header-wrapper" style="margin-bottom: 12px;">
+        <div class="auth-header-badge" style="background: linear-gradient(135deg, rgba(0,210,255,0.2), rgba(16,185,129,0.2)); border-color: rgba(0,210,255,0.4);">
+          <i class="fa-regular fa-bell" style="font-size: 20px; color: #00D2FF;"></i>
+        </div>
+        <h3 class="auth-main-title">Notification Center</h3>
+        <p class="auth-subtitle">Task assignments & phone push alerts (rings even when screen is locked/off).</p>
+      </div>
+
+      <!-- Phone Lock Screen Push Status Card -->
+      <div class="glass-card" style="margin-bottom: 12px; background: rgba(15, 23, 42, 0.7); border-color: rgba(0, 210, 255, 0.25); padding: 12px 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <i class="fa-solid fa-mobile-screen-button" style="color: #00D2FF;"></i>
+            <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;">iPhone Push Notifications</span>
+          </div>
+          <span class="badge" id="push-status-badge" style="background: rgba(245, 158, 11, 0.2); color: #F59E0B; font-size: 11px; padding: 2px 8px; border-radius: 999px;">
+            Checking...
+          </span>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin: 0 0 10px 0;">
+          When someone assigns you a task, your iPhone wakes up and notifies you whether your phone screen is off or on.
+        </p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="btn-primary" id="btn-enable-phone-push" style="flex: 1; min-width: 140px; height: 34px; font-size: 12px; padding: 0 12px;">
+            <i class="fa-solid fa-bell" style="margin-right: 6px;"></i> Enable Phone Push
+          </button>
+          <button type="button" class="btn-secondary" id="btn-test-phone-push" style="flex: 1; min-width: 140px; height: 34px; font-size: 12px; padding: 0 12px;">
+            <i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i> Send Test Push
+          </button>
+        </div>
+      </div>
+
+      <!-- Notifications Action Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 12px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em;">
+          Recent Alerts (<span id="notif-modal-count">0</span>)
+        </span>
+        <button type="button" class="btn-secondary" id="btn-mark-all-read" style="padding: 4px 10px; font-size: 11px; height: 26px; border-radius: 6px; cursor: pointer;">
+          Mark all as read
+        </button>
+      </div>
+
+      <!-- Notifications List Container -->
+      <div id="notifications-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; max-height: 380px;">
+        <!-- Dynamically rendered -->
       </div>
 
       <button type="button" class="btn-ghost-cancel modal-close-btn">Close</button>

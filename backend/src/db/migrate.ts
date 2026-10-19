@@ -32,6 +32,7 @@ export async function runMigrations() {
   try { await db.execute('ALTER TABLE users ADD COLUMN username TEXT;'); } catch {}
   try { await db.execute('ALTER TABLE tasks ADD COLUMN assigned_to_user_id TEXT;'); } catch {}
   try { await db.execute('ALTER TABLE tasks ADD COLUMN assigned_by_user_id TEXT;'); } catch {}
+  try { await db.execute('ALTER TABLE push_subscriptions ADD COLUMN apns_token TEXT;'); } catch {}
 
   for (const statement of statements) {
     try {

@@ -277,4 +277,22 @@ public final class NotificationManager: NSObject, UNUserNotificationCenterDelega
         
         completionHandler()
     }
+    
+    // MARK: - Immediate Local Alert (For Task Assignment)
+    public func showLocalAlert(title: String, body: String, taskId: String? = nil) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        if let taskId = taskId {
+            content.userInfo = ["taskId": taskId, "type": "task_assigned"]
+        }
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+        let request = UNNotificationRequest(identifier: "notif_assigned_\(UUID().uuidString)", content: content, trigger: trigger)
+        center.add(request) { error in
+            if let error = error {
+                print("Failed to schedule local task notification: \(error)")
+            }
+        }
+    }
 }

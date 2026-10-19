@@ -569,4 +569,27 @@ public final class APIClient {
         struct Res: Codable { var success: Bool }
         let _: Res? = try? await request(endpoint: "/api/preferences", method: "PUT", body: body)
     }
+    
+    // MARK: - Push Notifications
+    public func registerAPNsToken(_ token: String) async throws {
+        struct PushSubPayload: Codable {
+            var endpoint: String
+            var apnsToken: String
+            var deviceType: String
+            var keys: PushKeys
+        }
+        struct PushKeys: Codable {
+            var p256dh: String
+            var auth: String
+        }
+        let payload = PushSubPayload(
+            endpoint: "https://api.push.apple.com/3/device/\(token)",
+            apnsToken: token,
+            deviceType: "ios-native",
+            keys: PushKeys(p256dh: "apns_key", auth: "apns_auth")
+        )
+        let body = try JSONEncoder().encode(payload)
+        struct Res: Codable { var success: Bool }
+        let _: Res? = try? await request(endpoint: "/api/notifications/subscribe", method: "POST", body: body)
+    }
 }
