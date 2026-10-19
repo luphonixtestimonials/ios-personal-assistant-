@@ -15,6 +15,7 @@
   const STORAGE_KEY_AUTH_TOKEN = 'luphonix_auth_token_v1';
   const STORAGE_KEY_AUTH_USER = 'luphonix_auth_user_v1';
   const STORAGE_KEY_FRIENDS = 'luphonix_friends_v1';
+  const STORAGE_KEY_NOTIFS = 'luphonix_notifications_v1';
 
   // Default sample friends
   const DEFAULT_FRIENDS = [
@@ -72,6 +73,9 @@
     token: loadStorage(STORAGE_KEY_AUTH_TOKEN, null),
     user: loadStorage(STORAGE_KEY_AUTH_USER, null),
     friends: loadStorage(STORAGE_KEY_FRIENDS, DEFAULT_FRIENDS),
+    notifications: loadStorage(STORAGE_KEY_NOTIFS, []),
+    unreadNotifCount: 0,
+    pushSubscribed: false,
     currentFilter: 'all',
     currentRemFilter: 'all',
     currentReqFilter: 'all',
@@ -842,6 +846,9 @@
 
       // 3. Fetch friends list
       fetchFriendsFromCloud().catch(() => {});
+
+      // 4. Fetch in-app & task assignment notifications
+      fetchNotificationsFromCloud().catch(() => {});
     } catch (e) {
       console.warn('Cloud sync error:', e);
     }
@@ -999,9 +1006,13 @@
   function logoutUser() {
     state.token = null;
     state.user = null;
+    state.notifications = [];
+    state.unreadNotifCount = 0;
     localStorage.removeItem(STORAGE_KEY_AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEY_AUTH_USER);
+    localStorage.removeItem(STORAGE_KEY_NOTIFS);
     updateAuthUI();
+    updateNotificationBellUI();
     closeAllModals();
     showToast('Signed out of Luphonix', 'info');
     ensureApiKey(true);
@@ -1494,6 +1505,308 @@
     }
   }
 
+  // --- Push Notification & In-App Notification Engine ---
+  function urlB64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  function formatTimeAgo(isoString) {
+    try {
+      const now = Date.now();
+      const past = new Date(isoString).getTime();
+      const diffSec = Math.floor((now - past) / 1000);
+      if (diffSec < 45) return 'Just now';
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+      return `${Math.floor(diffSec / 86400)}d ago`;
+    } catch {
+      return '';
+    }
+  }
+
+  async function checkPushSubscriptionStatus() {
+    const badge = document.getElementById('push-status-badge');
+    const btn = document.getElementById('btn-enable-phone-push');
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      if (badge) {
+        badge.textContent = 'Unsupported';
+        badge.style.background = 'rgba(255, 82, 99, 0.2)';
+        badge.style.color = '#FF5263';
+      }
+      return false;
+    }
+
+    if (Notification.permission === 'denied') {
+      if (badge) {
+        badge.textContent = 'Blocked in Settings';
+        badge.style.background = 'rgba(255, 82, 99, 0.2)';
+        badge.style.color = '#FF5263';
+      }
+      if (btn) btn.textContent = 'Enable in Settings';
+      return false;
+    }
+
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        state.pushSubscribed = true;
+        if (badge) {
+          badge.textContent = '● Active (Screen Off Alerts)';
+          badge.style.background = 'rgba(16, 217, 164, 0.2)';
+          badge.style.color = '#10D9A4';
+        }
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-check" style="margin-right: 6px;"></i> Active on Phone';
+          btn.style.background = 'rgba(16, 217, 164, 0.2)';
+          btn.style.borderColor = 'rgba(16, 217, 164, 0.4)';
+          btn.style.color = '#10D9A4';
+        }
+        return true;
+      } else {
+        state.pushSubscribed = false;
+        if (badge) {
+          badge.textContent = Notification.permission === 'granted' ? 'Not Subscribed' : 'Permission Required';
+          badge.style.background = 'rgba(245, 158, 11, 0.2)';
+          badge.style.color = '#F59E0B';
+        }
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-bell" style="margin-right: 6px;"></i> Enable Phone Push';
+          btn.style.background = '';
+          btn.style.color = '';
+        }
+        return false;
+      }
+    } catch (e) {
+      console.warn('Push check error:', e);
+      return false;
+    }
+  }
+
+  async function subscribeToPhonePush() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      showToast('Push Notifications require iOS 16.4+ added to Home Screen or modern browser', 'error');
+      return;
+    }
+
+    try {
+      showToast('Requesting phone notification permission...', 'info');
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        showToast('Notification permission was not granted. Please enable it in Settings.', 'error');
+        checkPushSubscriptionStatus();
+        return;
+      }
+
+      const base = getBackendBaseUrl();
+      let key = await ensureApiKey();
+
+      // Fetch VAPID public key
+      const keyRes = await fetch(`${base}/api/notifications/vapid-public-key`).catch(() => null);
+      if (!keyRes || !keyRes.ok) {
+        throw new Error('Failed to retrieve server VAPID key');
+      }
+      const keyData = await keyRes.json();
+      const vapidPublicKey = keyData.publicKey;
+
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlB64ToUint8Array(vapidPublicKey)
+        });
+      }
+
+      const rawSub = sub.toJSON();
+      const res = await fetch(`${base}/api/notifications/subscribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({
+          endpoint: sub.endpoint,
+          keys: rawSub.keys,
+          deviceType: /iphone|ipad|ipod/i.test(navigator.userAgent) ? 'iphone-pwa' : 'web-pwa'
+        })
+      });
+
+      if (res.ok) {
+        state.pushSubscribed = true;
+        playSound('check');
+        showToast('📱 iPhone Push Alerts Active! Alerts work even with phone screen off.', 'success');
+        checkPushSubscriptionStatus();
+      } else {
+        showToast('Could not register phone subscription with server.', 'error');
+      }
+    } catch (err) {
+      console.error('Push subscription failed:', err);
+      showToast(`Push failed: ${err.message || 'Error'}`, 'error');
+    }
+  }
+
+  async function sendTestPhonePush() {
+    const base = getBackendBaseUrl();
+    try {
+      const key = await ensureApiKey();
+      showToast('Sending test alert to your phone...', 'info');
+      const res = await fetch(`${base}/api/notifications/test`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        playSound('check');
+        showToast(`📲 Alert dispatched! Delivered to ${data.pushSentCount || 1} phone endpoint(s).`, 'success');
+        fetchNotificationsFromCloud();
+      } else {
+        showToast(data.message || 'Failed to dispatch test notification.', 'error');
+      }
+    } catch (err) {
+      showToast('Network error triggering test push.', 'error');
+    }
+  }
+
+  async function fetchNotificationsFromCloud() {
+    const base = getBackendBaseUrl();
+    try {
+      let key = await ensureApiKey();
+      const res = await fetch(`${base}/api/notifications?limit=30`, {
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Accept': 'application/json'
+        }
+      }).catch(() => null);
+
+      if (!res || !res.ok) return;
+      const data = await res.json().catch(() => null);
+      if (!data || !Array.isArray(data.notifications)) return;
+
+      const prevIds = new Set((state.notifications || []).map(n => n.id));
+      const freshlyArrived = data.notifications.filter(n => !n.is_read && !prevIds.has(n.id));
+
+      // Alert user if a new task was assigned while the app is active
+      if (freshlyArrived.length > 0) {
+        const top = freshlyArrived[0];
+        playSound('check');
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        showToast(`🔔 ${top.title}: ${top.body}`, 'info');
+      }
+
+      state.notifications = data.notifications;
+      state.unreadNotifCount = data.unreadCount || 0;
+      saveStorage(STORAGE_KEY_NOTIFS, state.notifications);
+
+      updateNotificationBellUI();
+      renderNotificationList();
+    } catch (e) {
+      console.warn('Error fetching notifications:', e);
+    }
+  }
+
+  function updateNotificationBellUI() {
+    const dot = document.getElementById('notif-indicator-dot');
+    const badge = document.getElementById('notif-badge-count');
+    const count = state.unreadNotifCount || 0;
+
+    if (dot) {
+      if (count > 0) dot.classList.add('active');
+      else dot.classList.remove('active');
+    }
+
+    if (badge) {
+      if (count > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = count > 99 ? '99+' : count;
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    const modalCount = document.getElementById('notif-modal-count');
+    if (modalCount) {
+      modalCount.textContent = count;
+    }
+  }
+
+  function renderNotificationList() {
+    const container = document.getElementById('notifications-list-container');
+    const modalCount = document.getElementById('notif-modal-count');
+    if (modalCount) modalCount.textContent = state.unreadNotifCount || 0;
+    if (!container) return;
+
+    if (!state.notifications || state.notifications.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
+          <div style="font-size: 32px; margin-bottom: 8px;">🔔</div>
+          <div style="font-size: 14px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;">No Notifications Yet</div>
+          <p style="font-size: 12px; line-height: 1.5;">When someone assigns you a task, you will receive an alert here and on your phone screen!</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = state.notifications.map(n => {
+      const timeStr = formatTimeAgo(n.created_at);
+      const isUnread = !n.is_read;
+      const initial = (n.actor_name || n.actor_username || 'L').charAt(0).toUpperCase();
+
+      return `
+        <div class="notification-item-card ${isUnread ? 'unread' : ''}" data-notif-id="${n.id}" data-task-id="${n.data?.taskId || ''}">
+          <div class="notif-avatar-icon">
+            ${n.type === 'task_assigned' ? '📋' : initial}
+          </div>
+          <div class="notif-content-wrap">
+            <div class="notif-title-row">
+              <span class="notif-card-title">${escapeHTML(n.title)}</span>
+              <span class="notif-card-time">${timeStr}</span>
+            </div>
+            <div class="notif-card-body">${escapeHTML(n.body)}</div>
+          </div>
+          ${isUnread ? '<span class="notif-unread-dot" title="Unread"></span>' : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function markAllNotificationsAsRead() {
+    const base = getBackendBaseUrl();
+    try {
+      const key = await ensureApiKey();
+      await fetch(`${base}/api/notifications/mark-read`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify({})
+      });
+
+      if (state.notifications) {
+        state.notifications.forEach(n => { n.is_read = true; });
+      }
+      state.unreadNotifCount = 0;
+      saveStorage(STORAGE_KEY_NOTIFS, state.notifications);
+      updateNotificationBellUI();
+      renderNotificationList();
+      showToast('All notifications marked as read', 'info');
+    } catch {
+      showToast('Failed to mark notifications as read', 'error');
+    }
+  }
+
   // --- Event Bindings & Init ---
   function initEvents() {
     // Bottom Nav Tabs
@@ -1594,6 +1907,10 @@
           switchView(view);
         } else if (action === 'quick-add') {
           openModal('modal-task');
+        } else if (action === 'friends') {
+          renderFriendsList();
+          openModal('modal-friends');
+          fetchFriendsFromCloud();
         }
       });
     });
@@ -1905,7 +2222,64 @@
     if (headerBell) {
       headerBell.addEventListener('click', () => {
         playSound('check');
-        showToast('All notifications & habit schedules are active! 🔔', 'info');
+        openModal('modal-notifications');
+        fetchNotificationsFromCloud();
+        checkPushSubscriptionStatus();
+      });
+    }
+
+    // Phone Push Subscription Buttons inside Modal
+    const btnEnablePush = document.getElementById('btn-enable-phone-push');
+    if (btnEnablePush) {
+      btnEnablePush.addEventListener('click', subscribeToPhonePush);
+    }
+
+    const btnTestPush = document.getElementById('btn-test-phone-push');
+    if (btnTestPush) {
+      btnTestPush.addEventListener('click', sendTestPhonePush);
+    }
+
+    const btnMarkAllRead = document.getElementById('btn-mark-all-read');
+    if (btnMarkAllRead) {
+      btnMarkAllRead.addEventListener('click', markAllNotificationsAsRead);
+    }
+
+    // Notification Item Click Handler (Navigates to assigned task)
+    document.addEventListener('click', (e) => {
+      const notifCard = e.target.closest('.notification-item-card');
+      if (notifCard) {
+        const taskId = notifCard.dataset.taskId;
+        markAllNotificationsAsRead();
+        closeAllModals();
+        switchView('tasks');
+
+        if (taskId) {
+          const allFilterPill = document.querySelector('[data-filter="all"]');
+          if (allFilterPill) allFilterPill.click();
+          setTimeout(() => {
+            const taskEl = document.querySelector(`[data-task-id="${taskId}"]`);
+            if (taskEl) {
+              taskEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              taskEl.style.borderColor = '#00D9FF';
+              taskEl.style.boxShadow = '0 0 25px rgba(0, 217, 255, 0.6)';
+              setTimeout(() => {
+                taskEl.style.borderColor = '';
+                taskEl.style.boxShadow = '';
+              }, 2500);
+            }
+          }, 350);
+        }
+      }
+    });
+
+    // Listen for service worker notification clicks
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'NOTIFICATION_CLICKED') {
+          switchView('tasks');
+          fetchNotificationsFromCloud();
+          syncAllWithCloud();
+        }
       });
     }
 
@@ -2322,6 +2696,12 @@
 
     // Initial friends fetch
     setTimeout(fetchFriendsFromCloud, 600);
+
+    // Initial notifications & push status check
+    setTimeout(() => {
+      fetchNotificationsFromCloud();
+      checkPushSubscriptionStatus();
+    }, 700);
 
     // Health ping test on load
     setTimeout(testBackendPing, 800);

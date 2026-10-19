@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from '../db/client.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { AppEnv } from '../types/index.js';
+import { notificationService } from '../services/notificationService.js';
 
 const tasksApp = new Hono<AppEnv>();
 tasksApp.use('*', authMiddleware);
@@ -469,6 +470,20 @@ tasksApp.post('/', async (c) => {
     ],
   });
 
+  // Notify assigned user if task assigned to someone else
+  if (resolvedAssigneeId && resolvedAssigneeId !== assignedByUserId) {
+    try {
+      await notificationService.notifyTaskAssignment({
+        id,
+        title,
+        assigned_to_user_id: resolvedAssigneeId,
+        assigned_by_user_id: assignedByUserId,
+      });
+    } catch (err) {
+      console.error('Task assignment notification failed:', err);
+    }
+  }
+
   return c.json(
     {
       success: true,
@@ -643,6 +658,22 @@ tasksApp.patch('/:id', async (c) => {
           WHERE t.id = ?`,
     args: [id],
   });
+
+  const updatedTask = updatedResult.rows[0];
+  const oldAssignee = existing.rows[0]?.assigned_to_user_id;
+  const newAssignee = updatedTask?.assigned_to_user_id;
+  if (newAssignee && newAssignee !== oldAssignee && newAssignee !== userId) {
+    try {
+      await notificationService.notifyTaskAssignment({
+        id,
+        title: String(updatedTask.title),
+        assigned_to_user_id: String(newAssignee),
+        assigned_by_user_id: userId,
+      });
+    } catch (err) {
+      console.error('Task reassignment notification failed:', err);
+    }
+  }
 
   return c.json({
     success: true,

@@ -13,6 +13,7 @@ import preferencesApp from './routes/preferences.js';
 import syncApp from './routes/sync.js';
 import devicesApp from './routes/devices.js';
 import friendsApp from './routes/friends.js';
+import notificationsApp from './routes/notifications.js';
 import { requestTrackerMiddleware } from './middleware/requestTracker.js';
 
 const app = new Hono();
@@ -60,6 +61,7 @@ app.route('/api/preferences', preferencesApp);
 app.route('/api/sync', syncApp);
 app.route('/api/devices', devicesApp);
 app.route('/api/friends', friendsApp);
+app.route('/api/notifications', notificationsApp);
 
 // Central Error Handler
 app.onError(errorHandler);

@@ -33,6 +33,9 @@ const envSchema = z.object({
   JWT_SECRET: z.preprocess(sanitizeEnvValue, z.string().min(16, 'JWT_SECRET must be at least 16 characters long').default('super-secret-luphonix-jwt-key-dev-only-32-chars-long')),
   JWT_EXPIRES_IN: z.preprocess(sanitizeEnvValue, z.string().default('30d')),
   ALLOWED_ORIGIN: z.preprocess(sanitizeEnvValue, z.string().default('*')),
+  VAPID_PUBLIC_KEY: z.preprocess(sanitizeEnvValue, z.string().default('BOboWTdA0w-wVfxtzPJ0J8TgHUIL2uU0P66wqeuaQGFTr_lClHcFw4VxjR7uk8HtLfY7mYDDZsDCCRSrSSKy_IU')),
+  VAPID_PRIVATE_KEY: z.preprocess(sanitizeEnvValue, z.string().default('Rl8MaT7gssHdBfcldTrZoghcuXZAyHSQi9gkWhTk8Zk')),
+  VAPID_SUBJECT: z.preprocess(sanitizeEnvValue, z.string().default('mailto:support@luphonix.app')),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
