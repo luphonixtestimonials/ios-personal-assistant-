@@ -27,6 +27,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/node": "^22.10.2",
+    "@types/web-push": "^3.6.4",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
