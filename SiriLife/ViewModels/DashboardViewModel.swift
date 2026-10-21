@@ -22,17 +22,24 @@ public final class DashboardViewModel: ObservableObject {
     
     public func updateDateAndGreeting() {
         let hour = Calendar.current.component(.hour, from: Date())
-        let userName = AuthManager.shared.currentUser?.name ?? "Friend"
+        let firstName: String
+        if let name = AuthManager.shared.currentUser?.name?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+            firstName = name.components(separatedBy: .whitespacesAndNewlines).first ?? name
+        } else if let email = AuthManager.shared.currentUser?.email, !email.isEmpty {
+            firstName = email.components(separatedBy: "@").first ?? "Friend"
+        } else {
+            firstName = "Friend"
+        }
         
         switch hour {
         case 5..<12:
-            greeting = "Good Morning, \(userName)"
+            greeting = "Good Morning, \(firstName)"
         case 12..<17:
-            greeting = "Good Afternoon, \(userName)"
+            greeting = "Good Afternoon, \(firstName)"
         case 17..<22:
-            greeting = "Good Evening, \(userName)"
+            greeting = "Good Evening, \(firstName)"
         default:
-            greeting = "Good Night, \(userName)"
+            greeting = "Good Night, \(firstName)"
         }
         
         let formatter = DateFormatter()

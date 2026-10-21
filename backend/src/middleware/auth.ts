@@ -5,26 +5,30 @@ import { db } from '../db/client.js';
 import { AuthPayload, AppEnv } from '../types/index.js';
 
 export async function getOrCreateDefaultUser(): Promise<{ id: string; email: string; username: string; name: string }> {
+  const defaultId = 'user_siri_default';
+  const email = 'guest@luphonix.local';
+  const username = 'guest';
+  const name = 'Guest';
+  const now = new Date().toISOString();
+
   try {
-    const userResult = await db.execute('SELECT id, name, username, email FROM users ORDER BY created_at ASC LIMIT 1');
+    const userResult = await db.execute({
+      sql: 'SELECT id, name, username, email FROM users WHERE id = ?',
+      args: [defaultId],
+    });
     if (userResult.rows.length > 0) {
       const row = userResult.rows[0];
       return {
         id: String(row.id),
-        name: String(row.name || 'Luphonix User'),
-        username: String(row.username || String(row.email).split('@')[0]),
-        email: String(row.email),
+        name: String(row.name || 'Guest'),
+        username: String(row.username || 'guest'),
+        email: String(row.email || email),
       };
     }
 
-    const defaultId = 'user_siri_default';
-    const email = 'user@luphonix.local';
-    const username = 'dhyey';
-    const now = new Date().toISOString();
-
     await db.execute({
       sql: 'INSERT OR IGNORE INTO users (id, name, username, email, password_hash, timezone, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      args: [defaultId, 'Dhyey', username, email, 'siri-auth-user', 'UTC', now],
+      args: [defaultId, name, username, email, 'siri-auth-user', 'UTC', now],
     });
 
     await db.execute({
@@ -32,9 +36,9 @@ export async function getOrCreateDefaultUser(): Promise<{ id: string; email: str
       args: [defaultId, now],
     });
 
-    return { id: defaultId, name: 'Dhyey', username, email };
+    return { id: defaultId, name, username, email };
   } catch (err) {
-    return { id: 'user_siri_default', name: 'Dhyey', username: 'dhyey', email: 'user@luphonix.local' };
+    return { id: defaultId, name: 'Guest', username: 'guest', email: 'guest@luphonix.local' };
   }
 }
 

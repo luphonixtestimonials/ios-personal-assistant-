@@ -50,12 +50,12 @@
     <header class="app-header" id="main-header">
       <div class="header-left-user">
         <div class="user-greeting-sub" id="greeting-time">Good Morning</div>
-        <div class="user-greeting-name" id="greeting-title">Dhyey <span class="greeting-emoji">🌤️</span></div>
+        <div class="user-greeting-name" id="greeting-title">Welcome <span class="greeting-emoji">🌤️</span></div>
       </div>
       <div class="header-actions">
         <div class="user-auth-pill" id="user-auth-pill" title="Account / Sign In">
           <span class="user-avatar-dot" id="user-avatar-icon"><i class="fa-solid fa-user"></i></span>
-          <span id="user-display-name">Dhyey</span>
+          <span id="user-display-name">Sign In</span>
         </div>
         <div class="status-pill" id="connection-pill" title="Cloud Database Sync">
           <span class="status-dot"></span>
@@ -1064,7 +1064,7 @@
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 13px; color: var(--text-muted);">Assigned By:</span>
-          <span id="td-assigned-by" style="font-size: 13px; font-weight: 600; color: var(--text-main);">@dhyey</span>
+          <span id="td-assigned-by" style="font-size: 13px; font-weight: 600; color: var(--text-main);">@me</span>
         </div>
       </div>
 
@@ -1231,7 +1231,7 @@
           </label>
           <div class="input-icon-wrapper">
             <span class="input-leading-icon"><i class="fa-solid fa-user"></i></span>
-            <input type="text" class="form-input with-icon" id="signup-name" placeholder="Dhyey" required autocomplete="name">
+            <input type="text" class="form-input with-icon" id="signup-name" placeholder="e.g. Alex Rivera" required autocomplete="name">
           </div>
         </div>
         <div class="form-group">
@@ -1240,7 +1240,7 @@
           </label>
           <div class="input-icon-wrapper">
             <span class="input-leading-icon"><i class="fa-solid fa-at"></i></span>
-            <input type="text" class="form-input with-icon" id="signup-username" placeholder="e.g. dhyey_dev" autocomplete="username">
+            <input type="text" class="form-input with-icon" id="signup-username" placeholder="e.g. alex_dev" autocomplete="username">
           </div>
         </div>
         <div class="form-group">
@@ -1280,11 +1280,11 @@
       <div class="modal-handle"></div>
       <div class="auth-header-wrapper" style="margin-bottom: 14px;">
         <div class="auth-header-badge" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(0, 210, 255, 0.2) 100%); border-color: rgba(0, 210, 255, 0.4);">
-          <span id="account-avatar-char" style="font-size: 22px; font-weight: 800; color: #00D2FF;">D</span>
+          <span id="account-avatar-char" style="font-size: 22px; font-weight: 800; color: #00D2FF;">U</span>
         </div>
-        <h3 class="auth-main-title" id="account-name-val">Dhyey</h3>
-        <p class="auth-subtitle" id="account-email-val">dhyey@luphonix.local</p>
-        <div style="font-size: 13px; color: var(--accent-cyan); font-weight: 700; font-family: monospace; margin-top: 4px;" id="account-handle-val">@dhyey</div>
+        <h3 class="auth-main-title" id="account-name-val">User Profile</h3>
+        <p class="auth-subtitle" id="account-email-val">user@luphonix.local</p>
+        <div style="font-size: 13px; color: var(--accent-cyan); font-weight: 700; font-family: monospace; margin-top: 4px;" id="account-handle-val">@user</div>
       </div>
 
       <div class="glass-card" style="margin-bottom: 16px; background: rgba(15, 23, 42, 0.6); border-color: rgba(255, 255, 255, 0.08);">
@@ -1296,7 +1296,7 @@
         </div>
         <div style="font-size: 11px; color: var(--text-sub); border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; display: flex; justify-content: space-between;">
           <span>Account ID:</span>
-          <span id="account-id-val" style="font-family: monospace; color: #94A3B8;">dhyey</span>
+          <span id="account-id-val" style="font-family: monospace; color: #94A3B8;">—</span>
         </div>
       </div>
 
@@ -1326,7 +1326,7 @@
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 18px; font-weight: 800; color: #FFFFFF; font-family: monospace;" id="my-unique-handle">@dhyey</span>
+            <span style="font-size: 18px; font-weight: 800; color: #FFFFFF; font-family: monospace;" id="my-unique-handle">@user</span>
             <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34D399; font-size: 10px; padding: 2px 8px; border-radius: 999px;">Active</span>
           </div>
           <button type="button" class="btn-secondary" id="btn-copy-my-handle" style="padding: 6px 12px; font-size: 12px; height: 32px; border-radius: 8px; display: flex; align-items: center; gap: 6px; cursor: pointer;" title="Copy unique handle">

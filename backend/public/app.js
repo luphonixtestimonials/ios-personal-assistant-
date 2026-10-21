@@ -181,7 +181,27 @@
     }, 2800);
   }
 
-  // --- Dynamic Greeting ---
+  // --- Dynamic Greeting & User Identity Helper ---
+  function getUserFirstName() {
+    if (state.user && state.user.name && typeof state.user.name === 'string' && state.user.name.trim()) {
+      const parts = state.user.name.trim().split(/\s+/);
+      if (parts.length > 0 && parts[0]) {
+        return parts[0];
+      }
+    }
+    if (state.user && state.user.username && typeof state.user.username === 'string' && state.user.username.trim()) {
+      const u = state.user.username.trim().replace(/^@/, '');
+      return u.charAt(0).toUpperCase() + u.slice(1);
+    }
+    if (state.user && state.user.email && typeof state.user.email === 'string' && state.user.email.trim()) {
+      const emailName = state.user.email.split('@')[0].trim();
+      if (emailName) {
+        return emailName.charAt(0).toUpperCase() + emailName.slice(1);
+      }
+    }
+    return state.token ? 'User' : 'Friend';
+  }
+
   function updateGreeting() {
     const timeEl = document.getElementById('greeting-time');
     const titleEl = document.getElementById('greeting-title');
@@ -194,9 +214,9 @@
     else if (hour >= 22 || hour < 5) timeText = 'Good Night';
 
     timeEl.textContent = timeText;
-    const userName = (state.user && state.user.name) ? state.user.name.split(' ')[0] : 'Dhyey';
+    const firstName = getUserFirstName();
     const emoji = hour < 12 ? '🌤️' : hour < 18 ? '☀️' : '🌙';
-    titleEl.innerHTML = `${escapeHTML(userName)} <span class="greeting-emoji">${emoji}</span>`;
+    titleEl.innerHTML = `${escapeHTML(firstName)} <span class="greeting-emoji">${emoji}</span>`;
   }
 
   // --- Hydration Calculation & Ring Animation ---
@@ -421,8 +441,8 @@
 
     // Collaboration Assignment Badges
     let assignmentBadge = '';
-    const myUsername = (state.user && state.user.username) ? state.user.username.toLowerCase() : 'dhyey';
-    const myUserId = state.user ? state.user.id : 'dhyey';
+    const myUsername = (state.user && state.user.username) ? state.user.username.toLowerCase() : '';
+    const myUserId = state.user ? state.user.id : '';
 
     if (task.assigned_to_username || task.assigned_to_user_id) {
       const isAssignedToMe = (task.assigned_to_username && task.assigned_to_username.toLowerCase() === myUsername) || 
@@ -548,7 +568,7 @@
       }
     }
 
-    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
+    const myUsername = (state.user && state.user.username) ? state.user.username : (state.user?.name ? getUserFirstName().toLowerCase() : 'me');
     const assignee = task.assigned_to_username ? `@${task.assigned_to_username}` : `@${myUsername} (Myself)`;
     const assigner = task.assigned_by_username ? `@${task.assigned_by_username}` : `@${myUsername}`;
     if (assignedToEl) assignedToEl.textContent = assignee;
@@ -625,8 +645,8 @@
   }
 
   function addTask(title, category, priority, assignedToUserId, assignedToUsername, description, dueAt) {
-    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
-    const myUserId = (state.user && state.user.id) ? state.user.id : 'dhyey';
+    const myUsername = (state.user && state.user.username) ? state.user.username : (state.user?.name ? getUserFirstName().toLowerCase() : 'me');
+    const myUserId = (state.user && state.user.id) ? state.user.id : (state.token ? 'current_user' : 'user_siri_default');
 
     const newTask = {
       id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 't_' + Date.now(),
@@ -999,28 +1019,66 @@
     const accountAvatarChar = document.getElementById('account-avatar-char');
     const myHandleEl = document.getElementById('my-unique-handle');
     const accountHandleEl = document.getElementById('account-handle-val');
-    const username = (state.user && state.user.username) ? state.user.username : 'dhyey';
+    const username = (state.user && state.user.username)
+      ? state.user.username
+      : (state.user && state.user.email ? state.user.email.split('@')[0] : 'guest');
 
     if (myHandleEl) myHandleEl.textContent = `@${username}`;
     if (accountHandleEl) accountHandleEl.textContent = `@${username}`;
 
     if (state.user && state.token) {
       if (userAuthPill) userAuthPill.classList.add('logged-in');
-      const initial = (state.user.name || state.user.email || 'U').charAt(0).toUpperCase();
-      if (nameSpan) nameSpan.textContent = state.user.name ? state.user.name.split(' ')[0] : 'Account';
+      const firstName = getUserFirstName();
+      const initial = firstName.charAt(0).toUpperCase();
+      if (nameSpan) nameSpan.textContent = firstName;
       if (avatarIcon) avatarIcon.textContent = initial;
-      if (accountName) accountName.textContent = state.user.name || 'Luphonix User';
+      if (accountName) accountName.textContent = state.user.name || firstName;
       if (accountEmail) accountEmail.textContent = state.user.email || '';
       if (accountId) accountId.textContent = state.user.id || '';
       if (accountAvatarChar) accountAvatarChar.textContent = initial;
     } else {
       if (userAuthPill) userAuthPill.classList.remove('logged-in');
       if (nameSpan) nameSpan.textContent = 'Sign In';
-      if (avatarIcon) avatarIcon.textContent = '👤';
-      if (accountName) accountName.textContent = 'Guest / Siri Default';
-      if (accountEmail) accountEmail.textContent = 'user@luphonix.local';
-      if (accountId) accountId.textContent = 'user_siri_default';
+      if (avatarIcon) avatarIcon.innerHTML = '<i class="fa-solid fa-user"></i>';
+      if (accountName) accountName.textContent = 'Guest User';
+      if (accountEmail) accountEmail.textContent = 'Sign in to sync across devices';
+      if (accountId) accountId.textContent = '—';
       if (accountAvatarChar) accountAvatarChar.textContent = 'G';
+    }
+  }
+
+  async function checkAuthSession() {
+    if (!state.token) {
+      updateAuthUI();
+      updateGreeting();
+      return;
+    }
+    const base = getBackendBaseUrl();
+    try {
+      const res = await fetch(`${base}/api/auth/me`, {
+        headers: {
+          'Authorization': `Bearer ${state.token}`,
+          'Accept': 'application/json'
+        }
+      });
+      if (res.ok) {
+        const body = await res.json();
+        if (body && body.success && body.data && body.data.user) {
+          state.user = body.data.user;
+          saveStorage(STORAGE_KEY_AUTH_USER, state.user);
+          updateAuthUI();
+          updateGreeting();
+        }
+      } else if (res.status === 401) {
+        state.token = null;
+        state.user = null;
+        localStorage.removeItem(STORAGE_KEY_AUTH_TOKEN);
+        localStorage.removeItem(STORAGE_KEY_AUTH_USER);
+        updateAuthUI();
+        updateGreeting();
+      }
+    } catch (e) {
+      console.warn('Could not verify session online:', e);
     }
   }
 
@@ -1059,8 +1117,9 @@
       saveStorage(STORAGE_KEY_AUTH_TOKEN, state.token);
       saveStorage(STORAGE_KEY_AUTH_USER, state.user);
       updateAuthUI();
+      updateGreeting();
       closeAllModals();
-      showToast(`Welcome back, ${state.user.name || 'User'}! 🎉`, 'success');
+      showToast(`Welcome back, ${getUserFirstName()}! 🎉`, 'success');
 
       // Refresh cloud data for logged-in user
       syncAllWithCloud(true);
@@ -1116,8 +1175,9 @@
       saveStorage(STORAGE_KEY_AUTH_TOKEN, state.token);
       saveStorage(STORAGE_KEY_AUTH_USER, state.user);
       updateAuthUI();
+      updateGreeting();
       closeAllModals();
-      showToast(`Account created! Welcome, ${state.user.name}! 🚀`, 'success');
+      showToast(`Account created! Welcome, ${getUserFirstName()}! 🚀`, 'success');
 
       // Refresh cloud data
       syncAllWithCloud(true);
@@ -1146,6 +1206,7 @@
     localStorage.removeItem(STORAGE_KEY_AUTH_USER);
     localStorage.removeItem(STORAGE_KEY_NOTIFS);
     updateAuthUI();
+    updateGreeting();
     updateNotificationBellUI();
     closeAllModals();
     showToast('Signed out of Luphonix', 'info');
@@ -1574,7 +1635,7 @@
     const container = document.getElementById('friends-list-container');
     const countEl = document.getElementById('friends-count');
     const myHandleEl = document.getElementById('my-unique-handle');
-    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
+    const myUsername = (state.user && state.user.username) ? state.user.username : (state.user && state.user.email ? state.user.email.split('@')[0] : 'guest');
 
     if (myHandleEl) {
       myHandleEl.textContent = `@${myUsername}`;
@@ -2309,7 +2370,7 @@
     const btnCopyHandle = document.getElementById('btn-copy-my-handle');
     if (btnCopyHandle) {
       btnCopyHandle.addEventListener('click', () => {
-        const username = (state.user && state.user.username) ? state.user.username : 'dhyey';
+        const username = (state.user && state.user.username) ? state.user.username : (state.user && state.user.email ? state.user.email.split('@')[0] : 'guest');
         const handle = `@${username}`;
         navigator.clipboard.writeText(handle).then(() => {
           showToast(`Copied ${handle} to clipboard! 📋`, 'success');
@@ -2915,6 +2976,7 @@
     populateAssignDropdown();
     initEvents();
     updateAuthUI();
+    checkAuthSession();
     ensureApiKey();
     registerServiceWorker();
 
