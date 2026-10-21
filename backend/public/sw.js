@@ -1,8 +1,14 @@
-const CACHE_NAME = 'luphonix-pwa-v4';
+const CACHE_NAME = 'luphonix-pwa-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/style.css',
+  '/fonts/anton-latin-400-normal.woff2',
+  '/fonts/space-mono-latin-400-normal.woff2',
+  '/fonts/space-mono-latin-700-normal.woff2',
+  '/fonts/space-grotesk-latin-400-normal.woff2',
+  '/fonts/space-grotesk-latin-500-normal.woff2',
+  '/fonts/space-grotesk-latin-700-normal.woff2',
   '/app.js',
   '/manifest.json',
   '/favicon.png',

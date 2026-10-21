@@ -15,7 +15,6 @@
   const STORAGE_KEY_AUTH_TOKEN = 'luphonix_auth_token_v1';
   const STORAGE_KEY_AUTH_USER = 'luphonix_auth_user_v1';
   const STORAGE_KEY_FRIENDS = 'luphonix_friends_v1';
-  const STORAGE_KEY_NOTIFS = 'luphonix_notifications_v1';
 
   // Default sample friends
   const DEFAULT_FRIENDS = [
@@ -73,9 +72,6 @@
     token: loadStorage(STORAGE_KEY_AUTH_TOKEN, null),
     user: loadStorage(STORAGE_KEY_AUTH_USER, null),
     friends: loadStorage(STORAGE_KEY_FRIENDS, DEFAULT_FRIENDS),
-    notifications: loadStorage(STORAGE_KEY_NOTIFS, []),
-    unreadNotifCount: 0,
-    pushSubscribed: false,
     currentFilter: 'all',
     currentRemFilter: 'all',
     currentReqFilter: 'all',
@@ -172,6 +168,7 @@
     const icon = type === 'success' ? '✅' : type === 'water' ? '💧' : 'ℹ️';
     toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
     container.appendChild(toast);
+    recordAlert('Luphonix', message, type);
 
     setTimeout(() => {
       toast.style.opacity = '0';
@@ -181,27 +178,7 @@
     }, 2800);
   }
 
-  // --- Dynamic Greeting & User Identity Helper ---
-  function getUserFirstName() {
-    if (state.user && state.user.name && typeof state.user.name === 'string' && state.user.name.trim()) {
-      const parts = state.user.name.trim().split(/\s+/);
-      if (parts.length > 0 && parts[0]) {
-        return parts[0];
-      }
-    }
-    if (state.user && state.user.username && typeof state.user.username === 'string' && state.user.username.trim()) {
-      const u = state.user.username.trim().replace(/^@/, '');
-      return u.charAt(0).toUpperCase() + u.slice(1);
-    }
-    if (state.user && state.user.email && typeof state.user.email === 'string' && state.user.email.trim()) {
-      const emailName = state.user.email.split('@')[0].trim();
-      if (emailName) {
-        return emailName.charAt(0).toUpperCase() + emailName.slice(1);
-      }
-    }
-    return state.token ? 'User' : 'Friend';
-  }
-
+  // --- Dynamic Greeting ---
   function updateGreeting() {
     const timeEl = document.getElementById('greeting-time');
     const titleEl = document.getElementById('greeting-title');
@@ -213,10 +190,18 @@
     else if (hour >= 17 && hour < 22) timeText = 'Good Evening';
     else if (hour >= 22 || hour < 5) timeText = 'Good Night';
 
-    timeEl.textContent = timeText;
-    const firstName = getUserFirstName();
+    const userName = (state.user && state.user.name) ? state.user.name.split(' ')[0] : 'Dhyey';
     const emoji = hour < 12 ? '🌤️' : hour < 18 ? '☀️' : '🌙';
-    titleEl.innerHTML = `${escapeHTML(firstName)} <span class="greeting-emoji">${emoji}</span>`;
+    timeEl.innerHTML = `${timeText}, <span class="greeting-emoji">${emoji}</span>`;
+    titleEl.textContent = userName;
+
+    const dateEl = document.getElementById('hero-date');
+    if (dateEl) {
+      const now = new Date();
+      const mon = now.toLocaleDateString('en-US', { month: 'short' });
+      const wk = now.toLocaleDateString('en-US', { weekday: 'short' });
+      dateEl.innerHTML = `${mon} ${now.getDate()}<br>${now.getFullYear()}<br>${wk}`;
+    }
   }
 
   // --- Hydration Calculation & Ring Animation ---
@@ -418,31 +403,14 @@
     }
   }
 
-  function formatFriendlyDate(dateInput) {
-    if (!dateInput) return '';
-    const d = new Date(dateInput);
-    if (isNaN(d.getTime())) return '';
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
-    const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    if (diffDays === 0) return `Today, ${timeStr}`;
-    if (diffDays === 1) return `Tomorrow, ${timeStr}`;
-    if (diffDays === -1) return `Yesterday, ${timeStr}`;
-    
-    return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeStr}`;
-  }
-
   function renderTaskHTML(task) {
     const priorityClass = task.priority ? task.priority.toLowerCase() : 'medium';
     const categoryName = task.category ? task.category.toUpperCase() : 'GENERAL';
 
     // Collaboration Assignment Badges
     let assignmentBadge = '';
-    const myUsername = (state.user && state.user.username) ? state.user.username.toLowerCase() : '';
-    const myUserId = state.user ? state.user.id : '';
+    const myUsername = (state.user && state.user.username) ? state.user.username.toLowerCase() : 'dhyey';
+    const myUserId = state.user ? state.user.id : 'dhyey';
 
     if (task.assigned_to_username || task.assigned_to_user_id) {
       const isAssignedToMe = (task.assigned_to_username && task.assigned_to_username.toLowerCase() === myUsername) || 
@@ -453,24 +421,8 @@
       if (isAssignedToMe && task.assigned_by_username && task.assigned_by_username.toLowerCase() !== myUsername) {
         assignmentBadge = `<span class="task-badge assigned-to-me" title="Assigned to you by @${escapeHTML(assigner)}"><i class="fa-solid fa-arrow-down-left"></i> From @${escapeHTML(assigner)}</span>`;
       } else {
-        assignmentBadge = `<span class="task-badge assigned-to-other" title="Assigned by @${escapeHTML(assigner)} to @${escapeHTML(assignee)}"><i class="fa-solid fa-arrow-up-right-from-square"></i> To @${escapeHTML(assignee)}</span>`;
+        assignmentBadge = `<span class="task-badge assigned-to-other" title="Assigned to @${escapeHTML(assignee)}"><i class="fa-solid fa-arrow-up-right-from-square"></i> To @${escapeHTML(assignee)}</span>`;
       }
-    }
-
-    // Due Date Badge
-    let dueBadge = '';
-    if (task.due_at) {
-      const d = new Date(task.due_at);
-      if (!isNaN(d.getTime())) {
-        const isOverdue = !task.is_completed && d.getTime() < Date.now();
-        dueBadge = `<span class="task-badge due-badge ${isOverdue ? 'overdue' : ''}" title="Due date"><i class="fa-regular fa-calendar-check"></i> ${isOverdue ? 'Overdue: ' : ''}${escapeHTML(formatFriendlyDate(d))}</span>`;
-      }
-    }
-
-    // Full description snippet
-    let descHTML = '';
-    if (task.description && task.description.trim()) {
-      descHTML = `<div class="task-desc">${escapeHTML(task.description.trim())}</div>`;
     }
 
     return `
@@ -478,117 +430,17 @@
         <button class="task-checkbox-btn" data-toggle-task="${task.id}" aria-label="Toggle task">
           <span class="task-checkbox-check"><i class="fa-solid fa-check" style="font-size: 11px;"></i></span>
         </button>
-        <div class="task-content" data-open-task-details="${task.id}" title="Click to view full details" style="cursor: pointer;">
+        <div class="task-content">
           <div class="task-title">${escapeHTML(task.title)}</div>
-          ${descHTML}
           <div class="task-meta">
             <span class="priority-tag ${priorityClass}">${priorityClass}</span>
             <span class="category-tag">${categoryName}</span>
             ${assignmentBadge}
-            ${dueBadge}
           </div>
         </div>
-        <button class="task-delete-btn" data-open-task-details="${task.id}" title="View full task details / options"><i class="fa-solid fa-ellipsis-vertical" style="font-size: 14px;"></i></button>
+        <button class="task-delete-btn" data-delete-task="${task.id}" title="Task menu / delete"><i class="fa-solid fa-ellipsis-vertical" style="font-size: 14px;"></i></button>
       </div>
     `;
-  }
-
-  let activeDetailTaskId = null;
-
-  function openTaskDetailsModal(taskId) {
-    const task = state.tasks.find((t) => t.id === taskId);
-    if (!task) return;
-
-    activeDetailTaskId = taskId;
-
-    const titleEl = document.getElementById('td-title');
-    const descEl = document.getElementById('td-description');
-    const catBadge = document.getElementById('td-category-badge');
-    const prioBadge = document.getElementById('td-priority-badge');
-    const statusBadge = document.getElementById('td-status-badge');
-    const dueEl = document.getElementById('td-due-at');
-    const createdEl = document.getElementById('td-created-at');
-    const assignedToEl = document.getElementById('td-assigned-to');
-    const assignedByEl = document.getElementById('td-assigned-by');
-    const siriHintEl = document.getElementById('td-siri-hint');
-    const toggleBtn = document.getElementById('btn-td-toggle-status');
-
-    if (titleEl) titleEl.textContent = task.title;
-    if (descEl) {
-      if (task.description && task.description.trim()) {
-        descEl.textContent = task.description.trim();
-        descEl.style.color = 'var(--text-main)';
-        descEl.style.fontStyle = 'normal';
-      } else {
-        descEl.textContent = 'No additional description or notes provided for this task.';
-        descEl.style.color = 'var(--text-muted)';
-        descEl.style.fontStyle = 'italic';
-      }
-    }
-
-    const prio = (task.priority || 'medium').toLowerCase();
-    if (prioBadge) {
-      prioBadge.className = `priority-tag ${prio}`;
-      prioBadge.textContent = prio.toUpperCase();
-    }
-
-    if (catBadge) {
-      catBadge.textContent = (task.category || 'work').toUpperCase();
-    }
-
-    if (statusBadge) {
-      if (task.is_completed) {
-        statusBadge.textContent = 'COMPLETED';
-        statusBadge.style.background = 'rgba(16, 185, 129, 0.2)';
-        statusBadge.style.color = '#10B981';
-        statusBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
-      } else {
-        statusBadge.textContent = 'PENDING';
-        statusBadge.style.background = 'rgba(245, 158, 11, 0.2)';
-        statusBadge.style.color = '#F59E0B';
-        statusBadge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
-      }
-    }
-
-    if (dueEl) {
-      if (task.due_at) {
-        const d = new Date(task.due_at);
-        dueEl.textContent = formatFriendlyDate(d) || 'Today';
-      } else {
-        dueEl.textContent = 'No due date set';
-      }
-    }
-
-    if (createdEl) {
-      if (task.created_at) {
-        const d = new Date(task.created_at);
-        createdEl.textContent = formatFriendlyDate(d) || 'Recently';
-      } else {
-        createdEl.textContent = 'Recently';
-      }
-    }
-
-    const myUsername = (state.user && state.user.username) ? state.user.username : (state.user?.name ? getUserFirstName().toLowerCase() : 'me');
-    const assignee = task.assigned_to_username ? `@${task.assigned_to_username}` : `@${myUsername} (Myself)`;
-    const assigner = task.assigned_by_username ? `@${task.assigned_by_username}` : `@${myUsername}`;
-    if (assignedToEl) assignedToEl.textContent = assignee;
-    if (assignedByEl) assignedByEl.textContent = assigner;
-
-    if (siriHintEl) {
-      siriHintEl.textContent = `Say: "Hey Siri, complete ${task.title} in Luphonix"`;
-    }
-
-    if (toggleBtn) {
-      if (task.is_completed) {
-        toggleBtn.innerHTML = '<i class="fa-regular fa-circle-dot" style="margin-right: 6px;"></i> Mark as Pending';
-        toggleBtn.className = 'btn-secondary';
-      } else {
-        toggleBtn.innerHTML = '<i class="fa-solid fa-check" style="margin-right: 6px;"></i> Mark as Completed';
-        toggleBtn.className = 'btn-primary';
-      }
-    }
-
-    openModal('modal-task-details');
   }
 
   function toggleTask(id) {
@@ -644,14 +496,13 @@
     deleteTaskFromCloud(id);
   }
 
-  function addTask(title, category, priority, assignedToUserId, assignedToUsername, description, dueAt) {
-    const myUsername = (state.user && state.user.username) ? state.user.username : (state.user?.name ? getUserFirstName().toLowerCase() : 'me');
-    const myUserId = (state.user && state.user.id) ? state.user.id : (state.token ? 'current_user' : 'user_siri_default');
+  function addTask(title, category, priority, assignedToUserId, assignedToUsername) {
+    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
+    const myUserId = (state.user && state.user.id) ? state.user.id : 'dhyey';
 
     const newTask = {
       id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 't_' + Date.now(),
       title: title.trim(),
-      description: description && description.trim() ? description.trim() : null,
       category: category || 'work',
       priority: priority || 'medium',
       is_completed: false,
@@ -659,7 +510,7 @@
       assigned_to_username: assignedToUsername || null,
       assigned_by_user_id: myUserId,
       assigned_by_username: myUsername,
-      due_at: dueAt ? new Date(dueAt).toISOString() : new Date().toISOString(),
+      due_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
       _needsCloudSync: true
     };
@@ -1000,9 +851,6 @@
 
       // 3. Fetch friends list
       fetchFriendsFromCloud().catch(() => {});
-
-      // 4. Fetch in-app & task assignment notifications
-      fetchNotificationsFromCloud().catch(() => {});
     } catch (e) {
       console.warn('Cloud sync error:', e);
     }
@@ -1019,66 +867,28 @@
     const accountAvatarChar = document.getElementById('account-avatar-char');
     const myHandleEl = document.getElementById('my-unique-handle');
     const accountHandleEl = document.getElementById('account-handle-val');
-    const username = (state.user && state.user.username)
-      ? state.user.username
-      : (state.user && state.user.email ? state.user.email.split('@')[0] : 'guest');
+    const username = (state.user && state.user.username) ? state.user.username : 'dhyey';
 
     if (myHandleEl) myHandleEl.textContent = `@${username}`;
     if (accountHandleEl) accountHandleEl.textContent = `@${username}`;
 
     if (state.user && state.token) {
       if (userAuthPill) userAuthPill.classList.add('logged-in');
-      const firstName = getUserFirstName();
-      const initial = firstName.charAt(0).toUpperCase();
-      if (nameSpan) nameSpan.textContent = firstName;
+      const initial = (state.user.name || state.user.email || 'U').charAt(0).toUpperCase();
+      if (nameSpan) nameSpan.textContent = state.user.name ? state.user.name.split(' ')[0] : 'Account';
       if (avatarIcon) avatarIcon.textContent = initial;
-      if (accountName) accountName.textContent = state.user.name || firstName;
+      if (accountName) accountName.textContent = state.user.name || 'Luphonix User';
       if (accountEmail) accountEmail.textContent = state.user.email || '';
       if (accountId) accountId.textContent = state.user.id || '';
       if (accountAvatarChar) accountAvatarChar.textContent = initial;
     } else {
       if (userAuthPill) userAuthPill.classList.remove('logged-in');
       if (nameSpan) nameSpan.textContent = 'Sign In';
-      if (avatarIcon) avatarIcon.innerHTML = '<i class="fa-solid fa-user"></i>';
-      if (accountName) accountName.textContent = 'Guest User';
-      if (accountEmail) accountEmail.textContent = 'Sign in to sync across devices';
-      if (accountId) accountId.textContent = '—';
+      if (avatarIcon) avatarIcon.textContent = '👤';
+      if (accountName) accountName.textContent = 'Guest / Siri Default';
+      if (accountEmail) accountEmail.textContent = 'user@luphonix.local';
+      if (accountId) accountId.textContent = 'user_siri_default';
       if (accountAvatarChar) accountAvatarChar.textContent = 'G';
-    }
-  }
-
-  async function checkAuthSession() {
-    if (!state.token) {
-      updateAuthUI();
-      updateGreeting();
-      return;
-    }
-    const base = getBackendBaseUrl();
-    try {
-      const res = await fetch(`${base}/api/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${state.token}`,
-          'Accept': 'application/json'
-        }
-      });
-      if (res.ok) {
-        const body = await res.json();
-        if (body && body.success && body.data && body.data.user) {
-          state.user = body.data.user;
-          saveStorage(STORAGE_KEY_AUTH_USER, state.user);
-          updateAuthUI();
-          updateGreeting();
-        }
-      } else if (res.status === 401) {
-        state.token = null;
-        state.user = null;
-        localStorage.removeItem(STORAGE_KEY_AUTH_TOKEN);
-        localStorage.removeItem(STORAGE_KEY_AUTH_USER);
-        updateAuthUI();
-        updateGreeting();
-      }
-    } catch (e) {
-      console.warn('Could not verify session online:', e);
     }
   }
 
@@ -1117,9 +927,8 @@
       saveStorage(STORAGE_KEY_AUTH_TOKEN, state.token);
       saveStorage(STORAGE_KEY_AUTH_USER, state.user);
       updateAuthUI();
-      updateGreeting();
       closeAllModals();
-      showToast(`Welcome back, ${getUserFirstName()}! 🎉`, 'success');
+      showToast(`Welcome back, ${state.user.name || 'User'}! 🎉`, 'success');
 
       // Refresh cloud data for logged-in user
       syncAllWithCloud(true);
@@ -1175,9 +984,8 @@
       saveStorage(STORAGE_KEY_AUTH_TOKEN, state.token);
       saveStorage(STORAGE_KEY_AUTH_USER, state.user);
       updateAuthUI();
-      updateGreeting();
       closeAllModals();
-      showToast(`Account created! Welcome, ${getUserFirstName()}! 🚀`, 'success');
+      showToast(`Account created! Welcome, ${state.user.name}! 🚀`, 'success');
 
       // Refresh cloud data
       syncAllWithCloud(true);
@@ -1200,14 +1008,9 @@
   function logoutUser() {
     state.token = null;
     state.user = null;
-    state.notifications = [];
-    state.unreadNotifCount = 0;
     localStorage.removeItem(STORAGE_KEY_AUTH_TOKEN);
     localStorage.removeItem(STORAGE_KEY_AUTH_USER);
-    localStorage.removeItem(STORAGE_KEY_NOTIFS);
     updateAuthUI();
-    updateGreeting();
-    updateNotificationBellUI();
     closeAllModals();
     showToast('Signed out of Luphonix', 'info');
     ensureApiKey(true);
@@ -1399,11 +1202,6 @@
     const waterBtn = document.getElementById('btn-copy-siri-water');
     const tasksBtn = document.getElementById('btn-copy-siri-tasks');
     const completeBtn = document.getElementById('btn-copy-siri-complete');
-    const addBtn = document.getElementById('btn-copy-siri-add');
-    const assignBtn = document.getElementById('btn-copy-siri-assign');
-    const assignedMeBtn = document.getElementById('btn-copy-siri-assigned-me');
-    const hydrationBtn = document.getElementById('btn-copy-siri-hydration');
-    const quickReminderBtn = document.getElementById('btn-copy-siri-quick-reminder');
     const copyTokenBtn = document.getElementById('btn-copy-token');
     const refreshBtn = document.getElementById('btn-regenerate-token');
 
@@ -1432,59 +1230,9 @@
     if (completeBtn) {
       completeBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
-        const url = `${base}/api/tasks/complete?task=ShortcutInput&format=text&apiKey=${encodeURIComponent(key)}`;
+        const url = `${base}/api/tasks/complete?title=ShortcutInput&format=text&apiKey=${encodeURIComponent(key)}`;
         navigator.clipboard.writeText(url).then(() => {
           showToast('Copied Complete Task Webhook URL (with API key)!', 'success');
-        });
-      });
-    }
-
-    if (addBtn) {
-      addBtn.addEventListener('click', async () => {
-        const key = await ensureApiKey();
-        const url = `${base}/api/tasks/add?title=ShortcutInput&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Add Task Webhook URL (with API key)!', 'success');
-        });
-      });
-    }
-
-    if (assignBtn) {
-      assignBtn.addEventListener('click', async () => {
-        const key = await ensureApiKey();
-        const url = `${base}/api/tasks/assign?task=ShortcutInput&to=Alex&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Assign Task Webhook URL (with API key)!', 'success');
-        });
-      });
-    }
-
-    if (assignedMeBtn) {
-      assignedMeBtn.addEventListener('click', async () => {
-        const key = await ensureApiKey();
-        const url = `${base}/api/tasks?filter=assigned_to_me&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Assigned-to-Me Tasks Webhook URL (with API key)!', 'success');
-        });
-      });
-    }
-
-    if (hydrationBtn) {
-      hydrationBtn.addEventListener('click', async () => {
-        const key = await ensureApiKey();
-        const url = `${base}/api/hydration/today?format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Hydration Progress Webhook URL (with API key)!', 'success');
-        });
-      });
-    }
-
-    if (quickReminderBtn) {
-      quickReminderBtn.addEventListener('click', async () => {
-        const key = await ensureApiKey();
-        const url = `${base}/api/reminders/quick?title=ShortcutInput&minutes=30&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Quick Reminder Webhook URL (with API key)!', 'success');
         });
       });
     }
@@ -1536,6 +1284,7 @@
   function switchView(viewName) {
     playSound('click');
     state.activeView = viewName;
+    document.body.dataset.view = viewName;
 
     // Toggle View Sections
     document.querySelectorAll('.view-section').forEach((sec) => {
@@ -1547,7 +1296,7 @@
     // Toggle Nav Icons & Circular Orbit Icons
     document.querySelectorAll('.nav-item').forEach((item) => {
       item.classList.remove('active');
-      if (item.dataset.view === viewName) {
+      if (item.dataset.view === (viewName === 'notifications' ? 'reminders' : viewName)) {
         item.classList.add('active');
       }
     });
@@ -1566,6 +1315,8 @@
         headerSettingsBtn.classList.remove('active');
       }
     }
+
+    if (viewName === 'notifications') renderNotifications();
 
     if (viewName === 'devices') {
       fetchDevicesAndRequests();
@@ -1635,7 +1386,7 @@
     const container = document.getElementById('friends-list-container');
     const countEl = document.getElementById('friends-count');
     const myHandleEl = document.getElementById('my-unique-handle');
-    const myUsername = (state.user && state.user.username) ? state.user.username : (state.user && state.user.email ? state.user.email.split('@')[0] : 'guest');
+    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
 
     if (myHandleEl) {
       myHandleEl.textContent = `@${myUsername}`;
@@ -1755,308 +1506,6 @@
     }
   }
 
-  // --- Push Notification & In-App Notification Engine ---
-  function urlB64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  }
-
-  function formatTimeAgo(isoString) {
-    try {
-      const now = Date.now();
-      const past = new Date(isoString).getTime();
-      const diffSec = Math.floor((now - past) / 1000);
-      if (diffSec < 45) return 'Just now';
-      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
-      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
-      return `${Math.floor(diffSec / 86400)}d ago`;
-    } catch {
-      return '';
-    }
-  }
-
-  async function checkPushSubscriptionStatus() {
-    const badge = document.getElementById('push-status-badge');
-    const btn = document.getElementById('btn-enable-phone-push');
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      if (badge) {
-        badge.textContent = 'Unsupported';
-        badge.style.background = 'rgba(255, 82, 99, 0.2)';
-        badge.style.color = '#FF5263';
-      }
-      return false;
-    }
-
-    if (Notification.permission === 'denied') {
-      if (badge) {
-        badge.textContent = 'Blocked in Settings';
-        badge.style.background = 'rgba(255, 82, 99, 0.2)';
-        badge.style.color = '#FF5263';
-      }
-      if (btn) btn.textContent = 'Enable in Settings';
-      return false;
-    }
-
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      if (sub) {
-        state.pushSubscribed = true;
-        if (badge) {
-          badge.textContent = '● Active (Screen Off Alerts)';
-          badge.style.background = 'rgba(16, 217, 164, 0.2)';
-          badge.style.color = '#10D9A4';
-        }
-        if (btn) {
-          btn.innerHTML = '<i class="fa-solid fa-check" style="margin-right: 6px;"></i> Active on Phone';
-          btn.style.background = 'rgba(16, 217, 164, 0.2)';
-          btn.style.borderColor = 'rgba(16, 217, 164, 0.4)';
-          btn.style.color = '#10D9A4';
-        }
-        return true;
-      } else {
-        state.pushSubscribed = false;
-        if (badge) {
-          badge.textContent = Notification.permission === 'granted' ? 'Not Subscribed' : 'Permission Required';
-          badge.style.background = 'rgba(245, 158, 11, 0.2)';
-          badge.style.color = '#F59E0B';
-        }
-        if (btn) {
-          btn.innerHTML = '<i class="fa-solid fa-bell" style="margin-right: 6px;"></i> Enable Phone Push';
-          btn.style.background = '';
-          btn.style.color = '';
-        }
-        return false;
-      }
-    } catch (e) {
-      console.warn('Push check error:', e);
-      return false;
-    }
-  }
-
-  async function subscribeToPhonePush() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      showToast('Push Notifications require iOS 16.4+ added to Home Screen or modern browser', 'error');
-      return;
-    }
-
-    try {
-      showToast('Requesting phone notification permission...', 'info');
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        showToast('Notification permission was not granted. Please enable it in Settings.', 'error');
-        checkPushSubscriptionStatus();
-        return;
-      }
-
-      const base = getBackendBaseUrl();
-      let key = await ensureApiKey();
-
-      // Fetch VAPID public key
-      const keyRes = await fetch(`${base}/api/notifications/vapid-public-key`).catch(() => null);
-      if (!keyRes || !keyRes.ok) {
-        throw new Error('Failed to retrieve server VAPID key');
-      }
-      const keyData = await keyRes.json();
-      const vapidPublicKey = keyData.publicKey;
-
-      const reg = await navigator.serviceWorker.ready;
-      let sub = await reg.pushManager.getSubscription();
-
-      if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlB64ToUint8Array(vapidPublicKey)
-        });
-      }
-
-      const rawSub = sub.toJSON();
-      const res = await fetch(`${base}/api/notifications/subscribe`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${key}`
-        },
-        body: JSON.stringify({
-          endpoint: sub.endpoint,
-          keys: rawSub.keys,
-          deviceType: /iphone|ipad|ipod/i.test(navigator.userAgent) ? 'iphone-pwa' : 'web-pwa'
-        })
-      });
-
-      if (res.ok) {
-        state.pushSubscribed = true;
-        playSound('check');
-        showToast('📱 iPhone Push Alerts Active! Alerts work even with phone screen off.', 'success');
-        checkPushSubscriptionStatus();
-      } else {
-        showToast('Could not register phone subscription with server.', 'error');
-      }
-    } catch (err) {
-      console.error('Push subscription failed:', err);
-      showToast(`Push failed: ${err.message || 'Error'}`, 'error');
-    }
-  }
-
-  async function sendTestPhonePush() {
-    const base = getBackendBaseUrl();
-    try {
-      const key = await ensureApiKey();
-      showToast('Sending test alert to your phone...', 'info');
-      const res = await fetch(`${base}/api/notifications/test`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${key}`
-        }
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data.success) {
-        playSound('check');
-        showToast(`📲 Alert dispatched! Delivered to ${data.pushSentCount || 1} phone endpoint(s).`, 'success');
-        fetchNotificationsFromCloud();
-      } else {
-        showToast(data.message || 'Failed to dispatch test notification.', 'error');
-      }
-    } catch (err) {
-      showToast('Network error triggering test push.', 'error');
-    }
-  }
-
-  async function fetchNotificationsFromCloud() {
-    const base = getBackendBaseUrl();
-    try {
-      let key = await ensureApiKey();
-      const res = await fetch(`${base}/api/notifications?limit=30`, {
-        headers: {
-          'Authorization': `Bearer ${key}`,
-          'Accept': 'application/json'
-        }
-      }).catch(() => null);
-
-      if (!res || !res.ok) return;
-      const data = await res.json().catch(() => null);
-      if (!data || !Array.isArray(data.notifications)) return;
-
-      const prevIds = new Set((state.notifications || []).map(n => n.id));
-      const freshlyArrived = data.notifications.filter(n => !n.is_read && !prevIds.has(n.id));
-
-      // Alert user if a new task was assigned while the app is active
-      if (freshlyArrived.length > 0) {
-        const top = freshlyArrived[0];
-        playSound('check');
-        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-        showToast(`🔔 ${top.title}: ${top.body}`, 'info');
-      }
-
-      state.notifications = data.notifications;
-      state.unreadNotifCount = data.unreadCount || 0;
-      saveStorage(STORAGE_KEY_NOTIFS, state.notifications);
-
-      updateNotificationBellUI();
-      renderNotificationList();
-    } catch (e) {
-      console.warn('Error fetching notifications:', e);
-    }
-  }
-
-  function updateNotificationBellUI() {
-    const dot = document.getElementById('notif-indicator-dot');
-    const badge = document.getElementById('notif-badge-count');
-    const count = state.unreadNotifCount || 0;
-
-    if (dot) {
-      if (count > 0) dot.classList.add('active');
-      else dot.classList.remove('active');
-    }
-
-    if (badge) {
-      if (count > 0) {
-        badge.style.display = 'flex';
-        badge.textContent = count > 99 ? '99+' : count;
-      } else {
-        badge.style.display = 'none';
-      }
-    }
-
-    const modalCount = document.getElementById('notif-modal-count');
-    if (modalCount) {
-      modalCount.textContent = count;
-    }
-  }
-
-  function renderNotificationList() {
-    const container = document.getElementById('notifications-list-container');
-    const modalCount = document.getElementById('notif-modal-count');
-    if (modalCount) modalCount.textContent = state.unreadNotifCount || 0;
-    if (!container) return;
-
-    if (!state.notifications || state.notifications.length === 0) {
-      container.innerHTML = `
-        <div style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
-          <div style="font-size: 32px; margin-bottom: 8px;">🔔</div>
-          <div style="font-size: 14px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;">No Notifications Yet</div>
-          <p style="font-size: 12px; line-height: 1.5;">When someone assigns you a task, you will receive an alert here and on your phone screen!</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = state.notifications.map(n => {
-      const timeStr = formatTimeAgo(n.created_at);
-      const isUnread = !n.is_read;
-      const initial = (n.actor_name || n.actor_username || 'L').charAt(0).toUpperCase();
-
-      return `
-        <div class="notification-item-card ${isUnread ? 'unread' : ''}" data-notif-id="${n.id}" data-task-id="${n.data?.taskId || ''}">
-          <div class="notif-avatar-icon">
-            ${n.type === 'task_assigned' ? '📋' : initial}
-          </div>
-          <div class="notif-content-wrap">
-            <div class="notif-title-row">
-              <span class="notif-card-title">${escapeHTML(n.title)}</span>
-              <span class="notif-card-time">${timeStr}</span>
-            </div>
-            <div class="notif-card-body">${escapeHTML(n.body)}</div>
-          </div>
-          ${isUnread ? '<span class="notif-unread-dot" title="Unread"></span>' : ''}
-        </div>
-      `;
-    }).join('');
-  }
-
-  async function markAllNotificationsAsRead() {
-    const base = getBackendBaseUrl();
-    try {
-      const key = await ensureApiKey();
-      await fetch(`${base}/api/notifications/mark-read`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${key}`
-        },
-        body: JSON.stringify({})
-      });
-
-      if (state.notifications) {
-        state.notifications.forEach(n => { n.is_read = true; });
-      }
-      state.unreadNotifCount = 0;
-      saveStorage(STORAGE_KEY_NOTIFS, state.notifications);
-      updateNotificationBellUI();
-      renderNotificationList();
-      showToast('All notifications marked as read', 'info');
-    } catch {
-      showToast('Failed to mark notifications as read', 'error');
-    }
-  }
-
   // --- Event Bindings & Init ---
   function initEvents() {
     // Bottom Nav Tabs
@@ -2157,10 +1606,6 @@
           switchView(view);
         } else if (action === 'quick-add') {
           openModal('modal-task');
-        } else if (action === 'friends') {
-          renderFriendsList();
-          openModal('modal-friends');
-          fetchFriendsFromCloud();
         }
       });
     });
@@ -2264,17 +1709,11 @@
       });
     }
 
-    // Task Item Checkmark & Details delegation
+    // Task Item Checkmark & Delete delegation
     document.addEventListener('click', (e) => {
       const toggleId = e.target.closest('[data-toggle-task]')?.dataset.toggleTask;
       if (toggleId) {
         toggleTask(toggleId);
-        return;
-      }
-
-      const openDetailsId = e.target.closest('[data-open-task-details]')?.dataset.openTaskDetails;
-      if (openDetailsId) {
-        openTaskDetailsModal(openDetailsId);
         return;
       }
 
@@ -2293,28 +1732,6 @@
       }
     });
 
-    // Task Details Modal Action Buttons
-    const btnTdToggle = document.getElementById('btn-td-toggle-status');
-    if (btnTdToggle) {
-      btnTdToggle.addEventListener('click', () => {
-        if (activeDetailTaskId) {
-          toggleTask(activeDetailTaskId);
-          openTaskDetailsModal(activeDetailTaskId);
-        }
-      });
-    }
-
-    const btnTdDelete = document.getElementById('btn-td-delete');
-    if (btnTdDelete) {
-      btnTdDelete.addEventListener('click', () => {
-        if (activeDetailTaskId) {
-          const idToDelete = activeDetailTaskId;
-          closeAllModals();
-          deleteTask(idToDelete);
-        }
-      });
-    }
-
     // Add Task Button
     const addTaskBtn = document.getElementById('btn-add-task-modal');
     if (addTaskBtn) {
@@ -2327,8 +1744,6 @@
       formAddTask.addEventListener('submit', (e) => {
         e.preventDefault();
         const titleInput = document.getElementById('task-title-input');
-        const descInput = document.getElementById('task-desc-input');
-        const dueInput = document.getElementById('task-due-input');
         const catSelect = document.getElementById('task-category-select');
         const prioSelect = document.getElementById('task-priority-select');
         const assignSelect = document.getElementById('task-assign-select');
@@ -2343,13 +1758,9 @@
             catSelect ? catSelect.value : 'work',
             prioSelect ? prioSelect.value : 'medium',
             assignedId || null,
-            assignedUsername || null,
-            descInput ? descInput.value : '',
-            dueInput ? dueInput.value : ''
+            assignedUsername || null
           );
           titleInput.value = '';
-          if (descInput) descInput.value = '';
-          if (dueInput) dueInput.value = '';
           if (assignSelect) assignSelect.value = '';
           closeAllModals();
         }
@@ -2370,7 +1781,7 @@
     const btnCopyHandle = document.getElementById('btn-copy-my-handle');
     if (btnCopyHandle) {
       btnCopyHandle.addEventListener('click', () => {
-        const username = (state.user && state.user.username) ? state.user.username : (state.user && state.user.email ? state.user.email.split('@')[0] : 'guest');
+        const username = (state.user && state.user.username) ? state.user.username : 'dhyey';
         const handle = `@${username}`;
         navigator.clipboard.writeText(handle).then(() => {
           showToast(`Copied ${handle} to clipboard! 📋`, 'success');
@@ -2506,64 +1917,7 @@
     if (headerBell) {
       headerBell.addEventListener('click', () => {
         playSound('check');
-        openModal('modal-notifications');
-        fetchNotificationsFromCloud();
-        checkPushSubscriptionStatus();
-      });
-    }
-
-    // Phone Push Subscription Buttons inside Modal
-    const btnEnablePush = document.getElementById('btn-enable-phone-push');
-    if (btnEnablePush) {
-      btnEnablePush.addEventListener('click', subscribeToPhonePush);
-    }
-
-    const btnTestPush = document.getElementById('btn-test-phone-push');
-    if (btnTestPush) {
-      btnTestPush.addEventListener('click', sendTestPhonePush);
-    }
-
-    const btnMarkAllRead = document.getElementById('btn-mark-all-read');
-    if (btnMarkAllRead) {
-      btnMarkAllRead.addEventListener('click', markAllNotificationsAsRead);
-    }
-
-    // Notification Item Click Handler (Navigates to assigned task)
-    document.addEventListener('click', (e) => {
-      const notifCard = e.target.closest('.notification-item-card');
-      if (notifCard) {
-        const taskId = notifCard.dataset.taskId;
-        markAllNotificationsAsRead();
-        closeAllModals();
-        switchView('tasks');
-
-        if (taskId) {
-          const allFilterPill = document.querySelector('[data-filter="all"]');
-          if (allFilterPill) allFilterPill.click();
-          setTimeout(() => {
-            const taskEl = document.querySelector(`[data-task-id="${taskId}"]`);
-            if (taskEl) {
-              taskEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              taskEl.style.borderColor = '#00D9FF';
-              taskEl.style.boxShadow = '0 0 25px rgba(0, 217, 255, 0.6)';
-              setTimeout(() => {
-                taskEl.style.borderColor = '';
-                taskEl.style.boxShadow = '';
-              }, 2500);
-            }
-          }, 350);
-        }
-      }
-    });
-
-    // Listen for service worker notification clicks
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'NOTIFICATION_CLICKED') {
-          switchView('tasks');
-          fetchNotificationsFromCloud();
-          syncAllWithCloud();
-        }
+        switchView('notifications');
       });
     }
 
@@ -2660,13 +2014,6 @@
           showToast('Siri: "Showing your today\'s progress"', 'info');
         } else if (id === 'pill-cmd-add') {
           openModal('modal-task');
-        } else if (id === 'pill-cmd-assign') {
-          switchView('tasks');
-          showToast('Siri: "Assigning task #2 to Alex in Luphonix"', 'info');
-        } else if (id === 'pill-cmd-assigned-me') {
-          switchView('tasks');
-          setFilter('assigned');
-          showToast('Siri: "Here are tasks assigned to you"', 'info');
         }
       });
     });
@@ -2804,6 +2151,11 @@
           openModal('modal-auth');
         }
       });
+    }
+
+    const settingsAccountRow = document.getElementById('settings-account-row');
+    if (settingsAccountRow && userAuthPill) {
+      settingsAccountRow.addEventListener('click', () => userAuthPill.click());
     }
 
     const tabBtnLogin = document.getElementById('tab-btn-login');
@@ -2966,6 +2318,120 @@
     }
   }
 
+  // --- Notification Center (recent alerts + browser push permission) ---
+  const STORAGE_KEY_ALERTS = 'luphonix_alerts_v1';
+  let alertLog = loadStorage(STORAGE_KEY_ALERTS, []);
+  if (!Array.isArray(alertLog)) alertLog = [];
+
+  function recordAlert(title, body, type) {
+    alertLog.unshift({
+      id: 'a_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      title,
+      body: String(body || '').replace(/<[^>]*>/g, ''),
+      type: type || 'info',
+      ts: new Date().toISOString(),
+      read: false
+    });
+    alertLog = alertLog.slice(0, 30);
+    saveStorage(STORAGE_KEY_ALERTS, alertLog);
+    updateNotifBadge();
+    if (state.activeView === 'notifications') renderNotifications();
+  }
+
+  function updateNotifBadge() {
+    const badge = document.getElementById('notif-badge');
+    if (!badge) return;
+    const unread = alertLog.filter((a) => !a.read).length;
+    badge.textContent = unread > 9 ? '9+' : unread ? String(unread) : '';
+  }
+
+  function updatePushChip() {
+    const chip = document.getElementById('notif-permission-chip');
+    if (!chip) return;
+    const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+    chip.className = 'notif-chip' + (perm === 'granted' ? ' ok' : perm === 'denied' ? ' blocked' : '');
+    chip.textContent = perm === 'granted' ? 'Enabled' : perm === 'denied' ? 'Blocked' : perm === 'unsupported' ? 'Unsupported' : 'Permission Required';
+  }
+
+  function alertTimeAgo(iso) {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return 'now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  function renderNotifications() {
+    const list = document.getElementById('notif-list');
+    const count = document.getElementById('notif-count');
+    if (count) count.textContent = alertLog.length;
+    updatePushChip();
+    if (!list) return;
+    if (!alertLog.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔔</div><p>No alerts yet.</p></div>`;
+      return;
+    }
+    list.innerHTML = alertLog.map((a) => {
+      const icon = a.type === 'water' ? 'fa-droplet' : a.type === 'success' ? 'fa-circle-check' : 'fa-bell';
+      return `
+        <div class="alert-item ${a.read ? '' : 'unread'}">
+          <div class="alert-icon"><i class="fa-solid ${icon}"></i></div>
+          <div class="alert-body">
+            <div class="alert-title">${escapeHTML(a.title)}</div>
+            <div class="alert-text">${escapeHTML(a.body)}</div>
+          </div>
+          <div class="alert-time">${alertTimeAgo(a.ts)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function initNotifications() {
+    const enable = document.getElementById('btn-enable-push');
+    const test = document.getElementById('btn-send-test-push');
+    const markAll = document.getElementById('btn-mark-all-read');
+    const toggle = document.getElementById('btn-notif-toggle');
+
+    if (enable) {
+      enable.addEventListener('click', async () => {
+        if (!('Notification' in window)) {
+          showToast('Push is not supported in this browser', 'info');
+          return;
+        }
+        try {
+          await Notification.requestPermission();
+        } catch (e) { /* ignore */ }
+        updatePushChip();
+        showToast(Notification.permission === 'granted' ? 'Phone push enabled!' : 'Push permission not granted', 'info');
+      });
+    }
+    if (test) {
+      test.addEventListener('click', async () => {
+        const title = 'Luphonix: Phone Notification';
+        const body = 'Test push — notifications are working.';
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+            if (reg && reg.showNotification) reg.showNotification(title, { body, icon: '/icons/icon-192.png' });
+            else new Notification(title, { body, icon: '/icons/icon-192.png' });
+          } catch (e) { /* ignore */ }
+        }
+        recordAlert(title, body, 'info');
+        showToast('Test push sent', 'info');
+      });
+    }
+    if (markAll) {
+      markAll.addEventListener('click', () => {
+        alertLog.forEach((a) => { a.read = true; });
+        saveStorage(STORAGE_KEY_ALERTS, alertLog);
+        updateNotifBadge();
+        renderNotifications();
+      });
+    }
+    if (toggle) toggle.addEventListener('click', updatePushChip);
+    updateNotifBadge();
+    updatePushChip();
+  }
+
   // --- App Initialization ---
   function init() {
     updateGreeting();
@@ -2975,8 +2441,8 @@
     renderFriendsList();
     populateAssignDropdown();
     initEvents();
+    initNotifications();
     updateAuthUI();
-    checkAuthSession();
     ensureApiKey();
     registerServiceWorker();
 
@@ -2988,12 +2454,6 @@
 
     // Initial friends fetch
     setTimeout(fetchFriendsFromCloud, 600);
-
-    // Initial notifications & push status check
-    setTimeout(() => {
-      fetchNotificationsFromCloud();
-      checkPushSubscriptionStatus();
-    }, 700);
 
     // Health ping test on load
     setTimeout(testBackendPing, 800);
