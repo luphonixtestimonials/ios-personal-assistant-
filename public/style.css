@@ -781,10 +781,17 @@ main.app-main {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  word-break: break-word;
   transition: all 0.2s ease;
+}
+
+.task-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.45;
+  word-break: break-word;
 }
 
 .task-item.completed .task-title {
@@ -792,12 +799,18 @@ main.app-main {
   color: var(--text-sub);
 }
 
+.task-item.completed .task-desc {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
 .task-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-  font-size: 12px;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
@@ -858,6 +871,18 @@ main.app-main {
   background: rgba(168, 85, 247, 0.18);
   color: #C084FC;
   border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.task-badge.due-badge {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.task-badge.due-badge.overdue {
+  background: rgba(244, 63, 94, 0.15);
+  color: #FB7185;
+  border: 1px solid rgba(244, 63, 94, 0.35);
 }
 
 /* Friend Collaboration Cards */

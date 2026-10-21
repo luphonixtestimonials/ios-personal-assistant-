@@ -781,10 +781,17 @@ main.app-main {
   font-size: 15px;
   font-weight: 600;
   color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  word-break: break-word;
   transition: all 0.2s ease;
+}
+
+.task-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.45;
+  word-break: break-word;
 }
 
 .task-item.completed .task-title {
@@ -792,12 +799,18 @@ main.app-main {
   color: var(--text-sub);
 }
 
+.task-item.completed .task-desc {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
 .task-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin-top: 4px;
-  font-size: 12px;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11px;
   color: var(--text-muted);
 }
 
@@ -858,6 +871,18 @@ main.app-main {
   background: rgba(168, 85, 247, 0.18);
   color: #C084FC;
   border: 1px solid rgba(168, 85, 247, 0.4);
+}
+
+.task-badge.due-badge {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38BDF8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.task-badge.due-badge.overdue {
+  background: rgba(244, 63, 94, 0.15);
+  color: #FB7185;
+  border: 1px solid rgba(244, 63, 94, 0.35);
 }
 
 /* Friend Collaboration Cards */
@@ -3278,5 +3303,162 @@ nav.app-navbar {
   transform: scale(1.1) !important;
   box-shadow: 0 12px 35px rgba(0, 102, 255, 0.8), 0 0 30px rgba(0, 217, 255, 0.7) !important;
 }
+
+/* ==========================================================================
+   NOTIFICATION SYSTEM & TASK ASSIGNMENT UI
+   ========================================================================== */
+.notification-bell-btn {
+  position: relative;
+}
+
+.notification-indicator-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00D9FF;
+  box-shadow: 0 0 8px #00D9FF;
+  display: none;
+}
+
+.notification-indicator-dot.active {
+  display: block;
+  animation: pulse-notif-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-notif-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+    box-shadow: 0 0 6px #00D9FF;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.75;
+    box-shadow: 0 0 14px #00D9FF;
+  }
+}
+
+.notification-badge-count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background: #FF5263;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 800;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 2px 6px rgba(255, 82, 99, 0.6);
+  border: 1.5px solid var(--bg-primary);
+  line-height: 1;
+}
+
+/* Notification Item Card in Notification Center Modal */
+.notification-item-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(16, 24, 40, 0.65);
+  border: 1px solid rgba(23, 70, 107, 0.5);
+  border-radius: 14px;
+  padding: 12px 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.notification-item-card:hover {
+  background: rgba(23, 34, 53, 0.85);
+  border-color: rgba(0, 217, 255, 0.4);
+  transform: translateY(-1px);
+}
+
+.notification-item-card.unread {
+  background: rgba(0, 140, 255, 0.08);
+  border-color: rgba(0, 217, 255, 0.45);
+}
+
+.notif-avatar-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(0, 140, 255, 0.2), rgba(0, 217, 255, 0.25));
+  border: 1px solid rgba(0, 217, 255, 0.35);
+  color: #00D9FF;
+}
+
+.notif-content-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.notif-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #F5F8FF;
+}
+
+.notif-card-time {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.notif-card-body {
+  font-size: 12px;
+  color: #CBD5E1;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+.notif-unread-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #00D9FF;
+  box-shadow: 0 0 6px #00D9FF;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+/* Task card assignment tag */
+.task-assigned-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(0, 217, 255, 0.12);
+  color: #00D9FF;
+  border: 1px solid rgba(0, 217, 255, 0.28);
+}
+
+.task-assigned-tag.by-me {
+  background: rgba(16, 217, 164, 0.12);
+  color: #10D9A4;
+  border-color: rgba(16, 217, 164, 0.3);
+}
+
 
 

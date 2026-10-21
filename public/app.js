@@ -398,6 +398,23 @@
     }
   }
 
+  function formatFriendlyDate(dateInput) {
+    if (!dateInput) return '';
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return '';
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const target = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diffDays = Math.round((target - today) / (1000 * 60 * 60 * 24));
+    const timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    if (diffDays === 0) return `Today, ${timeStr}`;
+    if (diffDays === 1) return `Tomorrow, ${timeStr}`;
+    if (diffDays === -1) return `Yesterday, ${timeStr}`;
+    
+    return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${timeStr}`;
+  }
+
   function renderTaskHTML(task) {
     const priorityClass = task.priority ? task.priority.toLowerCase() : 'medium';
     const categoryName = task.category ? task.category.toUpperCase() : 'GENERAL';
@@ -416,8 +433,24 @@
       if (isAssignedToMe && task.assigned_by_username && task.assigned_by_username.toLowerCase() !== myUsername) {
         assignmentBadge = `<span class="task-badge assigned-to-me" title="Assigned to you by @${escapeHTML(assigner)}"><i class="fa-solid fa-arrow-down-left"></i> From @${escapeHTML(assigner)}</span>`;
       } else {
-        assignmentBadge = `<span class="task-badge assigned-to-other" title="Assigned to @${escapeHTML(assignee)}"><i class="fa-solid fa-arrow-up-right-from-square"></i> To @${escapeHTML(assignee)}</span>`;
+        assignmentBadge = `<span class="task-badge assigned-to-other" title="Assigned by @${escapeHTML(assigner)} to @${escapeHTML(assignee)}"><i class="fa-solid fa-arrow-up-right-from-square"></i> To @${escapeHTML(assignee)}</span>`;
       }
+    }
+
+    // Due Date Badge
+    let dueBadge = '';
+    if (task.due_at) {
+      const d = new Date(task.due_at);
+      if (!isNaN(d.getTime())) {
+        const isOverdue = !task.is_completed && d.getTime() < Date.now();
+        dueBadge = `<span class="task-badge due-badge ${isOverdue ? 'overdue' : ''}" title="Due date"><i class="fa-regular fa-calendar-check"></i> ${isOverdue ? 'Overdue: ' : ''}${escapeHTML(formatFriendlyDate(d))}</span>`;
+      }
+    }
+
+    // Full description snippet
+    let descHTML = '';
+    if (task.description && task.description.trim()) {
+      descHTML = `<div class="task-desc">${escapeHTML(task.description.trim())}</div>`;
     }
 
     return `
@@ -425,17 +458,117 @@
         <button class="task-checkbox-btn" data-toggle-task="${task.id}" aria-label="Toggle task">
           <span class="task-checkbox-check"><i class="fa-solid fa-check" style="font-size: 11px;"></i></span>
         </button>
-        <div class="task-content">
+        <div class="task-content" data-open-task-details="${task.id}" title="Click to view full details" style="cursor: pointer;">
           <div class="task-title">${escapeHTML(task.title)}</div>
+          ${descHTML}
           <div class="task-meta">
             <span class="priority-tag ${priorityClass}">${priorityClass}</span>
             <span class="category-tag">${categoryName}</span>
             ${assignmentBadge}
+            ${dueBadge}
           </div>
         </div>
-        <button class="task-delete-btn" data-delete-task="${task.id}" title="Task menu / delete"><i class="fa-solid fa-ellipsis-vertical" style="font-size: 14px;"></i></button>
+        <button class="task-delete-btn" data-open-task-details="${task.id}" title="View full task details / options"><i class="fa-solid fa-ellipsis-vertical" style="font-size: 14px;"></i></button>
       </div>
     `;
+  }
+
+  let activeDetailTaskId = null;
+
+  function openTaskDetailsModal(taskId) {
+    const task = state.tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    activeDetailTaskId = taskId;
+
+    const titleEl = document.getElementById('td-title');
+    const descEl = document.getElementById('td-description');
+    const catBadge = document.getElementById('td-category-badge');
+    const prioBadge = document.getElementById('td-priority-badge');
+    const statusBadge = document.getElementById('td-status-badge');
+    const dueEl = document.getElementById('td-due-at');
+    const createdEl = document.getElementById('td-created-at');
+    const assignedToEl = document.getElementById('td-assigned-to');
+    const assignedByEl = document.getElementById('td-assigned-by');
+    const siriHintEl = document.getElementById('td-siri-hint');
+    const toggleBtn = document.getElementById('btn-td-toggle-status');
+
+    if (titleEl) titleEl.textContent = task.title;
+    if (descEl) {
+      if (task.description && task.description.trim()) {
+        descEl.textContent = task.description.trim();
+        descEl.style.color = 'var(--text-main)';
+        descEl.style.fontStyle = 'normal';
+      } else {
+        descEl.textContent = 'No additional description or notes provided for this task.';
+        descEl.style.color = 'var(--text-muted)';
+        descEl.style.fontStyle = 'italic';
+      }
+    }
+
+    const prio = (task.priority || 'medium').toLowerCase();
+    if (prioBadge) {
+      prioBadge.className = `priority-tag ${prio}`;
+      prioBadge.textContent = prio.toUpperCase();
+    }
+
+    if (catBadge) {
+      catBadge.textContent = (task.category || 'work').toUpperCase();
+    }
+
+    if (statusBadge) {
+      if (task.is_completed) {
+        statusBadge.textContent = 'COMPLETED';
+        statusBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+        statusBadge.style.color = '#10B981';
+        statusBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+      } else {
+        statusBadge.textContent = 'PENDING';
+        statusBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+        statusBadge.style.color = '#F59E0B';
+        statusBadge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+      }
+    }
+
+    if (dueEl) {
+      if (task.due_at) {
+        const d = new Date(task.due_at);
+        dueEl.textContent = formatFriendlyDate(d) || 'Today';
+      } else {
+        dueEl.textContent = 'No due date set';
+      }
+    }
+
+    if (createdEl) {
+      if (task.created_at) {
+        const d = new Date(task.created_at);
+        createdEl.textContent = formatFriendlyDate(d) || 'Recently';
+      } else {
+        createdEl.textContent = 'Recently';
+      }
+    }
+
+    const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
+    const assignee = task.assigned_to_username ? `@${task.assigned_to_username}` : `@${myUsername} (Myself)`;
+    const assigner = task.assigned_by_username ? `@${task.assigned_by_username}` : `@${myUsername}`;
+    if (assignedToEl) assignedToEl.textContent = assignee;
+    if (assignedByEl) assignedByEl.textContent = assigner;
+
+    if (siriHintEl) {
+      siriHintEl.textContent = `Say: "Hey Siri, complete ${task.title} in Luphonix"`;
+    }
+
+    if (toggleBtn) {
+      if (task.is_completed) {
+        toggleBtn.innerHTML = '<i class="fa-regular fa-circle-dot" style="margin-right: 6px;"></i> Mark as Pending';
+        toggleBtn.className = 'btn-secondary';
+      } else {
+        toggleBtn.innerHTML = '<i class="fa-solid fa-check" style="margin-right: 6px;"></i> Mark as Completed';
+        toggleBtn.className = 'btn-primary';
+      }
+    }
+
+    openModal('modal-task-details');
   }
 
   function toggleTask(id) {
@@ -491,13 +624,14 @@
     deleteTaskFromCloud(id);
   }
 
-  function addTask(title, category, priority, assignedToUserId, assignedToUsername) {
+  function addTask(title, category, priority, assignedToUserId, assignedToUsername, description, dueAt) {
     const myUsername = (state.user && state.user.username) ? state.user.username : 'dhyey';
     const myUserId = (state.user && state.user.id) ? state.user.id : 'dhyey';
 
     const newTask = {
       id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 't_' + Date.now(),
       title: title.trim(),
+      description: description && description.trim() ? description.trim() : null,
       category: category || 'work',
       priority: priority || 'medium',
       is_completed: false,
@@ -505,7 +639,7 @@
       assigned_to_username: assignedToUsername || null,
       assigned_by_user_id: myUserId,
       assigned_by_username: myUsername,
-      due_at: new Date().toISOString(),
+      due_at: dueAt ? new Date(dueAt).toISOString() : new Date().toISOString(),
       created_at: new Date().toISOString(),
       _needsCloudSync: true
     };
@@ -2069,11 +2203,17 @@
       });
     }
 
-    // Task Item Checkmark & Delete delegation
+    // Task Item Checkmark & Details delegation
     document.addEventListener('click', (e) => {
       const toggleId = e.target.closest('[data-toggle-task]')?.dataset.toggleTask;
       if (toggleId) {
         toggleTask(toggleId);
+        return;
+      }
+
+      const openDetailsId = e.target.closest('[data-open-task-details]')?.dataset.openTaskDetails;
+      if (openDetailsId) {
+        openTaskDetailsModal(openDetailsId);
         return;
       }
 
@@ -2092,6 +2232,28 @@
       }
     });
 
+    // Task Details Modal Action Buttons
+    const btnTdToggle = document.getElementById('btn-td-toggle-status');
+    if (btnTdToggle) {
+      btnTdToggle.addEventListener('click', () => {
+        if (activeDetailTaskId) {
+          toggleTask(activeDetailTaskId);
+          openTaskDetailsModal(activeDetailTaskId);
+        }
+      });
+    }
+
+    const btnTdDelete = document.getElementById('btn-td-delete');
+    if (btnTdDelete) {
+      btnTdDelete.addEventListener('click', () => {
+        if (activeDetailTaskId) {
+          const idToDelete = activeDetailTaskId;
+          closeAllModals();
+          deleteTask(idToDelete);
+        }
+      });
+    }
+
     // Add Task Button
     const addTaskBtn = document.getElementById('btn-add-task-modal');
     if (addTaskBtn) {
@@ -2104,6 +2266,8 @@
       formAddTask.addEventListener('submit', (e) => {
         e.preventDefault();
         const titleInput = document.getElementById('task-title-input');
+        const descInput = document.getElementById('task-desc-input');
+        const dueInput = document.getElementById('task-due-input');
         const catSelect = document.getElementById('task-category-select');
         const prioSelect = document.getElementById('task-priority-select');
         const assignSelect = document.getElementById('task-assign-select');
@@ -2118,9 +2282,13 @@
             catSelect ? catSelect.value : 'work',
             prioSelect ? prioSelect.value : 'medium',
             assignedId || null,
-            assignedUsername || null
+            assignedUsername || null,
+            descInput ? descInput.value : '',
+            dueInput ? dueInput.value : ''
           );
           titleInput.value = '';
+          if (descInput) descInput.value = '';
+          if (dueInput) dueInput.value = '';
           if (assignSelect) assignSelect.value = '';
           closeAllModals();
         }
