@@ -71,3 +71,16 @@ export interface Friend {
   connectedAt?: string;
 }
 
+export interface AppNotification {
+  id: string;
+  userId?: string;
+  title: string;
+  body: string;
+  url?: string;
+  tag?: string;
+  type?: 'general' | 'task_assigned' | 'hydration' | 'reminder' | 'test_notification' | string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+

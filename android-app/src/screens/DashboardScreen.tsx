@@ -9,7 +9,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StorageService } from '../services/storage';
-import { Task, Reminder, HydrationLog, HydrationSettings } from '../types';
+import { ApiService } from '../services/api';
+import { NotificationService } from '../services/notifications';
+import { Task, Reminder, HydrationLog, HydrationSettings, AppNotification } from '../types';
+import { NotificationCenterModal } from '../components/NotificationCenterModal';
 import * as Haptics from 'expo-haptics';
 
 interface Props {
@@ -21,6 +24,8 @@ export const DashboardScreen: React.FC<Props> = ({ onNavigateTab, onOpenVoice })
   const [tasks, setTasks] = useState<Task[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [hydrationLogs, setHydrationLogs] = useState<HydrationLog[]>([]);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [isNotifModalVisible, setIsNotifModalVisible] = useState(false);
   const [settings, setSettings] = useState<HydrationSettings>({
     goalMl: 2000,
     intervalMinutes: 60,
@@ -31,16 +36,19 @@ export const DashboardScreen: React.FC<Props> = ({ onNavigateTab, onOpenVoice })
   const [refreshing, setRefreshing] = useState(false);
 
   const loadData = useCallback(async () => {
-    const [t, r, hl, hs] = await Promise.all([
+    const [t, r, hl, hs, notifData] = await Promise.all([
       StorageService.getTasks(),
       StorageService.getReminders(),
       StorageService.getHydrationLogs(),
       StorageService.getHydrationSettings(),
+      ApiService.getNotifications(),
     ]);
     setTasks(t);
     setReminders(r);
     setHydrationLogs(hl);
     setSettings(hs);
+    setNotifications(notifData.notifications || []);
+    await NotificationService.updateBadgeCount(notifData.unreadCount);
   }, []);
 
   useEffect(() => {
@@ -74,8 +82,19 @@ export const DashboardScreen: React.FC<Props> = ({ onNavigateTab, onOpenVoice })
     await StorageService.saveHydrationLogs(updated);
   };
 
+  const handleQuickTestAlert = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await NotificationService.sendImmediateTestNotification(
+      '✨ Luphonix Home Screen Alert',
+      'This notification is delivered to your Android Notification Center and displayed as a heads-up banner.'
+    );
+    await loadData();
+  };
+
   const pendingTasks = tasks.filter((t) => !t.isCompleted);
   const activeReminders = reminders.filter((r) => r.isActive);
+  const unreadNotifCount = notifications.filter((n) => !n.isRead).length;
+  const latestNotif = notifications[0];
 
   return (
     <ScrollView
@@ -91,13 +110,98 @@ export const DashboardScreen: React.FC<Props> = ({ onNavigateTab, onOpenVoice })
             {new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
           </Text>
         </View>
-        <TouchableOpacity style={styles.voiceAssistantBtn} onPress={onOpenVoice}>
-          <Ionicons name="mic" size={22} color="#FFFFFF" />
-        </TouchableOpacity>
+
+        <View style={styles.headerActionsRow}>
+          {/* Notification Center Bell Button */}
+          <TouchableOpacity
+            style={styles.bellBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setIsNotifModalVisible(true);
+            }}
+          >
+            <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
+            {unreadNotifCount > 0 && (
+              <View style={styles.bellBadge}>
+                <Text style={styles.bellBadgeText}>{unreadNotifCount > 9 ? '9+' : unreadNotifCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Voice Assistant Mic Button */}
+          <TouchableOpacity style={styles.voiceAssistantBtn} onPress={onOpenVoice}>
+            <Ionicons name="mic" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Android Notification Center & Status Widget */}
+      <View style={styles.notifWidgetCard}>
+        <View style={styles.notifWidgetHeader}>
+          <View style={styles.notifWidgetTitleRow}>
+            <View style={styles.notifWidgetIconCircle}>
+              <Ionicons name="notifications" size={18} color="#38BDF8" />
+            </View>
+            <View>
+              <Text style={styles.notifWidgetTitle}>Android Notification Center</Text>
+              <View style={styles.notifWidgetStatusPill}>
+                <View style={styles.greenDot} />
+                <Text style={styles.notifWidgetStatusText}>System Drawer & Heads-Up Active</Text>
+              </View>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.openNotifCenterBtn}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setIsNotifModalVisible(true);
+            }}
+          >
+            <Text style={styles.openNotifCenterText}>Open &gt;</Text>
+          </TouchableOpacity>
+        </View>
+
+        {latestNotif ? (
+          <View style={styles.latestNotifBox}>
+            <View style={styles.latestNotifHeader}>
+              <Text style={styles.latestNotifTitle} numberOfLines={1}>
+                {latestNotif.title}
+              </Text>
+              <Text style={styles.latestNotifTime}>Latest</Text>
+            </View>
+            <Text style={styles.latestNotifBody} numberOfLines={2}>
+              {latestNotif.body}
+            </Text>
+          </View>
+        ) : (
+          <Text style={styles.noNotifText}>
+            No unread alerts. Scheduled reminders and friend tasks will trigger here.
+          </Text>
+        )}
+
+        {/* Quick Trigger Buttons on Home Screen */}
+        <View style={styles.notifQuickActions}>
+          <TouchableOpacity style={styles.notifQuickBtnPrimary} onPress={handleQuickTestAlert}>
+            <Ionicons name="paper-plane" size={13} color="#090D16" />
+            <Text style={styles.notifQuickBtnPrimaryText}>Trigger Heads-Up Alert</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.notifQuickBtnSecondary}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setIsNotifModalVisible(true);
+            }}
+          >
+            <Ionicons name="albums-outline" size={13} color="#38BDF8" />
+            <Text style={styles.notifQuickBtnSecondaryText}>View All ({notifications.length})</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Hydration Summary Card */}
       <View style={styles.card}>
+
         <View style={styles.cardHeader}>
           <View style={styles.cardTitleRow}>
             <View style={[styles.iconCircle, { backgroundColor: 'rgba(14, 165, 233, 0.15)' }]}>
@@ -233,6 +337,14 @@ export const DashboardScreen: React.FC<Props> = ({ onNavigateTab, onOpenVoice })
           ))
         )}
       </View>
+
+      {/* Notification Center Modal */}
+      <NotificationCenterModal
+        visible={isNotifModalVisible}
+        onClose={() => setIsNotifModalVisible(false)}
+        notifications={notifications}
+        onRefresh={loadData}
+      />
     </ScrollView>
   );
 };
@@ -458,4 +570,171 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
+  headerActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  bellBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#38BDF8',
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: '#090D16',
+  },
+  bellBadgeText: {
+    color: '#090D16',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  notifWidgetCard: {
+    backgroundColor: '#0F172A',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(56, 189, 248, 0.25)',
+    padding: 16,
+    marginBottom: 16,
+  },
+  notifWidgetHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  notifWidgetTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  notifWidgetIconCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    backgroundColor: 'rgba(56, 189, 248, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notifWidgetTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#F8FAFC',
+  },
+  notifWidgetStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginTop: 2,
+  },
+  greenDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
+  notifWidgetStatusText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#94A3B8',
+  },
+  openNotifCenterBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(56, 189, 248, 0.1)',
+  },
+  openNotifCenterText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#38BDF8',
+  },
+  latestNotifBox: {
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    padding: 10,
+    marginBottom: 12,
+  },
+  latestNotifHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 2,
+  },
+  latestNotifTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#E2E8F0',
+    flex: 1,
+    marginRight: 6,
+  },
+  latestNotifTime: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#38BDF8',
+  },
+  latestNotifBody: {
+    fontSize: 11,
+    color: '#94A3B8',
+    lineHeight: 15,
+  },
+  noNotifText: {
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 12,
+    lineHeight: 16,
+  },
+  notifQuickActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  notifQuickBtnPrimary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#38BDF8',
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  notifQuickBtnPrimaryText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#090D16',
+  },
+  notifQuickBtnSecondary: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#1E293B',
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  notifQuickBtnSecondaryText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#38BDF8',
+  },
 });
+

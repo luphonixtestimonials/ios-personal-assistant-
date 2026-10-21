@@ -367,4 +367,95 @@ export const ApiService = {
       return { success: false, error: e.message || 'Network error' };
     }
   },
+
+  async getNotifications(): Promise<{ success: boolean; notifications: import('../types').AppNotification[]; unreadCount: number; error?: string }> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const headers = await this.getHeaders();
+      const res = await fetch(`${cleanUrl}/api/notifications?limit=50`, {
+        method: 'GET',
+        headers,
+      });
+      const parsed = await parseApiResponse(res);
+      if (parsed.ok && parsed.data) {
+        const rawNotifs: any[] = parsed.data.notifications || parsed.data.data || [];
+        const mapped: import('../types').AppNotification[] = rawNotifs.map((n) => ({
+          id: String(n.id),
+          userId: n.user_id,
+          title: n.title,
+          body: n.body,
+          url: n.url,
+          tag: n.tag,
+          type: n.type || 'general',
+          isRead: Boolean(n.is_read),
+          createdAt: n.created_at || new Date().toISOString(),
+        }));
+        await StorageService.saveNotifications(mapped);
+        const unreadCount = parsed.data.unreadCount ?? mapped.filter((n) => !n.isRead).length;
+        return { success: true, notifications: mapped, unreadCount };
+      }
+    } catch {
+      // offline fallback
+    }
+    const cached = await StorageService.getNotifications();
+    return {
+      success: true,
+      notifications: cached,
+      unreadCount: cached.filter((n) => !n.isRead).length,
+    };
+  },
+
+  async markNotificationsRead(ids?: string[]): Promise<boolean> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const headers = await this.getHeaders();
+      await fetch(`${cleanUrl}/api/notifications/mark-read`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(ids ? { ids } : {}),
+      });
+    } catch {
+      // ignore
+    }
+    await StorageService.markAllNotificationsRead();
+    return true;
+  },
+
+  async clearNotifications(): Promise<boolean> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const headers = await this.getHeaders();
+      await fetch(`${cleanUrl}/api/notifications`, {
+        method: 'DELETE',
+        headers,
+      });
+    } catch {
+      // ignore
+    }
+    await StorageService.clearNotifications();
+    return true;
+  },
+
+  async sendTestNotification(): Promise<{ success: boolean; message: string }> {
+    try {
+      const serverUrl = await StorageService.getServerUrl();
+      const cleanUrl = serverUrl.trim().replace(/\/+$/, '');
+      const headers = await this.getHeaders();
+      const res = await fetch(`${cleanUrl}/api/notifications/test`, {
+        method: 'POST',
+        headers,
+      });
+      const parsed = await parseApiResponse(res);
+      if (parsed.ok && parsed.data) {
+        return { success: true, message: parsed.data.message || 'Test notification sent!' };
+      }
+      return { success: false, message: parsed.error || 'Failed to dispatch cloud notification' };
+    } catch (e: any) {
+      return { success: false, message: e.message || 'Network error' };
+    }
+  },
 };
+

@@ -9,6 +9,7 @@ const STORAGE_KEYS = {
   USER_PROFILE: '@luphonix_user_profile',
   SERVER_URL: '@luphonix_server_url',
   FRIENDS: '@luphonix_friends',
+  NOTIFICATIONS: '@luphonix_notifications',
 };
 
 const DEFAULT_HYDRATION_SETTINGS: HydrationSettings = {
@@ -144,4 +145,50 @@ export const StorageService = {
       console.error('Failed to save friends', e);
     }
   },
+
+  async getNotifications(): Promise<import('../types').AppNotification[]> {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  },
+
+  async saveNotifications(notifications: import('../types').AppNotification[]): Promise<void> {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications));
+    } catch (e) {
+      console.error('Failed to save notifications', e);
+    }
+  },
+
+  async addNotification(notification: import('../types').AppNotification): Promise<void> {
+    try {
+      const existing = await this.getNotifications();
+      const updated = [notification, ...existing.filter((n) => n.id !== notification.id)].slice(0, 50);
+      await this.saveNotifications(updated);
+    } catch (e) {
+      console.error('Failed to add notification', e);
+    }
+  },
+
+  async markAllNotificationsRead(): Promise<void> {
+    try {
+      const existing = await this.getNotifications();
+      const updated = existing.map((n) => ({ ...n, isRead: true }));
+      await this.saveNotifications(updated);
+    } catch (e) {
+      console.error('Failed to mark notifications read', e);
+    }
+  },
+
+  async clearNotifications(): Promise<void> {
+    try {
+      await AsyncStorage.removeItem(STORAGE_KEYS.NOTIFICATIONS);
+    } catch (e) {
+      console.error('Failed to clear notifications', e);
+    }
+  },
 };
+

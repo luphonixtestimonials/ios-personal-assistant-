@@ -15,6 +15,7 @@ import { RemindersScreen } from './src/screens/RemindersScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { VoiceAssistantModal } from './src/components/VoiceAssistantModal';
 import { NotificationService } from './src/services/notifications';
+import * as Notifications from 'expo-notifications';
 
 type Tab = 'dashboard' | 'tasks' | 'hydration' | 'reminders' | 'settings';
 
@@ -23,8 +24,24 @@ export default function App() {
   const [isVoiceModalVisible, setIsVoiceModalVisible] = useState(false);
 
   useEffect(() => {
-    // Request notification permissions on app launch
-    NotificationService.requestPermissions();
+    // Request notification permissions on app launch and configure channels
+    NotificationService.requestPermissions().then(() => {
+      NotificationService.updateBadgeCount();
+    });
+
+    // Listen for incoming notifications while app is open
+    const subReceived = Notifications.addNotificationReceivedListener(() => {
+      NotificationService.updateBadgeCount();
+    });
+
+    const subResponse = Notifications.addNotificationResponseReceivedListener(() => {
+      setActiveTab('dashboard');
+    });
+
+    return () => {
+      subReceived.remove();
+      subResponse.remove();
+    };
   }, []);
 
   const renderContent = () => {
