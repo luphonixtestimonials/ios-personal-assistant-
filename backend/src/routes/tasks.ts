@@ -115,13 +115,20 @@ tasksApp.get('/', async (c) => {
 
   let summary = '';
   if (tasks.length === 0) {
-    summary = (filter === 'today' || !filter)
-      ? 'You have no remaining tasks for today in Luphonix!'
-      : 'You have no tasks in Luphonix.';
+    if (filter === 'assigned_to_me') {
+      summary = 'You have no tasks assigned to you in Luphonix.';
+    } else if (filter === 'assigned_by_me') {
+      summary = 'You have not assigned any tasks in Luphonix.';
+    } else if (filter === 'today' || !filter) {
+      summary = 'You have no remaining tasks for today in Luphonix!';
+    } else {
+      summary = 'You have no tasks in Luphonix.';
+    }
   } else {
+    const prefix = filter === 'assigned_to_me' ? 'assigned task' : 'task';
     const titles = tasks.slice(0, 3).map((t: any) => t.title).join(', ');
     const more = tasks.length > 3 ? ` and ${tasks.length - 3} more` : '';
-    summary = `You have ${tasks.length} task${tasks.length === 1 ? '' : 's'}: ${titles}${more}.`;
+    summary = `You have ${tasks.length} ${prefix}${tasks.length === 1 ? '' : 's'}: ${titles}${more}.`;
   }
 
   const format = c.req.query('format')?.toLowerCase();
@@ -146,12 +153,131 @@ tasksApp.get('/', async (c) => {
   });
 });
 
+interface ResolvedTask {
+  task: any;
+  index: number | null;
+}
+
+// Helper to resolve task by exact ID, ordinal number (e.g. 1, 2, "task 2", "#2"), or title
+async function resolveTaskFromQuery(userId: string, queryParam: string): Promise<ResolvedTask | null> {
+  const clean = queryParam.trim();
+  if (!clean) return null;
+
+  // 1. Try matching by exact ID
+  const byId = await db.execute({
+    sql: `SELECT * FROM tasks
+          WHERE (user_id = ? OR user_id = 'user_siri_default' OR assigned_to_user_id = ?)
+            AND is_completed = 0
+            AND id = ?
+          LIMIT 1`,
+    args: [userId, userId, clean],
+  });
+  if (byId.rows.length > 0) {
+    return { task: byId.rows[0], index: null };
+  }
+
+  // 2. Check if the query is a number or phrase like "task 1", "task 2", "#1", "2"
+  const numberMatch = clean.match(/^(?:task\s*(?:number\s*|#)?|#)?\s*(\d+)$/i);
+  if (numberMatch) {
+    const taskIndex = parseInt(numberMatch[1], 10);
+    if (taskIndex > 0) {
+      // Fetch today's uncompleted tasks in order (same order as /api/tasks?filter=today)
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      const todayTasks = await db.execute({
+        sql: `SELECT * FROM tasks
+              WHERE (user_id = ? OR user_id = 'user_siri_default' OR assigned_to_user_id = ?)
+                AND is_completed = 0
+                AND (due_at IS NULL OR due_at <= ?)
+              ORDER BY CASE WHEN due_at IS NULL THEN 1 ELSE 0 END, due_at ASC, created_at DESC`,
+        args: [userId, userId, todayEnd.toISOString()],
+      });
+      if (todayTasks.rows.length >= taskIndex) {
+        return { task: todayTasks.rows[taskIndex - 1], index: taskIndex };
+      }
+
+      // If not enough tasks in today list, check across all uncompleted tasks
+      const allTasks = await db.execute({
+        sql: `SELECT * FROM tasks
+              WHERE (user_id = ? OR user_id = 'user_siri_default' OR assigned_to_user_id = ?)
+                AND is_completed = 0
+              ORDER BY CASE WHEN due_at IS NULL THEN 1 ELSE 0 END, due_at ASC, created_at DESC`,
+        args: [userId, userId],
+      });
+      if (allTasks.rows.length >= taskIndex) {
+        return { task: allTasks.rows[taskIndex - 1], index: taskIndex };
+      }
+    }
+  }
+
+  // 3. Match by title substring
+  const byTitle = await db.execute({
+    sql: `SELECT * FROM tasks
+          WHERE (user_id = ? OR user_id = 'user_siri_default' OR assigned_to_user_id = ?)
+            AND is_completed = 0
+            AND (id = ? OR LOWER(title) LIKE ?)
+          ORDER BY CASE WHEN id = ? THEN 1 WHEN LOWER(title) = ? THEN 2 ELSE 3 END, created_at DESC
+          LIMIT 1`,
+    args: [userId, userId, clean, `%${clean.toLowerCase()}%`, clean, clean.toLowerCase()],
+  });
+
+  if (byTitle.rows.length > 0) {
+    return { task: byTitle.rows[0], index: null };
+  }
+
+  return null;
+}
+
+// Helper to resolve assignee user by username, email, name, or demo handle
+async function resolveAssigneeUser(assigneeQuery: string) {
+  let handle = assigneeQuery.trim();
+  if (handle.startsWith('@')) handle = handle.substring(1).trim();
+
+  // Search in users table
+  const uRes = await db.execute({
+    sql: `SELECT id, name, username, email FROM users
+          WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?) OR LOWER(name) = LOWER(?)
+          LIMIT 1`,
+    args: [handle, handle, handle],
+  });
+
+  if (uRes.rows.length > 0) {
+    const row = uRes.rows[0];
+    return {
+      id: String(row.id),
+      name: String(row.name || row.username),
+      username: String(row.username || handle),
+    };
+  }
+
+  // Demo user fallback / auto-provision
+  const demoHandle = handle.toLowerCase();
+  const demoId = `user_${demoHandle}_demo`;
+  const demoEmail = `${demoHandle}@luphonix.local`;
+  const demoName = handle.charAt(0).toUpperCase() + handle.slice(1);
+  const now = new Date().toISOString();
+  try {
+    await db.execute({
+      sql: `INSERT OR IGNORE INTO users (id, name, username, email, password_hash, timezone, created_at)
+            VALUES (?, ?, ?, ?, 'demo-hashed-pw', 'UTC', ?)`,
+      args: [demoId, demoName, demoHandle, demoEmail, now],
+    });
+  } catch {}
+
+  return {
+    id: demoId,
+    name: demoName,
+    username: demoHandle,
+  };
+}
+
 // GET /api/tasks/complete (Hands-free task completion for Siri Shortcuts)
 tasksApp.get('/complete', async (c) => {
   const userId = c.get('userId');
   const queryParam =
     c.req.query('title') ||
     c.req.query('task') ||
+    c.req.query('number') ||
     c.req.query('text') ||
     c.req.query('q') ||
     c.req.query('id');
@@ -161,7 +287,7 @@ tasksApp.get('/complete', async (c) => {
   const isExplicitJson = format === 'json' || accept.includes('application/json');
 
   if (!queryParam || !queryParam.trim()) {
-    const errorMsg = 'Please provide the task title to mark as completed in Luphonix.';
+    const errorMsg = 'Please provide the task number or title to mark as completed in Luphonix.';
     if (isExplicitJson) {
       return c.json({ success: false, error: errorMsg }, 400);
     }
@@ -171,18 +297,8 @@ tasksApp.get('/complete', async (c) => {
   const cleanQuery = queryParam.trim();
   const now = new Date().toISOString();
 
-  // Search for an uncompleted task matching ID or title (case-insensitive substring)
-  const findResult = await db.execute({
-    sql: `SELECT * FROM tasks
-          WHERE (user_id = ? OR user_id = 'user_siri_default')
-            AND is_completed = 0
-            AND (id = ? OR LOWER(title) LIKE ?)
-          ORDER BY CASE WHEN id = ? THEN 1 WHEN LOWER(title) = ? THEN 2 ELSE 3 END, created_at DESC
-          LIMIT 1`,
-    args: [userId, cleanQuery, `%${cleanQuery.toLowerCase()}%`, cleanQuery, cleanQuery.toLowerCase()],
-  });
-
-  if (findResult.rows.length === 0) {
+  const resolved = await resolveTaskFromQuery(userId, cleanQuery);
+  if (!resolved) {
     const notFoundMsg = `Could not find an uncompleted task matching '${cleanQuery}' in Luphonix.`;
     if (isExplicitJson) {
       return c.json({ success: false, message: notFoundMsg, error: 'Task not found' }, 404);
@@ -190,7 +306,7 @@ tasksApp.get('/complete', async (c) => {
     return c.text(notFoundMsg, 404);
   }
 
-  const matchedTask = findResult.rows[0];
+  const matchedTask = resolved.task;
   const taskId = matchedTask.id;
   const matchedTitle = String(matchedTask.title);
 
@@ -200,7 +316,8 @@ tasksApp.get('/complete', async (c) => {
     args: [now, taskId],
   });
 
-  const successMsg = `Marked '${matchedTitle}' as completed in Luphonix. Good job!`;
+  const label = resolved.index ? `task #${resolved.index} '${matchedTitle}'` : `'${matchedTitle}'`;
+  const successMsg = `Marked ${label} as completed in Luphonix. Good job!`;
 
   if (isExplicitJson) {
     return c.json({
@@ -216,6 +333,103 @@ tasksApp.get('/complete', async (c) => {
 
   return c.text(successMsg);
 });
+
+// GET & POST /api/tasks/assign (Hands-free task assignment for Siri Shortcuts and Web UI)
+async function handleAssignTask(c: any) {
+  const userId = c.get('userId');
+  let taskQuery =
+    c.req.query('task') ||
+    c.req.query('task_id') ||
+    c.req.query('number') ||
+    c.req.query('title') ||
+    c.req.query('q') ||
+    c.req.query('id');
+  let toQuery =
+    c.req.query('to') ||
+    c.req.query('assignee') ||
+    c.req.query('person') ||
+    c.req.query('friend') ||
+    c.req.query('user');
+
+  if (!taskQuery || !toQuery) {
+    try {
+      const body = await c.req.json();
+      if (body) {
+        if (!taskQuery) taskQuery = body.task || body.task_id || body.number || body.title || body.id;
+        if (!toQuery) toQuery = body.to || body.assignee || body.person || body.friend || body.user;
+      }
+    } catch {}
+  }
+
+  const format = c.req.query('format')?.toLowerCase();
+  const accept = c.req.header('accept')?.toLowerCase() || '';
+  const isExplicitJson = format === 'json' || accept.includes('application/json');
+
+  if (!taskQuery || !taskQuery.trim() || !toQuery || !toQuery.trim()) {
+    const errorMsg = 'Please provide the task number or title and the friend to assign to (e.g. task=2&to=Alex).';
+    if (isExplicitJson) {
+      return c.json({ success: false, error: errorMsg }, 400);
+    }
+    return c.text(errorMsg, 400);
+  }
+
+  const resolved = await resolveTaskFromQuery(userId, taskQuery);
+  if (!resolved) {
+    const notFoundMsg = `Could not find an uncompleted task matching '${taskQuery.trim()}' in Luphonix.`;
+    if (isExplicitJson) {
+      return c.json({ success: false, error: notFoundMsg }, 404);
+    }
+    return c.text(notFoundMsg, 404);
+  }
+
+  const assignee = await resolveAssigneeUser(toQuery);
+  const now = new Date().toISOString();
+  const matchedTask = resolved.task;
+  const taskId = matchedTask.id;
+  const matchedTitle = String(matchedTask.title);
+
+  // Update task assignment in database
+  await db.execute({
+    sql: 'UPDATE tasks SET assigned_to_user_id = ?, assigned_by_user_id = ?, updated_at = ? WHERE id = ?',
+    args: [assignee.id, userId, now, taskId],
+  });
+
+  // Notify assigned user if different from assigner
+  if (assignee.id !== userId) {
+    try {
+      await notificationService.notifyTaskAssignment({
+        id: taskId,
+        title: matchedTitle,
+        assigned_to_user_id: assignee.id,
+        assigned_by_user_id: userId,
+      });
+    } catch (err) {
+      console.error('Task assignment notification failed:', err);
+    }
+  }
+
+  const label = resolved.index ? `task #${resolved.index} '${matchedTitle}'` : `'${matchedTitle}'`;
+  const successMsg = `Assigned ${label} to @${assignee.username} in Luphonix.`;
+
+  if (isExplicitJson) {
+    return c.json({
+      success: true,
+      message: successMsg,
+      data: {
+        ...matchedTask,
+        assigned_to_user_id: assignee.id,
+        assigned_to_username: assignee.username,
+        assigned_by_user_id: userId,
+        updated_at: now,
+      },
+    });
+  }
+
+  return c.text(successMsg);
+}
+
+tasksApp.get('/assign', handleAssignTask);
+tasksApp.post('/assign', handleAssignTask);
 
 // GET /api/tasks/toggle?id=<ID> or ?title=<title> (Instant completion toggle for Siri and Web UI)
 tasksApp.get('/toggle', async (c) => {

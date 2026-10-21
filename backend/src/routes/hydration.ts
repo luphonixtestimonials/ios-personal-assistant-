@@ -43,8 +43,24 @@ hydrationApp.get('/today', async (c) => {
   const remaining = Math.max(0, dailyGoal - totalDrunk);
   const progressPercentage = Math.min(100, Math.round((totalDrunk / dailyGoal) * 100));
 
+  const msg = `You have drunk ${totalDrunk} ml of water today, which is ${progressPercentage}% of your ${dailyGoal} ml goal (${remaining} ml remaining).`;
+  const format = c.req.query('format')?.toLowerCase();
+  const accept = c.req.header('accept')?.toLowerCase() || '';
+  const userAgent = c.req.header('user-agent')?.toLowerCase() || '';
+
+  const isExplicitJson = format === 'json' || accept.includes('application/json');
+  const isExplicitText = format === 'text' || c.req.query('text') === '1' || accept.includes('text/plain');
+  const isShortcut = userAgent.includes('shortcut') || userAgent.includes('cfnetwork') || userAgent.includes('darwin');
+
+  if (isExplicitText || (!isExplicitJson && isShortcut)) {
+    return c.text(msg);
+  }
+
   return c.json({
     success: true,
+    message: msg,
+    speech: msg,
+    summary: msg,
     data: {
       daily_goal_ml: dailyGoal,
       total_ml: totalDrunk,

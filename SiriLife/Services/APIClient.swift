@@ -341,6 +341,17 @@ public final class APIClient {
         return task
     }
     
+    public func assignTask(task: String, to: String) async throws -> String {
+        let taskEncoded = task.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? task
+        let toEncoded = to.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? to
+        struct AssignTaskWrapper: Codable {
+            var success: Bool
+            var message: String
+        }
+        let res: AssignTaskWrapper = try await request(endpoint: "/api/tasks/assign?task=\(taskEncoded)&to=\(toEncoded)&format=json")
+        return res.message
+    }
+    
     public func deleteTask(id: String) async throws {
         StorageManager.shared.deleteTask(id: id)
         struct Res: Codable { var success: Bool }

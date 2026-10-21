@@ -398,6 +398,72 @@ describe('Luphonix Backend API Test Suite', async () => {
     const delBody = await delRes.json();
     assert.strictEqual(delBody.success, true);
   });
+
+  it('23. GET /api/tasks/assign should assign task by number or title to a person via Siri webhook', async () => {
+    const keyRes = await app.request('/api/auth/webhook-key');
+    const { apiKey } = await keyRes.json();
+
+    const titleToAssign = `Collaborative Siri Task ${Date.now()}`;
+    // Create the task first
+    const addRes = await app.request(`/api/tasks/add?title=${encodeURIComponent(titleToAssign)}&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(addRes.status, 200);
+
+    // Assign the task to Alex by title
+    const assignRes = await app.request(`/api/tasks/assign?task=${encodeURIComponent(titleToAssign)}&to=alex&format=text&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(assignRes.status, 200);
+    const assignText = await assignRes.text();
+    assert.ok(assignText.includes('Assigned'));
+    assert.ok(assignText.includes('@alex'));
+
+    // Verify task assignment in tasks list
+    const listRes = await app.request(`/api/tasks?filter=assigned_by_me&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(listRes.status, 200);
+    const listBody = await listRes.json();
+    const assignedTask = listBody.data.find((t: any) => t.title === titleToAssign);
+    assert.ok(assignedTask, 'Task must be listed in assigned_by_me');
+    assert.strictEqual(assignedTask.assigned_to_username, 'alex');
+  });
+
+  it('24. GET /api/tasks/complete should complete task by number (e.g. task 1)', async () => {
+    const keyRes = await app.request('/api/auth/webhook-key');
+    const { apiKey } = await keyRes.json();
+
+    // Query today tasks to get the current list
+    const todayRes = await app.request(`/api/tasks?filter=today&apiKey=${encodeURIComponent(apiKey)}`);
+    const todayBody = await todayRes.json();
+    assert.ok(todayBody.data.length >= 1, 'Should have at least 1 today task');
+    const firstTaskTitle = todayBody.data[0].title;
+
+    // Complete task #1 by number
+    const compRes = await app.request(`/api/tasks/complete?task=1&format=text&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(compRes.status, 200);
+    const compText = await compRes.text();
+    assert.ok(compText.includes('Marked task #1'));
+    assert.ok(compText.includes(firstTaskTitle));
+  });
+
+  it('25. GET /api/hydration/today with format=text should return spoken Siri summary', async () => {
+    const keyRes = await app.request('/api/auth/webhook-key');
+    const { apiKey } = await keyRes.json();
+
+    const res = await app.request(`/api/hydration/today?format=text&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(res.status, 200);
+    const text = await res.text();
+    assert.ok(text.includes('You have drunk'));
+    assert.ok(text.includes('goal'));
+  });
+
+  it('26. GET /api/reminders/quick should create a quick reminder with Siri text confirmation', async () => {
+    const keyRes = await app.request('/api/auth/webhook-key');
+    const { apiKey } = await keyRes.json();
+
+    const title = `Drink electrolytes ${Date.now()}`;
+    const res = await app.request(`/api/reminders/quick?title=${encodeURIComponent(title)}&minutes=45&format=text&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(res.status, 200);
+    const text = await res.text();
+    assert.ok(text.includes('Set reminder for'));
+    assert.ok(text.includes('45 minutes from now'));
+  });
 });
 
 

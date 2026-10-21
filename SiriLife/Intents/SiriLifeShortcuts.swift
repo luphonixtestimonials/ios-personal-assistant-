@@ -71,6 +71,17 @@ public struct LuphonixShortcuts: AppShortcutsProvider {
         )
         
         AppShortcut(
+            intent: AssignTaskIntent(),
+            phrases: [
+                "Assign task \(\.$task) to \(\.$to) in \(.applicationName)",
+                "Assign \(\.$task) to \(\.$to) in \(.applicationName)",
+                "Delegate \(\.$task) to \(\.$to) in \(.applicationName)"
+            ],
+            shortTitle: "Assign Task to Person",
+            systemImageName: "person.badge.shield.checkmark.fill"
+        )
+        
+        AppShortcut(
             intent: SetWaterReminderIntervalIntent(),
             phrases: [
                 "Remind me to drink water every hour in \(.applicationName)",

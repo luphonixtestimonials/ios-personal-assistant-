@@ -57,6 +57,73 @@ remindersApp.get('/', async (c) => {
   return c.json({ success: true, count: reminders.length, data: reminders });
 });
 
+// GET & POST /api/reminders/quick (Hands-free quick reminder creation for Siri Shortcuts)
+async function handleQuickReminder(c: any) {
+  const userId = c.get('userId');
+  let title = c.req.query('title') || c.req.query('text') || c.req.query('q');
+  let minutesParam = parseInt(c.req.query('minutes') || '30', 10);
+
+  if (!title) {
+    try {
+      const body = await c.req.json();
+      if (body) {
+        if (body.title) title = body.title;
+        if (typeof body.minutes === 'number') minutesParam = body.minutes;
+      }
+    } catch {}
+  }
+
+  if (!title || !title.trim()) {
+    return c.text('Please provide a reminder title in Luphonix.');
+  }
+
+  const minutes = isNaN(minutesParam) || minutesParam <= 0 ? 30 : minutesParam;
+  const scheduledAt = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+  const id = randomUUID();
+  const now = new Date().toISOString();
+  const reminderTitle = title.trim();
+
+  await db.execute({
+    sql: `INSERT INTO reminders (
+      id, user_id, title, description, scheduled_at, recurrence_rule, category, is_enabled, created_at, updated_at
+    ) VALUES (?, ?, ?, NULL, ?, NULL, 'personal', 1, ?, ?)`,
+    args: [id, userId, reminderTitle, scheduledAt, now, now],
+  });
+
+  const msg = `Set reminder for '${reminderTitle}' in Luphonix for ${minutes} minutes from now.`;
+  const format = c.req.query('format')?.toLowerCase();
+  const accept = c.req.header('accept')?.toLowerCase() || '';
+  const userAgent = c.req.header('user-agent')?.toLowerCase() || '';
+
+  const isExplicitJson = format === 'json' || accept.includes('application/json');
+  const isExplicitText = format === 'text' || c.req.query('text') === '1' || accept.includes('text/plain');
+  const isShortcut = userAgent.includes('shortcut') || userAgent.includes('cfnetwork') || userAgent.includes('darwin');
+
+  if (isExplicitText || (!isExplicitJson && isShortcut)) {
+    return c.text(msg);
+  }
+
+  return c.json(
+    {
+      success: true,
+      message: msg,
+      speech: msg,
+      data: {
+        id,
+        user_id: userId,
+        title: reminderTitle,
+        scheduled_at: scheduledAt,
+        is_enabled: true,
+        created_at: now,
+      },
+    },
+    201
+  );
+}
+
+remindersApp.get('/quick', handleQuickReminder);
+remindersApp.post('/quick', handleQuickReminder);
+
 // POST /api/reminders (Create or Upsert)
 remindersApp.post('/', async (c) => {
   const userId = c.get('userId');
