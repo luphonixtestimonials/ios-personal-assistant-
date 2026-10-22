@@ -15,6 +15,63 @@
   const STORAGE_KEY_AUTH_TOKEN = 'luphonix_auth_token_v1';
   const STORAGE_KEY_AUTH_USER = 'luphonix_auth_user_v1';
   const STORAGE_KEY_FRIENDS = 'luphonix_friends_v1';
+  const STORAGE_KEY_NOTES = 'luphonix_notes_v1';
+
+  // Default sample notes matching mockup screenshot
+  const DEFAULT_NOTES = [
+    {
+      id: 'note_1',
+      title: 'App Ideas',
+      content: 'Ideas for new features, UI improvements and seamless Siri workflows.\n\n- Add interactive widgets\n- Dark cosmic gradients\n- Real-time voice notes sync',
+      category: 'Study',
+      tags: ['#ideas', '#product'],
+      is_pinned: true,
+      color: 'blue',
+      icon: 'fa-lightbulb',
+      created_at: '2026-10-16T10:00:00Z',
+      updated_at: '2026-10-16T10:00:00Z',
+      date_display: 'Oct 16, 2026'
+    },
+    {
+      id: 'note_2',
+      title: 'Lecture Notes',
+      content: 'Important concepts from today\'s lecture on transformer architectures, attention mechanisms, and backpropagation.\n\nKey takeaways:\n1. Scaled dot-product attention\n2. Multi-head projection\n3. Positional encoding',
+      category: 'Study',
+      tags: ['#study', '#ai', '#important'],
+      is_pinned: false,
+      color: 'indigo',
+      icon: 'fa-book-open',
+      created_at: '2026-10-15T14:30:00Z',
+      updated_at: '2026-10-15T14:30:00Z',
+      date_display: 'Oct 15, 2026'
+    },
+    {
+      id: 'note_3',
+      title: 'Shopping List',
+      content: 'Protein, fruits, notebooks, headphones, water bottles, electrolyte powders.\n\n- [ ] Whey isolate\n- [ ] Fresh berries\n- [ ] Wireless earbuds\n- [ ] Grid notebook',
+      category: 'Personal',
+      tags: ['#personal'],
+      is_pinned: false,
+      color: 'emerald',
+      icon: 'fa-cart-shopping',
+      created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+      updated_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+      date_display: '2h ago'
+    },
+    {
+      id: 'note_4',
+      title: 'Daily Reflection',
+      content: 'Today was productive. I completed my core tasks early, stayed hydrated with 2.5L water, and prepared the roadmap for tomorrow.\n\nGrateful for good health and steady progress.',
+      category: 'Personal',
+      tags: ['#journal', '#personal'],
+      is_pinned: false,
+      color: 'pink',
+      icon: 'fa-heart',
+      created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+      updated_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+      date_display: '5h ago'
+    }
+  ];
 
   // Default sample friends
   const DEFAULT_FRIENDS = [
@@ -72,9 +129,18 @@
     token: loadStorage(STORAGE_KEY_AUTH_TOKEN, null),
     user: loadStorage(STORAGE_KEY_AUTH_USER, null),
     friends: loadStorage(STORAGE_KEY_FRIENDS, DEFAULT_FRIENDS),
+    notes: loadStorage(STORAGE_KEY_NOTES, DEFAULT_NOTES),
     currentFilter: 'all',
     currentRemFilter: 'all',
     currentReqFilter: 'all',
+    currentNoteCategory: 'all',
+    notesSearchQuery: '',
+    notesSortBy: 'updated',
+    editingNoteId: null,
+    editorTags: [],
+    selectedCategory: 'Personal',
+    selectedCategoryColor: '#EC4899',
+    isDictating: false,
     searchQuery: '',
     activeView: 'dashboard',
     isOnline: navigator.onLine,
@@ -1017,6 +1083,747 @@
     syncAllWithCloud();
   }
 
+  // ==========================================================================
+  // --- Complete Notes Engine (Matching Screenshot Design & Color Palette) ---
+  // ==========================================================================
+
+  const CATEGORY_COLORS = {
+    Personal: '#EC4899',
+    Study: '#8B5CF6',
+    Work: '#3B82F6',
+    Ideas: '#06B6D4',
+    Health: '#10B981'
+  };
+
+  function getNoteIconAndColor(note) {
+    if (note.icon && note.color) {
+      return { icon: note.icon, color: note.color };
+    }
+    const cat = (note.category || 'Personal').toLowerCase();
+    const title = (note.title || '').toLowerCase();
+
+    if (title.includes('idea') || title.includes('brainstorm') || title.includes('app')) {
+      return { icon: 'fa-lightbulb', color: 'blue' };
+    }
+    if (title.includes('shop') || title.includes('buy') || title.includes('grocery') || title.includes('store')) {
+      return { icon: 'fa-cart-shopping', color: 'emerald' };
+    }
+    if (title.includes('reflect') || title.includes('journal') || title.includes('diary') || title.includes('gratitude')) {
+      return { icon: 'fa-heart', color: 'pink' };
+    }
+    if (cat === 'study' || title.includes('lecture') || title.includes('exam') || title.includes('book') || title.includes('course')) {
+      return { icon: 'fa-book-open', color: 'indigo' };
+    }
+    if (cat === 'work') {
+      return { icon: 'fa-briefcase', color: 'blue' };
+    }
+    if (cat === 'health') {
+      return { icon: 'fa-heart-pulse', color: 'emerald' };
+    }
+    return { icon: 'fa-note-sticky', color: 'purple' };
+  }
+
+  function formatNoteDate(dateStr, fallbackStr) {
+    if (fallbackStr) return fallbackStr;
+    if (!dateStr) return 'Just now';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return 'Recently';
+      const now = new Date();
+      const diffMs = now.getTime() - d.getTime();
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      const diffDays = Math.floor(diffHour / 24);
+
+      if (diffMin < 1) return 'Just now';
+      if (diffMin < 60) return `${diffMin}m ago`;
+      if (diffHour < 24) return `${diffHour}h ago`;
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays}d ago`;
+
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return 'Recently';
+    }
+  }
+
+  function renderNotes() {
+    const container = document.getElementById('notes-cards-container');
+    const emptyState = document.getElementById('notes-empty-state');
+    if (!container) return;
+
+    let list = Array.isArray(state.notes) ? [...state.notes] : [];
+
+    // Filter by Category or Pinned
+    if (state.currentNoteCategory === 'pinned') {
+      list = list.filter((n) => Boolean(n.is_pinned));
+    } else if (state.currentNoteCategory && state.currentNoteCategory !== 'all') {
+      const targetCat = state.currentNoteCategory.toLowerCase();
+      list = list.filter((n) => (n.category || '').toLowerCase() === targetCat);
+    }
+
+    // Filter by Search Query
+    if (state.notesSearchQuery) {
+      const q = state.notesSearchQuery.toLowerCase().trim();
+      list = list.filter((n) => {
+        const titleMatch = (n.title || '').toLowerCase().includes(q);
+        const contentMatch = (n.content || '').toLowerCase().includes(q);
+        const tagsMatch = Array.isArray(n.tags) && n.tags.some((t) => String(t).toLowerCase().includes(q));
+        return titleMatch || contentMatch || tagsMatch;
+      });
+    }
+
+    // Sort Notes
+    list.sort((a, b) => {
+      if (state.notesSortBy === 'pinned') {
+        if (Boolean(a.is_pinned) !== Boolean(b.is_pinned)) {
+          return a.is_pinned ? -1 : 1;
+        }
+      }
+      if (state.notesSortBy === 'title') {
+        return (a.title || '').localeCompare(b.title || '');
+      }
+      // Default: pinned stick to the top, then newest
+      if (Boolean(a.is_pinned) !== Boolean(b.is_pinned)) {
+        return a.is_pinned ? -1 : 1;
+      }
+      const tA = new Date(a.updated_at || a.created_at || 0).getTime();
+      const tB = new Date(b.updated_at || b.created_at || 0).getTime();
+      return tB - tA;
+    });
+
+    if (list.length === 0) {
+      container.innerHTML = '';
+      if (emptyState) emptyState.classList.remove('hidden');
+      return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+
+    container.innerHTML = list.map((note) => {
+      const { icon, color } = getNoteIconAndColor(note);
+      const dateDisplay = note.date_display || formatNoteDate(note.updated_at || note.created_at);
+      const isPinned = Boolean(note.is_pinned);
+
+      // Clean snippet preview text
+      const previewText = (note.content || '').trim().replace(/[#*`_[\]]/g, '') || 'No additional text';
+
+      // Tags HTML
+      const tagsArr = Array.isArray(note.tags) ? note.tags : [];
+      const tagsHtml = tagsArr.map((t) => {
+        const cleanTag = String(t).startsWith('#') ? t : `#${t}`;
+        const catClass = (note.category || '').toLowerCase() === 'personal' ? 'tag-personal'
+          : (note.category || '').toLowerCase() === 'work' ? 'tag-work'
+          : (note.category || '').toLowerCase() === 'study' ? 'tag-study'
+          : '';
+        return `<span class="note-tag-chip ${catClass}">${escapeHTML(cleanTag)}</span>`;
+      }).join('');
+
+      return `
+        <div class="note-card" data-note-id="${escapeHTML(note.id)}">
+          <div class="note-card-icon-wrap color-${color}">
+            <i class="fa-solid ${icon}"></i>
+          </div>
+          <div class="note-card-body">
+            <div class="note-card-header-row">
+              <h4 class="note-card-title">${escapeHTML(note.title || 'Untitled Note')}</h4>
+              <div class="note-card-meta-right">
+                <span>${escapeHTML(dateDisplay)}</span>
+                ${isPinned ? '<span class="note-card-pin" title="Pinned Note"><i class="fa-solid fa-thumbtack"></i></span>' : ''}
+              </div>
+            </div>
+            <p class="note-card-preview">${escapeHTML(previewText)}</p>
+            <div class="note-card-footer-row">
+              <div class="note-card-tags">
+                ${tagsHtml}
+              </div>
+              <button type="button" class="note-card-dots-btn" data-action-note="${escapeHTML(note.id)}" title="More Options" aria-label="Note Options">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach click events on note cards
+    container.querySelectorAll('.note-card').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.note-card-dots-btn')) {
+          e.stopPropagation();
+          const noteId = card.dataset.noteId;
+          openNoteContextMenu(noteId, e.target.closest('.note-card-dots-btn'));
+          return;
+        }
+        const noteId = card.dataset.noteId;
+        openNoteEditor(noteId);
+      });
+    });
+  }
+
+  function showNotesListView() {
+    const listSub = document.getElementById('notes-subview-list');
+    const editorSub = document.getElementById('notes-subview-editor');
+    if (listSub) listSub.classList.remove('hidden');
+    if (editorSub) editorSub.classList.add('hidden');
+    stopVoiceDictation();
+    state.editingNoteId = null;
+  }
+
+  function openNoteEditor(noteId = null) {
+    playSound('click');
+    const listSub = document.getElementById('notes-subview-list');
+    const editorSub = document.getElementById('notes-subview-editor');
+    if (listSub) listSub.classList.add('hidden');
+    if (editorSub) editorSub.classList.remove('hidden');
+
+    state.editingNoteId = noteId;
+    const headingEl = document.getElementById('note-editor-heading');
+    const titleInput = document.getElementById('note-title-input');
+    const contentInput = document.getElementById('note-content-input');
+    const pinCheck = document.getElementById('note-pin-checkbox');
+    const deleteBtn = document.getElementById('btn-note-delete');
+
+    if (noteId) {
+      const note = state.notes.find((n) => n.id === noteId);
+      if (note) {
+        if (headingEl) headingEl.textContent = 'Edit Note';
+        if (titleInput) titleInput.value = note.title || '';
+        if (contentInput) contentInput.value = note.content || '';
+        if (pinCheck) pinCheck.checked = Boolean(note.is_pinned);
+        state.editorTags = Array.isArray(note.tags) ? [...note.tags] : [];
+        setEditorCategory(note.category || 'Personal');
+        if (deleteBtn) deleteBtn.classList.remove('hidden');
+      }
+    } else {
+      if (headingEl) headingEl.textContent = 'New Note';
+      if (titleInput) titleInput.value = '';
+      if (contentInput) contentInput.value = '';
+      if (pinCheck) pinCheck.checked = false;
+      state.editorTags = [];
+      setEditorCategory('Personal');
+      if (deleteBtn) deleteBtn.classList.add('hidden');
+    }
+
+    renderEditorTags();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (titleInput && !noteId) {
+      setTimeout(() => titleInput.focus(), 150);
+    }
+  }
+
+  function setEditorCategory(catName) {
+    state.selectedCategory = catName;
+    const color = CATEGORY_COLORS[catName] || '#EC4899';
+    state.selectedCategoryColor = color;
+
+    const nameEl = document.getElementById('category-selected-name');
+    const dotEl = document.getElementById('category-color-dot');
+    if (nameEl) nameEl.textContent = catName;
+    if (dotEl) dotEl.style.background = color;
+
+    const dropdown = document.getElementById('category-dropdown-menu');
+    if (dropdown) dropdown.classList.add('hidden');
+  }
+
+  function renderEditorTags() {
+    const wrap = document.getElementById('editor-tags-chips');
+    if (!wrap) return;
+    wrap.innerHTML = state.editorTags.map((tag, idx) => {
+      const cleanTag = tag.startsWith('#') ? tag : `#${tag}`;
+      return `
+        <span class="editor-tag-chip">
+          ${escapeHTML(cleanTag)}
+          <i class="fa-solid fa-xmark editor-tag-remove" data-remove-tag="${idx}"></i>
+        </span>
+      `;
+    }).join('');
+
+    wrap.querySelectorAll('.editor-tag-remove').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.removeTag, 10);
+        state.editorTags.splice(idx, 1);
+        renderEditorTags();
+      });
+    });
+  }
+
+  function addEditorTag(rawTag) {
+    if (!rawTag) return;
+    let clean = rawTag.trim().replace(/^#+/, '');
+    if (!clean) return;
+    clean = `#${clean}`;
+    if (!state.editorTags.includes(clean)) {
+      state.editorTags.push(clean);
+      renderEditorTags();
+    }
+    const input = document.getElementById('note-tag-add-input');
+    if (input) input.value = '';
+  }
+
+  async function saveCurrentNote() {
+    const titleInput = document.getElementById('note-title-input');
+    const contentInput = document.getElementById('note-content-input');
+    const pinCheck = document.getElementById('note-pin-checkbox');
+
+    let title = titleInput ? titleInput.value.trim() : '';
+    const content = contentInput ? contentInput.value : '';
+    const is_pinned = pinCheck ? pinCheck.checked : false;
+    const category = state.selectedCategory || 'Personal';
+    const tags = state.editorTags || [];
+
+    if (!title && !content) {
+      showToast('Please enter a note title or content', 'info');
+      if (titleInput) titleInput.focus();
+      return;
+    }
+
+    if (!title) {
+      title = content.split('\n')[0].slice(0, 40) || 'Untitled Note';
+    }
+
+    const now = new Date().toISOString();
+    const isEditing = Boolean(state.editingNoteId);
+    let noteObj;
+
+    if (isEditing) {
+      const idx = state.notes.findIndex((n) => n.id === state.editingNoteId);
+      if (idx !== -1) {
+        state.notes[idx] = {
+          ...state.notes[idx],
+          title,
+          content,
+          category,
+          tags,
+          is_pinned,
+          updated_at: now,
+          date_display: 'Just now'
+        };
+        noteObj = state.notes[idx];
+      }
+    } else {
+      noteObj = {
+        id: `note_${Date.now()}`,
+        title,
+        content,
+        category,
+        tags,
+        is_pinned,
+        created_at: now,
+        updated_at: now,
+        date_display: 'Just now'
+      };
+      state.notes.unshift(noteObj);
+    }
+
+    saveStorage(STORAGE_KEY_NOTES, state.notes);
+    playSound('success');
+    showToast(isEditing ? 'Note updated! 📝' : 'Note saved successfully! ✨', 'success');
+
+    showNotesListView();
+    renderNotes();
+
+    // Sync to backend in background
+    syncNoteToCloud(noteObj, isEditing);
+  }
+
+  async function deleteCurrentNote(noteId = null) {
+    const id = noteId || state.editingNoteId;
+    if (!id) return;
+
+    state.notes = state.notes.filter((n) => n.id !== id);
+    saveStorage(STORAGE_KEY_NOTES, state.notes);
+    playSound('click');
+    showToast('Note deleted', 'info');
+
+    showNotesListView();
+    renderNotes();
+
+    // Sync delete to backend
+    const base = getBackendBaseUrl();
+    try {
+      await fetch(`${base}/api/notes/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+    } catch (e) {
+      /* offline */
+    }
+  }
+
+  async function togglePinNote(noteId) {
+    const note = state.notes.find((n) => n.id === noteId);
+    if (!note) return;
+    note.is_pinned = !note.is_pinned;
+    note.updated_at = new Date().toISOString();
+    saveStorage(STORAGE_KEY_NOTES, state.notes);
+    playSound('check');
+    showToast(note.is_pinned ? 'Note pinned to top 📌' : 'Note unpinned', 'info');
+    renderNotes();
+
+    // Sync to cloud
+    const base = getBackendBaseUrl();
+    try {
+      await fetch(`${base}/api/notes/${noteId}/pin`, {
+        method: 'PATCH',
+        headers: getAuthHeaders()
+      });
+    } catch {}
+  }
+
+  function duplicateNote(noteId) {
+    const note = state.notes.find((n) => n.id === noteId);
+    if (!note) return;
+    const duplicated = {
+      ...note,
+      id: `note_${Date.now()}`,
+      title: `${note.title} (Copy)`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      date_display: 'Just now'
+    };
+    state.notes.unshift(duplicated);
+    saveStorage(STORAGE_KEY_NOTES, state.notes);
+    playSound('success');
+    showToast('Note duplicated', 'success');
+    renderNotes();
+    syncNoteToCloud(duplicated, false);
+  }
+
+  function openNoteContextMenu(noteId, triggerBtn) {
+    const note = state.notes.find((n) => n.id === noteId);
+    if (!note) return;
+
+    document.querySelectorAll('.notes-context-menu').forEach((m) => m.remove());
+
+    const menu = document.createElement('div');
+    menu.className = 'notes-context-menu';
+    menu.style.cssText = `
+      position: absolute;
+      right: 14px;
+      margin-top: 4px;
+      background: #1C1F2E;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 6px;
+      z-index: 500;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 150px;
+      animation: sheetUp 0.18s ease both;
+    `;
+
+    menu.innerHTML = `
+      <button type="button" class="ctx-item" data-action="edit" style="display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:#F1F5F9;border-radius:6px;cursor:pointer;background:none;border:none;width:100%;text-align:left;">
+        <i class="fa-solid fa-pen" style="color:#A855F7;font-size:12px;"></i> Edit
+      </button>
+      <button type="button" class="ctx-item" data-action="pin" style="display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:#F1F5F9;border-radius:6px;cursor:pointer;background:none;border:none;width:100%;text-align:left;">
+        <i class="fa-solid fa-thumbtack" style="color:#C084FC;font-size:12px;"></i> ${note.is_pinned ? 'Unpin' : 'Pin to Top'}
+      </button>
+      <button type="button" class="ctx-item" data-action="duplicate" style="display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:#F1F5F9;border-radius:6px;cursor:pointer;background:none;border:none;width:100%;text-align:left;">
+        <i class="fa-regular fa-copy" style="color:#38BDF8;font-size:12px;"></i> Duplicate
+      </button>
+      <button type="button" class="ctx-item" data-action="delete" style="display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:#FB7185;border-radius:6px;cursor:pointer;background:none;border:none;width:100%;text-align:left;">
+        <i class="fa-solid fa-trash-can" style="color:#FB7185;font-size:12px;"></i> Delete
+      </button>
+    `;
+
+    menu.querySelectorAll('.ctx-item').forEach((item) => {
+      item.addEventListener('mouseenter', () => { item.style.background = 'rgba(255,255,255,0.08)'; });
+      item.addEventListener('mouseleave', () => { item.style.background = 'transparent'; });
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.remove();
+        const action = item.dataset.action;
+        if (action === 'edit') openNoteEditor(noteId);
+        else if (action === 'pin') togglePinNote(noteId);
+        else if (action === 'duplicate') duplicateNote(noteId);
+        else if (action === 'delete') deleteCurrentNote(noteId);
+      });
+    });
+
+    triggerBtn.parentElement.appendChild(menu);
+
+    const dismissMenu = (e) => {
+      if (!menu.contains(e.target)) {
+        menu.remove();
+        document.removeEventListener('click', dismissMenu);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', dismissMenu), 10);
+  }
+
+  async function syncNoteToCloud(note, isEditing) {
+    const base = getBackendBaseUrl();
+    try {
+      const url = isEditing ? `${base}/api/notes/${note.id}` : `${base}/api/notes`;
+      const method = isEditing ? 'PUT' : 'POST';
+      await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(note)
+      });
+    } catch (e) {
+      /* offline */
+    }
+  }
+
+  async function fetchNotesFromCloud() {
+    const base = getBackendBaseUrl();
+    try {
+      const res = await fetch(`${base}/api/notes`, {
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          const cloudIds = new Set(data.data.map((n) => n.id));
+          const localOnly = state.notes.filter((n) => !cloudIds.has(n.id));
+          state.notes = [...data.data, ...localOnly];
+          saveStorage(STORAGE_KEY_NOTES, state.notes);
+          renderNotes();
+        }
+      }
+    } catch (e) {
+      /* offline */
+    }
+  }
+
+  function applyFormatting(format) {
+    const textarea = document.getElementById('note-content-input');
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    const before = textarea.value.substring(0, start);
+    const after = textarea.value.substring(end);
+
+    let replacement = '';
+    let newCursorPos = end;
+
+    switch (format) {
+      case 'bold':
+        replacement = `**${selected || 'bold text'}**`;
+        newCursorPos = selected ? end + 4 : start + 2;
+        break;
+      case 'italic':
+        replacement = `*${selected || 'italic text'}*`;
+        newCursorPos = selected ? end + 2 : start + 1;
+        break;
+      case 'underline':
+        replacement = `<u>${selected || 'underlined text'}</u>`;
+        newCursorPos = selected ? end + 7 : start + 3;
+        break;
+      case 'bullet':
+        replacement = before.endsWith('\n') || before === '' ? `- ${selected || 'Bullet item'}` : `\n- ${selected || 'Bullet item'}`;
+        break;
+      case 'checklist':
+        replacement = before.endsWith('\n') || before === '' ? `- [ ] ${selected || 'Task item'}` : `\n- [ ] ${selected || 'Task item'}`;
+        break;
+      case 'link':
+        replacement = `[${selected || 'link title'}](https://)`;
+        break;
+      case 'image':
+        replacement = `![${selected || 'image description'}](https://)`;
+        break;
+      default:
+        return;
+    }
+
+    textarea.value = before + replacement + after;
+    textarea.focus();
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+  }
+
+  let speechRecognitionObj = null;
+
+  function toggleVoiceDictation() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast('Voice dictation is not supported by your browser', 'info');
+      return;
+    }
+
+    const voiceBtn = document.getElementById('btn-note-voice');
+    const banner = document.getElementById('voice-dictate-banner');
+    const contentInput = document.getElementById('note-content-input');
+
+    if (state.isDictating) {
+      stopVoiceDictation();
+      return;
+    }
+
+    try {
+      speechRecognitionObj = new SpeechRecognition();
+      speechRecognitionObj.continuous = true;
+      speechRecognitionObj.interimResults = true;
+      speechRecognitionObj.lang = 'en-US';
+
+      speechRecognitionObj.onstart = () => {
+        state.isDictating = true;
+        if (voiceBtn) voiceBtn.classList.add('recording');
+        if (banner) banner.classList.remove('hidden');
+        showToast('Listening... Speak now 🎙️', 'info');
+      };
+
+      speechRecognitionObj.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            transcript += event.results[i][0].transcript;
+          }
+        }
+        if (transcript && contentInput) {
+          const val = contentInput.value;
+          contentInput.value = val ? `${val.trimEnd()} ${transcript.trim()}` : transcript.trim();
+        }
+      };
+
+      speechRecognitionObj.onerror = () => {
+        stopVoiceDictation();
+      };
+
+      speechRecognitionObj.onend = () => {
+        stopVoiceDictation();
+      };
+
+      speechRecognitionObj.start();
+    } catch (e) {
+      stopVoiceDictation();
+      showToast('Microphone access unavailable', 'info');
+    }
+  }
+
+  function stopVoiceDictation() {
+    state.isDictating = false;
+    const voiceBtn = document.getElementById('btn-note-voice');
+    const banner = document.getElementById('voice-dictate-banner');
+    if (voiceBtn) voiceBtn.classList.remove('recording');
+    if (banner) banner.classList.add('hidden');
+    if (speechRecognitionObj) {
+      try { speechRecognitionObj.stop(); } catch {}
+      speechRecognitionObj = null;
+    }
+  }
+
+  function setupNotesEventListeners() {
+    const btnNew = document.getElementById('btn-notes-new');
+    if (btnNew) btnNew.addEventListener('click', () => openNoteEditor(null));
+
+    const btnEmptyCreate = document.getElementById('btn-empty-create-note');
+    if (btnEmptyCreate) btnEmptyCreate.addEventListener('click', () => openNoteEditor(null));
+
+    const btnEditorBack = document.getElementById('btn-note-editor-back');
+    if (btnEditorBack) btnEditorBack.addEventListener('click', showNotesListView);
+
+    const btnSave = document.getElementById('btn-note-save');
+    if (btnSave) btnSave.addEventListener('click', saveCurrentNote);
+
+    const btnDelete = document.getElementById('btn-note-delete');
+    if (btnDelete) btnDelete.addEventListener('click', () => deleteCurrentNote(null));
+
+    const catBar = document.getElementById('notes-categories-bar');
+    if (catBar) {
+      catBar.querySelectorAll('.notes-cat-pill').forEach((pill) => {
+        pill.addEventListener('click', () => {
+          catBar.querySelectorAll('.notes-cat-pill').forEach((p) => p.classList.remove('active'));
+          pill.classList.add('active');
+          state.currentNoteCategory = pill.dataset.category || 'all';
+          renderNotes();
+        });
+      });
+    }
+
+    const searchInput = document.getElementById('notes-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        state.notesSearchQuery = e.target.value;
+        renderNotes();
+      });
+    }
+
+    const sortToggle = document.getElementById('btn-notes-sort-toggle');
+    const sortBar = document.getElementById('notes-sort-bar');
+    if (sortToggle && sortBar) {
+      sortToggle.addEventListener('click', () => {
+        sortBar.classList.toggle('hidden');
+      });
+      sortBar.querySelectorAll('.notes-sort-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          sortBar.querySelectorAll('.notes-sort-chip').forEach((c) => c.classList.remove('active'));
+          chip.classList.add('active');
+          state.notesSortBy = chip.dataset.sort || 'updated';
+          renderNotes();
+        });
+      });
+    }
+
+    const toolbar = document.getElementById('notes-editor-toolbar');
+    if (toolbar) {
+      toolbar.querySelectorAll('.toolbar-btn[data-format]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          applyFormatting(btn.dataset.format);
+        });
+      });
+    }
+
+    const voiceBtn = document.getElementById('btn-note-voice');
+    if (voiceBtn) voiceBtn.addEventListener('click', toggleVoiceDictation);
+
+    const stopVoiceBtn = document.getElementById('btn-stop-voice');
+    if (stopVoiceBtn) stopVoiceBtn.addEventListener('click', stopVoiceDictation);
+
+    const tagInput = document.getElementById('note-tag-add-input');
+    const addTagBtn = document.getElementById('btn-add-tag-chip');
+    if (tagInput) {
+      tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          addEditorTag(tagInput.value);
+        }
+      });
+    }
+    if (addTagBtn && tagInput) {
+      addTagBtn.addEventListener('click', () => {
+        addEditorTag(tagInput.value);
+      });
+    }
+
+    const catTrigger = document.getElementById('btn-category-picker-trigger');
+    const catDropdown = document.getElementById('category-dropdown-menu');
+    if (catTrigger && catDropdown) {
+      catTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        catDropdown.classList.toggle('hidden');
+      });
+      catDropdown.querySelectorAll('.cat-drop-item').forEach((item) => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setEditorCategory(item.dataset.cat);
+        });
+      });
+      document.addEventListener('click', () => {
+        catDropdown.classList.add('hidden');
+      });
+    }
+
+    const qaNote = document.getElementById('btn-qa-note');
+    if (qaNote) {
+      qaNote.addEventListener('click', () => {
+        switchView('notes');
+        openNoteEditor(null);
+      });
+    }
+  }
+
   // --- Connected Devices & Live Request Feed Engine ---
   async function fetchDevicesAndRequests() {
     const base = getBackendBaseUrl();
@@ -1367,6 +2174,12 @@
     }
 
     if (viewName === 'notifications') renderNotifications();
+
+    if (viewName === 'notes') {
+      showNotesListView();
+      renderNotes();
+      fetchNotesFromCloud();
+    }
 
     if (viewName === 'devices') {
       fetchDevicesAndRequests();
@@ -2500,9 +3313,11 @@
     updateHydrationRings();
     renderTasks();
     renderReminders();
+    renderNotes();
     renderFriendsList();
     populateAssignDropdown();
     initEvents();
+    setupNotesEventListeners();
     initNotifications();
     updateAuthUI();
     ensureApiKey();
@@ -2510,6 +3325,9 @@
 
     // Instant sync with cloud on load so Siri & terminal tasks show up right away
     setTimeout(syncAllWithCloud, 200);
+
+    // Initial notes fetch from cloud
+    setTimeout(fetchNotesFromCloud, 350);
 
     // Initial devices & requests pre-fetch
     setTimeout(fetchDevicesAndRequests, 400);

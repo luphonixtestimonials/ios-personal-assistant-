@@ -567,89 +567,173 @@
         </div>
       </section>
 
-      <!-- ================= VIEW 6: CONNECTED DEVICES & REQUEST MONITOR ================= -->
-      <section class="view-section" id="view-devices">
-        <div class="view-header-bar">
-          <div class="view-title-wrap">
-            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
-            <h2 class="view-screen-title">Devices</h2>
-          </div>
-          <span class="view-sub">/ Connect<br>Manage<br>Control.</span>
-          <div class="view-header-tools">
-            <button class="header-icon-btn" id="btn-add-device-modal" title="Add Device Session">
+      <!-- ================= VIEW 6: NOTES (Capture Ideas, Thoughts & More) ================= -->
+      <section class="view-section" id="view-notes">
+        
+        <!-- SUBVIEW A: Notes List Screen (Matching Left Screenshot) -->
+        <div class="notes-subview" id="notes-subview-list">
+          <!-- Top Header Bar -->
+          <div class="notes-header-bar">
+            <button class="view-back-btn notes-back-btn" data-back="dashboard" title="Back to Dashboard">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="notes-header-center">
+              <div class="notes-title-row">
+                <h2 class="notes-display-title">NOTES</h2>
+                <span class="notes-sparkle" aria-hidden="true">✦</span>
+              </div>
+              <p class="notes-header-sub">Capture ideas, thoughts and more.</p>
+            </div>
+            <button class="notes-top-add-btn" id="btn-notes-new" title="Create New Note" aria-label="New Note">
               <i class="fa-solid fa-plus"></i>
             </button>
-            <button class="header-icon-btn" id="btn-refresh-devices" title="Refresh Devices & Requests">
-              <i class="fa-solid fa-arrows-rotate"></i>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="notes-search-wrapper">
+            <i class="fa-solid fa-magnifying-glass notes-search-icon" aria-hidden="true"></i>
+            <input type="text" id="notes-search-input" class="notes-search-input" placeholder="Search notes..." autocomplete="off">
+            <button type="button" class="notes-search-filter-btn" id="btn-notes-sort-toggle" title="Sort & Options" aria-label="Sort notes">
+              <i class="fa-solid fa-sliders"></i>
+            </button>
+          </div>
+
+          <!-- Collapsible Sort Options Menu -->
+          <div class="notes-sort-bar hidden" id="notes-sort-bar">
+            <span class="notes-sort-label">Sort:</span>
+            <button type="button" class="notes-sort-chip active" data-sort="updated">Recent</button>
+            <button type="button" class="notes-sort-chip" data-sort="pinned">Pinned</button>
+            <button type="button" class="notes-sort-chip" data-sort="title">Title (A-Z)</button>
+          </div>
+
+          <!-- Category Filter Pills Bar (Horizontal Scrollable) -->
+          <div class="notes-categories-bar" id="notes-categories-bar">
+            <button type="button" class="notes-cat-pill active" data-category="all">All</button>
+            <button type="button" class="notes-cat-pill" data-category="pinned">Pinned</button>
+            <button type="button" class="notes-cat-pill" data-category="study">Study</button>
+            <button type="button" class="notes-cat-pill" data-category="work">Work</button>
+            <button type="button" class="notes-cat-pill" data-category="personal">Personal</button>
+          </div>
+
+          <!-- Notes Cards Container -->
+          <div class="notes-cards-list" id="notes-cards-container">
+            <!-- Dynamically populated via app.js -->
+          </div>
+
+          <!-- Empty State (Shown when no notes match) -->
+          <div class="notes-empty-state hidden" id="notes-empty-state">
+            <div class="notes-empty-icon"><i class="fa-solid fa-note-sticky"></i></div>
+            <h4 class="notes-empty-title">No notes found</h4>
+            <p class="notes-empty-desc">Capture your first brilliant thought or study note.</p>
+            <button type="button" class="btn-primary" id="btn-empty-create-note" style="margin-top: 12px; width: auto; padding: 10px 24px; border-radius: 999px; background: #9333EA;">
+              <i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Create Note
             </button>
           </div>
         </div>
 
-        <!-- 3 Quick Stats Overview -->
-        <div class="stats-row">
-          <div class="stat-box">
-             <div class="stat-val" id="stat-devices-online">1</div>
-            <div class="stat-label">Online</div>
-          </div>
-          <div class="stat-box">
-             <div class="stat-val" id="stat-requests-total">21</div>
-            <div class="stat-label">Requests</div>
-          </div>
-          <div class="stat-box">
-             <div class="stat-val" id="stat-db-tasks-count">2</div>
-            <div class="stat-label">In DB</div>
-          </div>
-        </div>
-
-        <!-- Active Connected Devices List -->
-        <div class="section-header">
-          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-mobile-screen-button" style="color: #00D2FF; margin-right: 6px;"></i> Active Sessions</h3>
-          <span class="section-link" id="btn-ping-device" style="font-size: 12px; cursor: pointer;"><i class="fa-solid fa-bolt" style="margin-right: 4px;"></i> Ping All</span>
-        </div>
-        <div id="devices-list-container">
-          <!-- Dynamically populated -->
-        </div>
-
-        <!-- Live Client Request Inspector -->
-        <div class="section-header" style="margin-top: 24px;">
-          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-tower-broadcast" style="color: #00D2FF; margin-right: 6px;"></i> Live Request Inspector</h3>
-          <span style="font-size: 11px; color: var(--accent-emerald); font-weight: 600;">● Live Stream</span>
-        </div>
-
-        <!-- Diagnostic Alert Banner -->
-        <div class="diag-box diag-box-success" id="diag-banner-box">
-          <span style="font-size: 18px;"><i class="fa-solid fa-shield-halved" style="color: #34D399;"></i></span>
-          <div>
-            <div style="font-weight: 700; margin-bottom: 2px;">Continuous Loop Guard: Active</div>
-            <p style="font-size: 12px; opacity: 0.9;">
-              Client background sync protected. Duplicate tasks purged automatically.
-            </p>
-          </div>
-        </div>
-
-        <div class="request-feed-card">
-          <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-            <button class="btn-primary" id="btn-deduplicate-tasks" style="padding: 8px 12px; font-size: 12px; width: auto; background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
-              <i class="fa-solid fa-broom" style="margin-right: 6px;"></i> Clean Duplicates
+        <!-- SUBVIEW B: New Note / Edit Note Editor Screen (Matching Right Screenshot) -->
+        <div class="notes-subview hidden" id="notes-subview-editor">
+          <!-- Top Navigation Bar -->
+          <div class="notes-editor-header">
+            <button type="button" class="notes-editor-back-btn" id="btn-note-editor-back" title="Back to Notes" aria-label="Back">
+              <i class="fa-solid fa-arrow-left"></i>
             </button>
-            <button class="btn-secondary" id="btn-clear-request-logs" style="padding: 8px 12px; font-size: 12px; width: auto;">
-              <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Clear Feed
+            <h3 class="notes-editor-title" id="note-editor-heading">New Note</h3>
+            <button type="button" class="btn-note-save" id="btn-note-save">Save</button>
+          </div>
+
+          <!-- Note Title Input -->
+          <div class="note-input-group">
+            <input type="text" class="note-title-input" id="note-title-input" placeholder="Note Title" autocomplete="off">
+          </div>
+
+          <!-- Note Content Area -->
+          <div class="note-input-group">
+            <textarea class="note-content-input" id="note-content-input" placeholder="Start writing your note..." rows="10"></textarea>
+          </div>
+
+          <!-- Rich Formatting Toolbar -->
+          <div class="notes-editor-toolbar" id="notes-editor-toolbar">
+            <button type="button" class="toolbar-btn" data-format="bold" title="Bold"><b>B</b></button>
+            <button type="button" class="toolbar-btn" data-format="italic" title="Italic"><i>I</i></button>
+            <button type="button" class="toolbar-btn" data-format="underline" title="Underline"><u>U</u></button>
+            <button type="button" class="toolbar-btn" data-format="bullet" title="Bullet List"><i class="fa-solid fa-list-ul"></i></button>
+            <button type="button" class="toolbar-btn" data-format="checklist" title="Numbered / Checklist"><i class="fa-solid fa-list-check"></i></button>
+            <button type="button" class="toolbar-btn" data-format="link" title="Insert Link"><i class="fa-solid fa-link"></i></button>
+            <button type="button" class="toolbar-btn" data-format="image" title="Insert Image"><i class="fa-regular fa-image"></i></button>
+            <button type="button" class="toolbar-btn voice-dictate-btn" id="btn-note-voice" title="Voice Dictation (Speech to Text)">
+              <i class="fa-solid fa-microphone"></i>
             </button>
           </div>
 
-          <div class="filter-pills-bar" style="margin-bottom: 12px;" id="request-filter-bar">
-            <button class="filter-pill active" data-req-filter="all">All Traffic</button>
-            <button class="filter-pill" data-req-filter="tasks_add">Task Additions</button>
-            <button class="filter-pill" data-req-filter="sync">Sync &amp; Read</button>
-            <button class="filter-pill" data-req-filter="auth">Auth</button>
+          <!-- Voice Listening Status Banner -->
+          <div class="voice-listening-banner hidden" id="voice-dictate-banner">
+            <span class="voice-pulse-dot"></span>
+            <span>Listening... speak now to transcribe into note</span>
+            <button type="button" class="voice-stop-btn" id="btn-stop-voice"><i class="fa-solid fa-stop"></i></button>
           </div>
 
-          <div class="request-feed-list" id="requests-feed-container">
-            <div style="text-align: center; padding: 24px 10px; color: var(--text-sub);">
-              Listening for incoming client requests...
+          <!-- Metadata Rows -->
+          <div class="note-meta-cards-group">
+            <!-- 1. Add Tags Row -->
+            <div class="note-meta-row" id="note-tags-row">
+              <div class="note-meta-row-top">
+                <div class="note-meta-left">
+                  <i class="fa-regular fa-circle-plus note-meta-icon"></i>
+                  <span class="note-meta-label">Add Tags</span>
+                </div>
+              </div>
+              <div class="note-tags-chips-list" id="editor-tags-chips"></div>
+              <div class="note-tag-inline-input-wrap">
+                <span class="tag-hash-prefix">#</span>
+                <input type="text" class="note-tag-add-input" id="note-tag-add-input" placeholder="type tag & press enter (e.g. ideas, work)">
+                <button type="button" class="btn-tag-add-chip" id="btn-add-tag-chip" title="Add Tag"><i class="fa-solid fa-plus"></i></button>
+              </div>
+            </div>
+
+            <!-- 2. Category Row with Picker -->
+            <div class="note-meta-row" id="note-category-row">
+              <div class="note-meta-left">
+                <i class="fa-solid fa-tag note-meta-icon"></i>
+                <span class="note-meta-label">Category</span>
+              </div>
+              <div class="note-category-dropdown-wrap">
+                <button type="button" class="note-category-selector" id="btn-category-picker-trigger">
+                  <span class="category-color-dot" id="category-color-dot" style="background: #EC4899;"></span>
+                  <span class="category-selected-name" id="category-selected-name">Personal</span>
+                  <i class="fa-solid fa-chevron-down category-chevron"></i>
+                </button>
+                <div class="category-dropdown-menu hidden" id="category-dropdown-menu">
+                  <div class="cat-drop-item" data-cat="Personal" data-color="#EC4899"><span class="category-color-dot" style="background: #EC4899;"></span> Personal</div>
+                  <div class="cat-drop-item" data-cat="Study" data-color="#8B5CF6"><span class="category-color-dot" style="background: #8B5CF6;"></span> Study</div>
+                  <div class="cat-drop-item" data-cat="Work" data-color="#3B82F6"><span class="category-color-dot" style="background: #3B82F6;"></span> Work</div>
+                  <div class="cat-drop-item" data-cat="Ideas" data-color="#06B6D4"><span class="category-color-dot" style="background: #06B6D4;"></span> Ideas</div>
+                  <div class="cat-drop-item" data-cat="Health" data-color="#10B981"><span class="category-color-dot" style="background: #10B981;"></span> Health</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Pin to Top Row -->
+            <div class="note-meta-row" id="note-pin-row">
+              <div class="note-meta-left">
+                <i class="fa-solid fa-thumbtack note-meta-icon" style="color: #C084FC;"></i>
+                <span class="note-meta-label">Pin to Top</span>
+              </div>
+              <label class="note-toggle-switch">
+                <input type="checkbox" id="note-pin-checkbox">
+                <span class="note-switch-slider"></span>
+              </label>
             </div>
           </div>
+
+          <!-- Bottom Action Buttons (Delete / Cancel) -->
+          <div class="note-editor-bottom-actions">
+            <button type="button" class="btn-note-delete hidden" id="btn-note-delete">
+              <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Delete Note
+            </button>
+          </div>
         </div>
+
       </section>
 
       <!-- ================= VIEW 7: SETTINGS ================= -->
@@ -933,9 +1017,9 @@
         <span>Siri</span>
       </button>
 
-      <button class="nav-item" data-view="devices" id="nav-btn-devices" title="Connected Devices">
-        <i class="fa-solid fa-mobile-screen-button"></i>
-        <span>Devices</span>
+      <button class="nav-item" data-view="notes" id="nav-btn-notes" title="Notes">
+        <i class="fa-solid fa-note-sticky"></i>
+        <span>Notes</span>
       </button>
     </div>
   </nav>
@@ -982,9 +1066,9 @@
           <span class="orbit-label">Siri</span>
         </button>
 
-        <button class="circular-orbit-item" data-view="devices" title="Connected Devices">
-          <div class="orbit-icon-circle"><i class="fa-solid fa-mobile-screen-button"></i></div>
-          <span class="orbit-label">Devices</span>
+        <button class="circular-orbit-item" data-view="notes" title="Notes">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-note-sticky"></i></div>
+          <span class="orbit-label">Notes</span>
         </button>
 
         <button class="circular-orbit-item" data-view="settings" title="Settings">

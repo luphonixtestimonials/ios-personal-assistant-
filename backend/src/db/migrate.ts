@@ -33,6 +33,22 @@ export async function runMigrations() {
   try { await db.execute('ALTER TABLE tasks ADD COLUMN assigned_to_user_id TEXT;'); } catch {}
   try { await db.execute('ALTER TABLE tasks ADD COLUMN assigned_by_user_id TEXT;'); } catch {}
   try { await db.execute('ALTER TABLE push_subscriptions ADD COLUMN apns_token TEXT;'); } catch {}
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS notes (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        content TEXT NOT NULL DEFAULT '',
+        category TEXT NOT NULL DEFAULT 'Personal',
+        tags TEXT NOT NULL DEFAULT '[]',
+        is_pinned INTEGER NOT NULL DEFAULT 0 CHECK(is_pinned IN (0, 1)),
+        color TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+  } catch {}
 
   for (const statement of statements) {
     try {

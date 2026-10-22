@@ -14,6 +14,7 @@ import syncApp from './routes/sync.js';
 import devicesApp from './routes/devices.js';
 import friendsApp from './routes/friends.js';
 import notificationsApp from './routes/notifications.js';
+import notesApp from './routes/notes.js';
 import { requestTrackerMiddleware } from './middleware/requestTracker.js';
 
 const app = new Hono();
@@ -62,6 +63,7 @@ app.route('/api/sync', syncApp);
 app.route('/api/devices', devicesApp);
 app.route('/api/friends', friendsApp);
 app.route('/api/notifications', notificationsApp);
+app.route('/api/notes', notesApp);
 
 // Central Error Handler
 app.onError(errorHandler);
@@ -76,6 +78,7 @@ app.get('/signup', (c) => c.html(getPwaHtml()));
 app.get('/auth', (c) => c.html(getPwaHtml()));
 app.get('/setup', (c) => c.html(getPwaHtml()));
 app.get('/devices', (c) => c.html(getPwaHtml()));
+app.get('/notes', (c) => c.html(getPwaHtml()));
 app.get('/siri', (c) => c.html(getPwaHtml()));
 
 // Serve PWA Static Frontend

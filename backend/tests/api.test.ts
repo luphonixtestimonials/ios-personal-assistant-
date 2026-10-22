@@ -464,6 +464,90 @@ describe('Luphonix Backend API Test Suite', async () => {
     assert.ok(text.includes('Set reminder for'));
     assert.ok(text.includes('45 minutes from now'));
   });
+
+  let createdNoteId = '';
+
+  it('27. POST /api/notes should create a new note with category, tags, and pin status', async () => {
+    const res = await app.request('/api/notes', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: 'App Ideas',
+        content: 'Ideas for new features, UI improvements...\n- Dark mode\n- Siri shortcuts',
+        category: 'Study',
+        tags: ['#ideas', '#product'],
+        is_pinned: true,
+        color: 'blue',
+      }),
+    });
+
+    assert.strictEqual(res.status, 201);
+    const body = await res.json();
+    assert.strictEqual(body.success, true);
+    assert.strictEqual(body.data.title, 'App Ideas');
+    assert.strictEqual(body.data.is_pinned, true);
+    assert.deepStrictEqual(body.data.tags, ['#ideas', '#product']);
+    createdNoteId = body.data.id;
+  });
+
+  it('28. GET /api/notes should list notes with filtering and search support', async () => {
+    const res = await app.request('/api/notes?category=study', {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    assert.strictEqual(res.status, 200);
+    const body = await res.json();
+    assert.strictEqual(body.success, true);
+    assert.ok(body.data.length >= 1);
+    const found = body.data.find((n: any) => n.id === createdNoteId);
+    assert.ok(found);
+    assert.strictEqual(found.title, 'App Ideas');
+  });
+
+  it('29. PUT /api/notes/:id and PATCH /api/notes/:id/pin should update note and toggle pin', async () => {
+    // Update content
+    const putRes = await app.request(`/api/notes/${createdNoteId}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: 'App Ideas (Updated)',
+        content: 'Updated content text here',
+      }),
+    });
+    assert.strictEqual(putRes.status, 200);
+    const putBody = await putRes.json();
+    assert.strictEqual(putBody.data.title, 'App Ideas (Updated)');
+
+    // Toggle Pin
+    const pinRes = await app.request(`/api/notes/${createdNoteId}/pin`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    assert.strictEqual(pinRes.status, 200);
+    const pinBody = await pinRes.json();
+    assert.strictEqual(pinBody.success, true);
+  });
+
+  it('30. DELETE /api/notes/:id should delete note', async () => {
+    const delRes = await app.request(`/api/notes/${createdNoteId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    assert.strictEqual(delRes.status, 200);
+    const delBody = await delRes.json();
+    assert.strictEqual(delBody.success, true);
+
+    const getRes = await app.request(`/api/notes/${createdNoteId}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    assert.strictEqual(getRes.status, 404);
+  });
 });
 
 
