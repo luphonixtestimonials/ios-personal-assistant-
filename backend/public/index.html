@@ -416,18 +416,28 @@
             <span class="cmd-text">"Add a new task"</span>
             <span class="cmd-trailing-icon">➕</span>
           </div>
+          <div class="popular-cmd-bubble" id="pill-cmd-assign">
+            <span class="cmd-quote-icon">“</span>
+            <span class="cmd-text">"Assign task 2 to Alex"</span>
+            <span class="cmd-trailing-icon">👥</span>
+          </div>
+          <div class="popular-cmd-bubble" id="pill-cmd-reminder">
+            <span class="cmd-quote-icon">“</span>
+            <span class="cmd-text">"Remind me to drink water"</span>
+            <span class="cmd-trailing-icon">⏰</span>
+          </div>
         </div>
 
         <!-- Full Siri Webhook Cards (Intact Functionality) -->
         <div class="section-header" style="margin-top: 24px;">
-          <h3 class="section-title"><i class="fa-solid fa-code" style="color: #00D2FF; margin-right: 6px;"></i> Ready-To-Use Siri Shortcuts</h3>
+          <h3 class="section-title"><span style="color: #00D2FF; margin-right: 6px; font-weight: 800;">&gt;</span> Ready-To-Use Siri Shortcuts</h3>
         </div>
 
         <!-- Shortcut 1: Log Water -->
         <div class="siri-shortcut-card">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-weight: 700; font-size: 15px;">1. Log Water by Voice</span>
-            <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 600;">Siri Voice</span>
+            <span style="font-size: 11px; color: #00D2FF; font-weight: 700; letter-spacing: 0.3px;">Siri Voice</span>
           </div>
           <div class="siri-phrase-box">
             <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
@@ -442,7 +452,7 @@
         <div class="siri-shortcut-card">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-weight: 700; font-size: 15px;">2. Check Today's Tasks</span>
-            <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 600;">Siri Voice</span>
+            <span style="font-size: 11px; color: #00D2FF; font-weight: 700; letter-spacing: 0.3px;">Siri Voice</span>
           </div>
           <div class="siri-phrase-box">
             <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
@@ -456,14 +466,89 @@
         <!-- Shortcut 3: Complete Task -->
         <div class="siri-shortcut-card">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 15px;">3. Complete a Task</span>
-            <span style="font-size: 11px; color: #10B981; font-weight: 600;">Siri Voice</span>
+            <span style="font-weight: 700; font-size: 15px;">3. Complete a Task (By Number or Title)</span>
+            <span style="font-size: 11px; color: #00D2FF; font-weight: 700; letter-spacing: 0.3px;">Siri Voice</span>
           </div>
           <div class="siri-phrase-box">
             <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, mark study completed in Luphonix"</span>
+            <span>"Hey Siri, complete task 1 in Luphonix"</span>
           </div>
           <button class="btn-secondary" id="btn-copy-siri-complete" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 4: Add a Task by Voice -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">4. Add a Task by Voice</span>
+            <span style="font-size: 11px; color: #00D2FF; font-weight: 700; letter-spacing: 0.3px;">Siri Voice</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, add prepare presentation in Luphonix"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-add" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 5: Assign Task by Number to Person -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">5. Assign Task by Number to Person</span>
+            <span style="font-size: 11px; color: #F59E0B; font-weight: 700; letter-spacing: 0.3px;">Collaborative</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, assign task 2 to Alex in Luphonix"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-assign" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 6: Check Tasks Assigned to Me -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">6. Check Tasks Assigned to Me</span>
+            <span style="font-size: 11px; color: #F59E0B; font-weight: 700; letter-spacing: 0.3px;">Collaborative</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, what tasks are assigned to me in Luphonix?"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-assigned-me" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 7: Check Hydration Progress -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">7. Check Hydration Progress</span>
+            <span style="font-size: 11px; color: #10B981; font-weight: 700; letter-spacing: 0.3px;">Health &amp; Wellness</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, how much water did I drink in Luphonix?"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-hydration-today" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 8: Quick Voice Reminder -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">8. Quick Voice Reminder</span>
+            <span style="font-size: 11px; color: #EC4899; font-weight: 700; letter-spacing: 0.3px;">Reminders</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, remind me to drink water in Luphonix"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-quick-reminder" style="padding: 8px 12px; font-size: 13px;">
             <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
           </button>
         </div>

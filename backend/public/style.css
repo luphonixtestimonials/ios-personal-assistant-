@@ -503,10 +503,56 @@ main.app-main { flex: 1; padding: 12px 18px calc(var(--nav-height) + var(--safe-
 .popular-cmd-bubble:hover { border-color: var(--lav); background: var(--ink-2); }
 .cmd-quote-icon { color: var(--lav); font-size: 18px; line-height: 1; }
 .cmd-text { flex: 1; }
-.siri-shortcut-card { background: #000; border: 1px solid var(--line); padding: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px; }
-.siri-phrase-box { display: flex; gap: 10px; align-items: center; padding: 10px 12px; background: var(--ink-3); border-left: 3px solid var(--lav); font-family: var(--font-mono); font-size: 12px; }
-.siri-phrase-box i { color: var(--lav) !important; }
-.siri-shortcut-card .btn-secondary { min-height: 38px; }
+.siri-shortcut-card {
+  background: #040914;
+  border: 1px solid rgba(0, 210, 255, 0.16);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+.siri-shortcut-card:hover {
+  border-color: rgba(0, 210, 255, 0.35);
+  box-shadow: 0 4px 20px rgba(0, 210, 255, 0.08);
+}
+.siri-phrase-box {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(0, 210, 255, 0.05);
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: #38BDF8;
+}
+.siri-phrase-box i {
+  color: #00D2FF !important;
+  font-size: 14px;
+}
+.siri-shortcut-card .btn-secondary {
+  min-height: 38px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #F1F5F9;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.siri-shortcut-card .btn-secondary:hover {
+  background: rgba(0, 210, 255, 0.18);
+  border-color: #00D2FF;
+  color: #FFFFFF;
+}
 
 /* ==========================================================================
    06 · DEVICES

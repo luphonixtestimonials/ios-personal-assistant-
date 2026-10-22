@@ -1202,18 +1202,34 @@
     const waterBtn = document.getElementById('btn-copy-siri-water');
     const tasksBtn = document.getElementById('btn-copy-siri-tasks');
     const completeBtn = document.getElementById('btn-copy-siri-complete');
+    const addBtn = document.getElementById('btn-copy-siri-add');
+    const assignBtn = document.getElementById('btn-copy-siri-assign');
+    const assignedMeBtn = document.getElementById('btn-copy-siri-assigned-me');
+    const hydrationTodayBtn = document.getElementById('btn-copy-siri-hydration-today');
+    const quickReminderBtn = document.getElementById('btn-copy-siri-quick-reminder');
     const copyTokenBtn = document.getElementById('btn-copy-token');
     const refreshBtn = document.getElementById('btn-regenerate-token');
 
     const base = state.prefs.backendUrl || window.location.origin;
 
+    const copyUrlWithFeedback = async (url, successMsg) => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+          showToast(successMsg, 'success');
+        } else {
+          prompt('Copy Webhook URL:', url);
+        }
+      } catch (err) {
+        prompt('Copy Webhook URL:', url);
+      }
+    };
+
     if (waterBtn) {
       waterBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
         const url = `${base}/api/hydration?amount=250&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Water Webhook URL (with API key)!', 'success');
-        });
+        await copyUrlWithFeedback(url, 'Copied Water Webhook URL (with API key)!');
       });
     }
 
@@ -1221,28 +1237,62 @@
       tasksBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
         const url = `${base}/api/tasks?filter=today&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Tasks Webhook URL (with API key)!', 'success');
-        });
+        await copyUrlWithFeedback(url, 'Copied Today\'s Tasks Webhook URL (with API key)!');
       });
     }
 
     if (completeBtn) {
       completeBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
-        const url = `${base}/api/tasks/complete?title=ShortcutInput&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Complete Task Webhook URL (with API key)!', 'success');
-        });
+        const url = `${base}/api/tasks/complete?task=1&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Complete Task Webhook URL (with API key)!');
+      });
+    }
+
+    if (addBtn) {
+      addBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/tasks/add?title=prepare%20presentation&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Add Task Webhook URL (with API key)!');
+      });
+    }
+
+    if (assignBtn) {
+      assignBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/tasks/assign?task=2&to=Alex&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Assign Task Webhook URL (with API key)!');
+      });
+    }
+
+    if (assignedMeBtn) {
+      assignedMeBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/tasks?filter=assigned_to_me&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Assigned Tasks Webhook URL (with API key)!');
+      });
+    }
+
+    if (hydrationTodayBtn) {
+      hydrationTodayBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/hydration/today?format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Hydration Progress Webhook URL (with API key)!');
+      });
+    }
+
+    if (quickReminderBtn) {
+      quickReminderBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/reminders/quick?title=drink%20water&minutes=30&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Quick Reminder Webhook URL (with API key)!');
       });
     }
 
     if (copyTokenBtn) {
       copyTokenBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
-        navigator.clipboard.writeText(key).then(() => {
-          showToast('Copied API Key to clipboard!', 'success');
-        });
+        await copyUrlWithFeedback(key, 'Copied API Key to clipboard!');
       });
     }
 
@@ -2014,6 +2064,18 @@
           showToast('Siri: "Showing your today\'s progress"', 'info');
         } else if (id === 'pill-cmd-add') {
           openModal('modal-task');
+        } else if (id === 'pill-cmd-assign') {
+          showToast('Siri: "Hey Siri, assign task 2 to Alex in Luphonix"', 'info');
+          const uncompleted = state.tasks.filter((t) => !t.is_completed);
+          if (uncompleted.length >= 2) {
+            assignTask(uncompleted[1].id, 'alex');
+          } else {
+            switchView('tasks');
+            showToast('Tip: Use Siri shortcut to assign task by number or name', 'info');
+          }
+        } else if (id === 'pill-cmd-reminder') {
+          showToast('Siri: "Hey Siri, remind me to drink water in Luphonix"', 'info');
+          switchView('reminders');
         }
       });
     });
