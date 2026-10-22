@@ -3,6 +3,12 @@ const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/style.css',
+  '/fonts/anton-latin-400-normal.woff2',
+  '/fonts/space-mono-latin-400-normal.woff2',
+  '/fonts/space-mono-latin-700-normal.woff2',
+  '/fonts/space-grotesk-latin-400-normal.woff2',
+  '/fonts/space-grotesk-latin-500-normal.woff2',
+  '/fonts/space-grotesk-latin-700-normal.woff2',
   '/app.js',
   '/manifest.json',
   '/favicon.png',
@@ -78,82 +84,3 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
-
-// =======================================================================
-// SYSTEM PUSH NOTIFICATIONS (Phone Locked / Screen Off / On / App Closed)
-// =======================================================================
-self.addEventListener('push', (event) => {
-  let data = {
-    title: 'Luphonix — Task Assigned',
-    body: 'You have been assigned a new task in Luphonix.',
-    icon: '/icons/apple-touch-icon.png',
-    badge: '/icons/icon-192.png',
-    data: { url: '/?view=tasks' }
-  };
-
-  if (event.data) {
-    try {
-      const parsed = event.data.json();
-      data = Object.assign(data, parsed);
-    } catch (e) {
-      data.body = event.data.text() || data.body;
-    }
-  }
-
-  const title = data.title || 'Luphonix Task Alert';
-  const options = {
-    body: data.body,
-    icon: data.icon || '/icons/apple-touch-icon.png',
-    badge: data.badge || '/icons/icon-192.png',
-    vibrate: [300, 100, 300, 100, 300],
-    tag: data.tag || `luphonix-task-${Date.now()}`,
-    renotify: true,
-    requireInteraction: true,
-    data: data.data || { url: '/?view=tasks' },
-    actions: [
-      { action: 'view', title: 'Open Task' },
-      { action: 'close', title: 'Dismiss' }
-    ]
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
-});
-
-// Handle User Tap / Click on the Push Notification Banner
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-
-  if (event.action === 'close') {
-    return;
-  }
-
-  const targetUrl = (event.notification.data && event.notification.data.url)
-    ? event.notification.data.url
-    : '/?view=tasks';
-
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If a window is already open, focus it and navigate
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          if ('navigate' in client && targetUrl) {
-            client.navigate(targetUrl);
-          }
-          client.postMessage({
-            type: 'NOTIFICATION_CLICKED',
-            url: targetUrl,
-            data: event.notification.data
-          });
-          return client.focus();
-        }
-      }
-      // If no window open, launch a new window
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(targetUrl);
-      }
-    })
-  );
-});
-

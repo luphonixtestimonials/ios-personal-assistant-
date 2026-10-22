@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Luphonix — Personal Assistant</title>
   <meta name="description" content="Your personal assistant for daily tasks, hydration tracking, and Siri voice shortcuts with cloud sync.">
-  <meta name="theme-color" content="#08090E">
+  <meta name="theme-color" content="#0a0a0a">
 
   <!-- Apple iOS PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,9 +17,9 @@
 
   <!-- Styles & Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="/style.css?v=13.1">
+  <link rel="stylesheet" href="/style.css?v=14.0">
 </head>
-<body>
+<body data-view="dashboard">
   <div id="app-container">
     <!-- Ambient Background Branding & Cosmic Night Gradient -->
     <div class="ambient-bg-layer" aria-hidden="true">
@@ -50,12 +50,14 @@
     <header class="app-header" id="main-header">
       <div class="header-left-user">
         <div class="user-greeting-sub" id="greeting-time">Good Morning</div>
-        <div class="user-greeting-name" id="greeting-title">Welcome <span class="greeting-emoji">🌤️</span></div>
+        <div class="user-greeting-name" id="greeting-title">Dhyey</div>
       </div>
+      <div class="hero-tagline">Small habits,<br>big changes.</div>
+      <div class="hero-date" id="hero-date" aria-label="Today's date"></div>
       <div class="header-actions">
         <div class="user-auth-pill" id="user-auth-pill" title="Account / Sign In">
           <span class="user-avatar-dot" id="user-avatar-icon"><i class="fa-solid fa-user"></i></span>
-          <span id="user-display-name">Sign In</span>
+          <span id="user-display-name">Dhyey</span>
         </div>
         <div class="status-pill" id="connection-pill" title="Cloud Database Sync">
           <span class="status-dot"></span>
@@ -63,8 +65,7 @@
         </div>
         <button class="header-icon-btn notification-bell-btn" id="btn-header-bell" aria-label="Notifications" title="Notifications">
           <i class="fa-regular fa-bell"></i>
-          <span class="notification-indicator-dot" id="notif-indicator-dot"></span>
-          <span class="notification-badge-count" id="notif-badge-count" style="display: none;">0</span>
+          <span class="notification-indicator-dot" id="notif-badge"></span>
         </button>
         <button class="header-icon-btn" id="btn-header-settings" aria-label="Settings" title="Settings">
           <i class="fa-solid fa-gear"></i>
@@ -105,29 +106,24 @@
           </div>
 
           <div class="card-water-header">
-            <span class="water-header-title"><i class="fa-solid fa-droplet" style="color: #00D2FF; margin-right: 6px;"></i> Today's Water</span>
+            <span class="water-header-title"><i class="fa-solid fa-droplet"></i> Today's Water</span>
             <button class="btn-keep-going-pill" id="btn-keep-going" title="Quick log 250 ml">
-              Keep Going <i class="fa-solid fa-arrow-right" style="font-size: 11px; margin-left: 4px;"></i>
+              Keep Going <i class="fa-solid fa-arrow-right" style="font-size: 9px; margin-left: 2px;"></i>
             </button>
+          </div>
+
+          <div class="water-big">
+            <span class="water-big-num" id="dash-water-val">750</span>
+            <span class="water-big-goal">/ <span id="dash-water-goal">2,000</span> ml</span>
           </div>
 
           <div class="circular-ring-container">
             <svg class="ring-svg" viewBox="0 0 120 120">
-              <defs>
-                <linearGradient id="waterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#0066FF" />
-                  <stop offset="50%" stop-color="#008CFF" />
-                  <stop offset="100%" stop-color="#00D9FF" />
-                </linearGradient>
-              </defs>
-              <circle class="ring-bg-circle" cx="60" cy="60" r="52" stroke-width="9" fill="none" />
-              <circle class="ring-progress-circle" id="dash-ring-progress" cx="60" cy="60" r="52" stroke-width="9" fill="none"
+              <circle class="ring-bg-circle" cx="60" cy="60" r="52" stroke-width="12" fill="none" />
+              <circle class="ring-progress-circle" id="dash-ring-progress" cx="60" cy="60" r="52" stroke-width="12" fill="none"
                       stroke-dasharray="326.72" stroke-dashoffset="326.72" />
             </svg>
             <div class="ring-content">
-              <span class="ring-water-icon">💧</span>
-              <div class="ring-val-current" id="dash-water-val">750</div>
-              <div class="ring-val-goal">of <span id="dash-water-goal">2,000</span> ml</div>
               <span class="ring-percentage-pill" id="dash-water-percent">38%</span>
             </div>
           </div>
@@ -164,7 +160,7 @@
           </button>
           <button class="qa-item-btn" id="btn-qa-siri">
             <div class="qa-icon-box cyan"><i class="fa-solid fa-microphone-lines"></i></div>
-            <span class="qa-label">Siri Shortcuts</span>
+            <span class="qa-label">Siri</span>
           </button>
           <button class="qa-item-btn" id="btn-qa-note">
             <div class="qa-icon-box amber"><i class="fa-solid fa-pen-to-square"></i></div>
@@ -179,15 +175,15 @@
         </div>
         <div class="stats-row">
           <div class="stat-box">
-            <div class="stat-val" style="color: #00D2FF;" id="stat-tasks-pending">1</div>
+             <div class="stat-val" id="stat-tasks-pending">1</div>
             <div class="stat-label">Pending</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" style="color: #10B981;" id="stat-tasks-done">1</div>
+             <div class="stat-val" id="stat-tasks-done">1</div>
             <div class="stat-label">Completed</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" style="color: #F59E0B;" id="stat-streak-val"><i class="fa-solid fa-fire-flame-curved" style="color: #F97316; margin-right: 4px;"></i>1</div>
+             <div class="stat-val" id="stat-streak-val"><i class="fa-solid fa-fire-flame-curved"></i>1</div>
             <div class="stat-label">Day Streak</div>
           </div>
         </div>
@@ -205,11 +201,12 @@
 
       <!-- ================= VIEW 2: TASKS ================= -->
       <section class="view-section" id="view-tasks">
-        <div class="view-header-bar">
+        <div class="view-header-bar tall">
           <div class="view-title-wrap">
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Tasks</h2>
           </div>
+          <span class="view-sub">Tasks<br>for a better<br>tomorrow.</span>
           <div class="view-header-tools">
             <button class="header-icon-btn" id="btn-friends-modal" title="Friends & Task Assignment">
               <i class="fa-solid fa-user-group"></i>
@@ -245,16 +242,24 @@
         <div id="tasks-full-list">
           <!-- Dynamically populated -->
         </div>
+        <div class="deco-tagline" aria-hidden="true">
+          <div class="deco-lines">Organize<br>Execute<br>Grow<br>Repeat.</div>
+          <div class="deco-arrow"><i class="fa-solid fa-arrow-up-right-from-square" style="transform: rotate(0deg)"></i></div>
+        </div>
       </section>
 
       <!-- ================= VIEW 3: HYDRATION ================= -->
       <section class="view-section" id="view-hydration">
-        <div class="view-header-bar">
+        <div class="view-header-bar tall">
           <div class="view-title-wrap">
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Hydration</h2>
           </div>
-          <span class="section-link" id="link-edit-water-goal">Goal: <span id="hyd-goal-display">2,000</span> ml</span>
+          <span class="section-link" id="link-edit-water-goal">Goal<br><span id="hyd-goal-display">2,000</span> ml <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px"></i></span>
+        </div>
+        <div class="hydration-deco" aria-hidden="true">
+          <div class="deco-lines">Drink<br>Track<br>Stay<br>Healthy</div>
+          <div class="deco-barcode"></div>
         </div>
 
         <!-- Big Circular Widget -->
@@ -309,6 +314,7 @@
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Reminders</h2>
           </div>
+          <span class="view-sub">Stay<br>on track.</span>
           <button class="header-icon-btn" id="btn-add-reminder-modal" title="Add Reminder">
             <i class="fa-solid fa-plus"></i>
           </button>
@@ -334,6 +340,7 @@
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Siri</h2>
           </div>
+          <span class="view-sub">/ Your AI<br>assistant.<br>Always ready.</span>
           <button class="header-icon-btn" id="btn-siri-help" title="Siri Setup Guide">
             <i class="fa-solid fa-question"></i>
           </button>
@@ -409,16 +416,6 @@
             <span class="cmd-text">"Add a new task"</span>
             <span class="cmd-trailing-icon">➕</span>
           </div>
-          <div class="popular-cmd-bubble" id="pill-cmd-assign">
-            <span class="cmd-quote-icon">“</span>
-            <span class="cmd-text">"Assign task 2 to Alex"</span>
-            <span class="cmd-trailing-icon">🤝</span>
-          </div>
-          <div class="popular-cmd-bubble" id="pill-cmd-assigned-me">
-            <span class="cmd-quote-icon">“</span>
-            <span class="cmd-text">"Tasks assigned to me"</span>
-            <span class="cmd-trailing-icon">📋</span>
-          </div>
         </div>
 
         <!-- Full Siri Webhook Cards (Intact Functionality) -->
@@ -459,89 +456,14 @@
         <!-- Shortcut 3: Complete Task -->
         <div class="siri-shortcut-card">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 15px;">3. Complete a Task (By Number or Title)</span>
+            <span style="font-weight: 700; font-size: 15px;">3. Complete a Task</span>
             <span style="font-size: 11px; color: #10B981; font-weight: 600;">Siri Voice</span>
           </div>
           <div class="siri-phrase-box">
             <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, complete task 1 in Luphonix"</span>
+            <span>"Hey Siri, mark study completed in Luphonix"</span>
           </div>
           <button class="btn-secondary" id="btn-copy-siri-complete" style="padding: 8px 12px; font-size: 13px;">
-            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
-          </button>
-        </div>
-
-        <!-- Shortcut 4: Add Task by Voice -->
-        <div class="siri-shortcut-card">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 15px;">4. Add a Task by Voice</span>
-            <span style="font-size: 11px; color: #8B5CF6; font-weight: 600;">Siri Voice</span>
-          </div>
-          <div class="siri-phrase-box">
-            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, add prepare presentation in Luphonix"</span>
-          </div>
-          <button class="btn-secondary" id="btn-copy-siri-add" style="padding: 8px 12px; font-size: 13px;">
-            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
-          </button>
-        </div>
-
-        <!-- Shortcut 5: Assign Task to Person -->
-        <div class="siri-shortcut-card" style="border-left: 3px solid #00D2FF;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 15px;">5. Assign Task by Number to Person</span>
-            <span style="font-size: 11px; color: #F59E0B; font-weight: 600;">Collaborative</span>
-          </div>
-          <div class="siri-phrase-box">
-            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, assign task 2 to Alex in Luphonix"</span>
-          </div>
-          <button class="btn-secondary" id="btn-copy-siri-assign" style="padding: 8px 12px; font-size: 13px;">
-            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
-          </button>
-        </div>
-
-        <!-- Shortcut 6: Check Tasks Assigned to Me -->
-        <div class="siri-shortcut-card">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 15px;">6. Check Tasks Assigned to Me</span>
-            <span style="font-size: 11px; color: #F59E0B; font-weight: 600;">Collaborative</span>
-          </div>
-          <div class="siri-phrase-box">
-            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, what tasks are assigned to me in Luphonix?"</span>
-          </div>
-          <button class="btn-secondary" id="btn-copy-siri-assigned-me" style="padding: 8px 12px; font-size: 13px;">
-            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
-          </button>
-        </div>
-
-        <!-- Shortcut 7: Check Hydration Goal Progress -->
-        <div class="siri-shortcut-card">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 15px;">7. Check Hydration Progress</span>
-            <span style="font-size: 11px; color: #06B6D4; font-weight: 600;">Health & Wellness</span>
-          </div>
-          <div class="siri-phrase-box">
-            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, how much water did I drink in Luphonix?"</span>
-          </div>
-          <button class="btn-secondary" id="btn-copy-siri-hydration" style="padding: 8px 12px; font-size: 13px;">
-            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
-          </button>
-        </div>
-
-        <!-- Shortcut 8: Quick Voice Reminder -->
-        <div class="siri-shortcut-card">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 15px;">8. Quick Voice Reminder</span>
-            <span style="font-size: 11px; color: #EC4899; font-weight: 600;">Reminders</span>
-          </div>
-          <div class="siri-phrase-box">
-            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, remind me to drink water in Luphonix"</span>
-          </div>
-          <button class="btn-secondary" id="btn-copy-siri-quick-reminder" style="padding: 8px 12px; font-size: 13px;">
             <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
           </button>
         </div>
@@ -567,6 +489,7 @@
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Devices</h2>
           </div>
+          <span class="view-sub">/ Connect<br>Manage<br>Control.</span>
           <div class="view-header-tools">
             <button class="header-icon-btn" id="btn-add-device-modal" title="Add Device Session">
               <i class="fa-solid fa-plus"></i>
@@ -580,15 +503,15 @@
         <!-- 3 Quick Stats Overview -->
         <div class="stats-row">
           <div class="stat-box">
-            <div class="stat-val" style="color: #10B981;" id="stat-devices-online">1</div>
+             <div class="stat-val" id="stat-devices-online">1</div>
             <div class="stat-label">Online</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" style="color: #00D2FF;" id="stat-requests-total">21</div>
+             <div class="stat-val" id="stat-requests-total">21</div>
             <div class="stat-label">Requests</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" style="color: #F59E0B;" id="stat-db-tasks-count">2</div>
+             <div class="stat-val" id="stat-db-tasks-count">2</div>
             <div class="stat-label">In DB</div>
           </div>
         </div>
@@ -651,10 +574,20 @@
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Settings</h2>
           </div>
+          <span class="view-sub">// Customize<br>your experience.</span>
         </div>
 
         <!-- iOS Grouped Menu Layout (Screen 7 of Mockup) -->
         <div class="ios-grouped-list">
+          <div class="ios-list-item" id="settings-account-row">
+            <div class="ios-item-icon emerald"><i class="fa-solid fa-user"></i></div>
+            <div class="ios-item-info">
+              <div class="ios-item-title">Account</div>
+              <div class="ios-item-sub">Sign in, profile &amp; sync</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ios-item-arrow"></i>
+          </div>
+
           <div class="ios-list-item" data-accordion="setting-card-install">
             <div class="ios-item-icon blue"><i class="fa-solid fa-mobile-screen-button"></i></div>
             <div class="ios-item-info">
@@ -812,6 +745,36 @@
         </div>
       </section>
 
+      <!-- ================= VIEW 8: NOTIFICATION CENTER ================= -->
+      <section class="view-section" id="view-notifications">
+        <div class="view-header-bar">
+          <div class="view-title-wrap">
+            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="view-screen-title">Notification Center</h2>
+          </div>
+          <button class="header-icon-btn" id="btn-notif-toggle" title="Notification status"><i class="fa-solid fa-bell"></i></button>
+        </div>
+
+        <div class="notif-card">
+          <div class="notif-card-head">
+            <i class="fa-solid fa-bell"></i>
+            <span>iPhone Push Notifications</span>
+            <span class="notif-chip" id="notif-permission-chip">Permission Required</span>
+          </div>
+          <p>When someone assigns you a task, your iPhone wakes up and notifies you whether your phone screen is off or on.</p>
+          <div class="notif-actions">
+            <button class="btn-primary" id="btn-enable-push"><i class="fa-solid fa-shield-halved"></i> Enable Phone Push</button>
+            <button class="btn-dark" id="btn-send-test-push"><i class="fa-solid fa-star"></i> Send Test Push</button>
+          </div>
+        </div>
+
+        <div class="notif-list-head">
+          <span>Recent Alerts (<span id="notif-count">0</span>)</span>
+          <button class="notif-markread" id="btn-mark-all-read">Mark all as read</button>
+        </div>
+        <div id="notif-list"></div>
+      </section>
+
       <!-- Bottom Spacer to guarantee zero content blockage by the floating navbar -->
       <div class="bottom-nav-spacer" aria-hidden="true"></div>
     </main>
@@ -894,6 +857,10 @@
 
   <!-- Circular Radial Navigation Menu Modal (Luphonix Circular Dial) -->
   <div class="circular-nav-overlay" id="circular-nav-overlay" aria-hidden="true">
+    <div class="hub-meta tl" aria-hidden="true">Luphonix</div>
+    <div class="hub-meta tr" aria-hidden="true">Your<br>Personal<br>Control Hub.</div>
+    <div class="hub-meta bl" aria-hidden="true">Simple<br>Smart<br>Powerful</div>
+    <div class="hub-meta br" aria-hidden="true">2026<br>Version 1.0</div>
     <div class="circular-nav-portal" id="circular-nav-portal" role="dialog" aria-label="Circular Navigation Menu">
       <!-- Ambient Outer Liquid Halo -->
       <div class="circular-nav-halo" aria-hidden="true"></div>
@@ -920,9 +887,9 @@
           <span class="orbit-label">Water</span>
         </button>
 
-        <button class="circular-orbit-item" data-action="friends" id="circular-btn-friends" title="Friends & Task Delegation">
-          <div class="orbit-icon-circle"><i class="fa-solid fa-user-group"></i></div>
-          <span class="orbit-label">Friends</span>
+        <button class="circular-orbit-item" data-view="reminders" title="Reminders">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-bell"></i></div>
+          <span class="orbit-label">Reminders</span>
         </button>
 
         <button class="circular-orbit-item" data-view="siri" title="Siri Shortcuts">
@@ -961,14 +928,6 @@
           <input type="text" class="form-input" id="task-title-input" placeholder="e.g. Finish project UI design" required autofocus>
         </div>
         <div class="form-group">
-          <label class="form-label" for="task-desc-input">Description / Notes (Optional)</label>
-          <textarea class="form-input" id="task-desc-input" rows="2" placeholder="Add full details, requirements, or links..." style="resize: vertical; font-family: inherit; font-size: 13px;"></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="task-due-input">Due Date & Time (Optional)</label>
-          <input type="datetime-local" class="form-input" id="task-due-input">
-        </div>
-        <div class="form-group">
           <label class="form-label" for="task-category-select">Category</label>
           <select class="form-select" id="task-category-select">
             <option value="work">Work</option>
@@ -1001,93 +960,6 @@
         <button type="submit" class="btn-primary" id="btn-save-task">Create Task</button>
         <button type="button" class="btn-secondary modal-close-btn">Cancel</button>
       </form>
-    </div>
-  </div>
-
-  <!-- Modal: Full Task Details View & Actions -->
-  <div class="modal-overlay" id="modal-task-details">
-    <div class="modal-sheet" style="max-height: 85vh; overflow-y: auto;">
-      <div class="modal-handle"></div>
-      
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <span class="category-tag" id="td-category-badge" style="font-size: 11px; padding: 4px 8px;">WORK</span>
-        <div style="display: flex; gap: 6px;">
-          <span class="priority-tag" id="td-priority-badge" style="font-size: 11px; padding: 4px 8px;">HIGH</span>
-          <span class="task-badge" id="td-status-badge" style="font-size: 11px; padding: 4px 8px;">PENDING</span>
-        </div>
-      </div>
-
-      <h3 class="modal-title" id="td-title" style="text-align: left; font-size: 18px; line-height: 1.4; margin-bottom: 14px; word-break: break-word;">
-        Task Details
-      </h3>
-
-      <!-- Description Section -->
-      <div class="glass-card" style="margin-bottom: 12px; padding: 12px; background: rgba(255, 255, 255, 0.03);">
-        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.05em;">
-          <i class="fa-solid fa-align-left" style="color: #00D2FF; margin-right: 5px;"></i> Description & Notes
-        </div>
-        <div id="td-description" style="font-size: 13.5px; line-height: 1.55; color: var(--text-main); white-space: pre-wrap; word-break: break-word;">
-          No description provided for this task.
-        </div>
-      </div>
-
-      <!-- Schedule & Timing Grid -->
-      <div class="glass-card" style="margin-bottom: 12px; padding: 12px; background: rgba(255, 255, 255, 0.03);">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-          <div>
-            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
-              <i class="fa-regular fa-calendar-check" style="color: #10B981; margin-right: 4px;"></i> Due Date
-            </div>
-            <div id="td-due-at" style="font-size: 13px; font-weight: 600; color: #FFFFFF;">
-              Not set
-            </div>
-          </div>
-          <div>
-            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;">
-              <i class="fa-regular fa-clock" style="color: #F59E0B; margin-right: 4px;"></i> Created
-            </div>
-            <div id="td-created-at" style="font-size: 13px; font-weight: 600; color: #FFFFFF;">
-              Just now
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Team Collaboration / Assignment Box -->
-      <div class="glass-card" style="margin-bottom: 12px; padding: 12px; background: rgba(255, 255, 255, 0.03);">
-        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.05em;">
-          <i class="fa-solid fa-users" style="color: #C084FC; margin-right: 5px;"></i> People & Assignment
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span style="font-size: 13px; color: var(--text-muted);">Assigned To:</span>
-          <span id="td-assigned-to" style="font-size: 13px; font-weight: 700; color: #38BDF8;">@myself</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 13px; color: var(--text-muted);">Assigned By:</span>
-          <span id="td-assigned-by" style="font-size: 13px; font-weight: 600; color: var(--text-main);">@me</span>
-        </div>
-      </div>
-
-      <!-- Siri Voice Integration Info -->
-      <div class="glass-card" style="margin-bottom: 14px; padding: 10px 12px; background: rgba(0, 210, 255, 0.05); border: 1px solid rgba(0, 210, 255, 0.2);">
-        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #00D2FF; margin-bottom: 4px;">
-          <i class="fa-solid fa-microphone-lines" style="margin-right: 4px;"></i> Siri Voice Shortcut
-        </div>
-        <div id="td-siri-hint" style="font-size: 12.5px; color: #E2E8F0;">
-          Say: "Hey Siri, complete this task in Luphonix"
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div style="display: flex; flex-direction: column; gap: 8px;">
-        <button type="button" class="btn-primary" id="btn-td-toggle-status" style="width: 100%;">
-          <i class="fa-solid fa-check" style="margin-right: 6px;"></i> Mark as Completed
-        </button>
-        <button type="button" class="btn-secondary" id="btn-td-delete" style="width: 100%; color: #F43F5E; border-color: rgba(244, 63, 94, 0.3);">
-          <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Delete Task
-        </button>
-        <button type="button" class="btn-ghost-cancel modal-close-btn" style="margin-top: 2px;">Close</button>
-      </div>
     </div>
   </div>
 
@@ -1231,7 +1103,7 @@
           </label>
           <div class="input-icon-wrapper">
             <span class="input-leading-icon"><i class="fa-solid fa-user"></i></span>
-            <input type="text" class="form-input with-icon" id="signup-name" placeholder="e.g. Alex Rivera" required autocomplete="name">
+            <input type="text" class="form-input with-icon" id="signup-name" placeholder="Dhyey" required autocomplete="name">
           </div>
         </div>
         <div class="form-group">
@@ -1240,7 +1112,7 @@
           </label>
           <div class="input-icon-wrapper">
             <span class="input-leading-icon"><i class="fa-solid fa-at"></i></span>
-            <input type="text" class="form-input with-icon" id="signup-username" placeholder="e.g. alex_dev" autocomplete="username">
+            <input type="text" class="form-input with-icon" id="signup-username" placeholder="e.g. dhyey_dev" autocomplete="username">
           </div>
         </div>
         <div class="form-group">
@@ -1280,11 +1152,11 @@
       <div class="modal-handle"></div>
       <div class="auth-header-wrapper" style="margin-bottom: 14px;">
         <div class="auth-header-badge" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(0, 210, 255, 0.2) 100%); border-color: rgba(0, 210, 255, 0.4);">
-          <span id="account-avatar-char" style="font-size: 22px; font-weight: 800; color: #00D2FF;">U</span>
+          <span id="account-avatar-char" style="font-size: 22px; font-weight: 800; color: #00D2FF;">D</span>
         </div>
-        <h3 class="auth-main-title" id="account-name-val">User Profile</h3>
-        <p class="auth-subtitle" id="account-email-val">user@luphonix.local</p>
-        <div style="font-size: 13px; color: var(--accent-cyan); font-weight: 700; font-family: monospace; margin-top: 4px;" id="account-handle-val">@user</div>
+        <h3 class="auth-main-title" id="account-name-val">Dhyey</h3>
+        <p class="auth-subtitle" id="account-email-val">dhyey@luphonix.local</p>
+        <div style="font-size: 13px; color: var(--accent-cyan); font-weight: 700; font-family: monospace; margin-top: 4px;" id="account-handle-val">@dhyey</div>
       </div>
 
       <div class="glass-card" style="margin-bottom: 16px; background: rgba(15, 23, 42, 0.6); border-color: rgba(255, 255, 255, 0.08);">
@@ -1296,7 +1168,7 @@
         </div>
         <div style="font-size: 11px; color: var(--text-sub); border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px; display: flex; justify-content: space-between;">
           <span>Account ID:</span>
-          <span id="account-id-val" style="font-family: monospace; color: #94A3B8;">—</span>
+          <span id="account-id-val" style="font-family: monospace; color: #94A3B8;">dhyey</span>
         </div>
       </div>
 
@@ -1326,7 +1198,7 @@
         </div>
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-size: 18px; font-weight: 800; color: #FFFFFF; font-family: monospace;" id="my-unique-handle">@user</span>
+            <span style="font-size: 18px; font-weight: 800; color: #FFFFFF; font-family: monospace;" id="my-unique-handle">@dhyey</span>
             <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34D399; font-size: 10px; padding: 2px 8px; border-radius: 999px;">Active</span>
           </div>
           <button type="button" class="btn-secondary" id="btn-copy-my-handle" style="padding: 6px 12px; font-size: 12px; height: 32px; border-radius: 8px; display: flex; align-items: center; gap: 6px; cursor: pointer;" title="Copy unique handle">
@@ -1387,66 +1259,10 @@
     </div>
   </div>
 
-  <!-- Modal 8: Notification Center & Phone Push Alerts -->
-  <div class="modal-overlay" id="modal-notifications">
-    <div class="modal-sheet" style="max-height: 85vh; display: flex; flex-direction: column;">
-      <div class="modal-handle"></div>
-
-      <div class="auth-header-wrapper" style="margin-bottom: 12px;">
-        <div class="auth-header-badge" style="background: linear-gradient(135deg, rgba(0,210,255,0.2), rgba(16,185,129,0.2)); border-color: rgba(0,210,255,0.4);">
-          <i class="fa-regular fa-bell" style="font-size: 20px; color: #00D2FF;"></i>
-        </div>
-        <h3 class="auth-main-title">Notification Center</h3>
-        <p class="auth-subtitle">Task assignments & phone push alerts (rings even when screen is locked/off).</p>
-      </div>
-
-      <!-- Phone Lock Screen Push Status Card -->
-      <div class="glass-card" style="margin-bottom: 12px; background: rgba(15, 23, 42, 0.7); border-color: rgba(0, 210, 255, 0.25); padding: 12px 14px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <i class="fa-solid fa-mobile-screen-button" style="color: #00D2FF;"></i>
-            <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;">iPhone Push Notifications</span>
-          </div>
-          <span class="badge" id="push-status-badge" style="background: rgba(245, 158, 11, 0.2); color: #F59E0B; font-size: 11px; padding: 2px 8px; border-radius: 999px;">
-            Checking...
-          </span>
-        </div>
-        <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin: 0 0 10px 0;">
-          When someone assigns you a task, your iPhone wakes up and notifies you whether your phone screen is off or on.
-        </p>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button type="button" class="btn-primary" id="btn-enable-phone-push" style="flex: 1; min-width: 140px; height: 34px; font-size: 12px; padding: 0 12px;">
-            <i class="fa-solid fa-bell" style="margin-right: 6px;"></i> Enable Phone Push
-          </button>
-          <button type="button" class="btn-secondary" id="btn-test-phone-push" style="flex: 1; min-width: 140px; height: 34px; font-size: 12px; padding: 0 12px;">
-            <i class="fa-solid fa-paper-plane" style="margin-right: 6px;"></i> Send Test Push
-          </button>
-        </div>
-      </div>
-
-      <!-- Notifications Action Bar -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <span style="font-size: 12px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.05em;">
-          Recent Alerts (<span id="notif-modal-count">0</span>)
-        </span>
-        <button type="button" class="btn-secondary" id="btn-mark-all-read" style="padding: 4px 10px; font-size: 11px; height: 26px; border-radius: 6px; cursor: pointer;">
-          Mark all as read
-        </button>
-      </div>
-
-      <!-- Notifications List Container -->
-      <div id="notifications-list-container" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; max-height: 380px;">
-        <!-- Dynamically rendered -->
-      </div>
-
-      <button type="button" class="btn-ghost-cancel modal-close-btn">Close</button>
-    </div>
-  </div>
-
   <!-- Toast Notification Container -->
   <div id="toast-container"></div>
 
   <!-- Main JavaScript Logic -->
-  <script src="/app.js?v=8.1"></script>
+  <script src="/app.js?v=9.0"></script>
 </body>
 </html>
