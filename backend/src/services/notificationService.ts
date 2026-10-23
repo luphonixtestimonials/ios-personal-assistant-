@@ -137,7 +137,7 @@ export class NotificationService {
       body: payload.body,
       icon: payload.icon || '/icons/apple-touch-icon.png',
       badge: payload.badge || '/icons/icon-192.png',
-      tag: payload.tag || `luphonix-${notifType}-${Date.now()}`,
+      tag: payload.tag || `synvy-${notifType}-${Date.now()}`,
       data: {
         url: payload.url || '/?view=tasks',
         notificationId: inAppId,

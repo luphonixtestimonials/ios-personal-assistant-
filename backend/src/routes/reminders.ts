@@ -74,7 +74,7 @@ async function handleQuickReminder(c: any) {
   }
 
   if (!title || !title.trim()) {
-    return c.text('Please provide a reminder title in Luphonix.');
+    return c.text('Please provide a reminder title in Synvy.');
   }
 
   const minutes = isNaN(minutesParam) || minutesParam <= 0 ? 30 : minutesParam;
@@ -90,7 +90,7 @@ async function handleQuickReminder(c: any) {
     args: [id, userId, reminderTitle, scheduledAt, now, now],
   });
 
-  const msg = `Set reminder for '${reminderTitle}' in Luphonix for ${minutes} minutes from now.`;
+  const msg = `Set reminder for '${reminderTitle}' in Synvy for ${minutes} minutes from now.`;
   const format = c.req.query('format')?.toLowerCase();
   const accept = c.req.header('accept')?.toLowerCase() || '';
   const userAgent = c.req.header('user-agent')?.toLowerCase() || '';

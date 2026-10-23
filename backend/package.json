@@ -1,8 +1,8 @@
 {
-  "name": "luphonix-backend",
+  "name": "synvy-backend",
   "version": "1.0.0",
   "type": "module",
-  "description": "Production-ready backend API for Luphonix iOS App with Hono and Turso (libSQL)",
+  "description": "Production-ready backend API for Synvy iOS App with Hono and Turso (libSQL)",
   "main": "src/server.ts",
   "scripts": {
     "dev": "tsx watch src/server.ts",

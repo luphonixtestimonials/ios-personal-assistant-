@@ -18,13 +18,13 @@ async function resolveUserFromContext(c: any): Promise<{ id: string; email: stri
     try {
       const decoded = jwt.verify(raw, config.JWT_SECRET) as any;
       if (decoded && decoded.userId) {
-        return { id: String(decoded.userId), email: String(decoded.email || 'user@luphonix.local') };
+        return { id: String(decoded.userId), email: String(decoded.email || 'user@synvy.local') };
       }
     } catch {
       try {
         const decoded = jwt.decode(raw) as any;
         if (decoded && decoded.userId) {
-          return { id: String(decoded.userId), email: String(decoded.email || 'user@luphonix.local') };
+          return { id: String(decoded.userId), email: String(decoded.email || 'user@synvy.local') };
         }
       } catch {}
     }

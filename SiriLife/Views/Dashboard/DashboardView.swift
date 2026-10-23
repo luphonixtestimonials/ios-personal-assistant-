@@ -32,7 +32,7 @@ public struct DashboardView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
-            .navigationTitle("Luphonix")
+            .navigationTitle("Synvy")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -202,7 +202,7 @@ public struct DashboardView: View {
                 Text("Built-in Siri Ready")
                     .font(.subheadline)
                     .fontWeight(.bold)
-                Text("\"Siri, what are my tasks for today in Luphonix?\"")
+                Text("\"Siri, what are my tasks for today in Synvy?\"")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

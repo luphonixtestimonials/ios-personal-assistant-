@@ -1,5 +1,5 @@
 /**
- * Luphonix — Progressive Web Application
+ * Synvy — Progressive Web Application
  * Complete Client State, Offline Storage, Cloud Sync, and Audio Engine
  */
 
@@ -7,15 +7,15 @@
   'use strict';
 
   // --- Initial State & Storage Keys ---
-  const STORAGE_KEY_TASKS = 'luphonix_tasks_v1';
-  const STORAGE_KEY_WATER = 'luphonix_water_logs_v1';
-  const STORAGE_KEY_REMINDERS = 'luphonix_reminders_v1';
-  const STORAGE_KEY_PREFS = 'luphonix_preferences_v1';
-  const STORAGE_KEY_API_KEY = 'luphonix_api_key_v1';
-  const STORAGE_KEY_AUTH_TOKEN = 'luphonix_auth_token_v1';
-  const STORAGE_KEY_AUTH_USER = 'luphonix_auth_user_v1';
-  const STORAGE_KEY_FRIENDS = 'luphonix_friends_v1';
-  const STORAGE_KEY_NOTES = 'luphonix_notes_v1';
+  const STORAGE_KEY_TASKS = 'synvy_tasks_v1';
+  const STORAGE_KEY_WATER = 'synvy_water_logs_v1';
+  const STORAGE_KEY_REMINDERS = 'synvy_reminders_v1';
+  const STORAGE_KEY_PREFS = 'synvy_preferences_v1';
+  const STORAGE_KEY_API_KEY = 'synvy_api_key_v1';
+  const STORAGE_KEY_AUTH_TOKEN = 'synvy_auth_token_v1';
+  const STORAGE_KEY_AUTH_USER = 'synvy_auth_user_v1';
+  const STORAGE_KEY_FRIENDS = 'synvy_friends_v1';
+  const STORAGE_KEY_NOTES = 'synvy_notes_v1';
 
   // Default sample notes matching mockup screenshot
   const DEFAULT_NOTES = [
@@ -82,7 +82,7 @@
 
   // Default sample data for instant wow effect matching mockup
   const DEFAULT_TASKS = [
-    { id: '1', title: 'Luphonix or...', category: 'work', priority: 'medium', is_completed: true, created_at: new Date().toISOString() },
+    { id: '1', title: 'Synvy onboarding', category: 'work', priority: 'medium', is_completed: true, created_at: new Date().toISOString() },
     { id: '2', title: 'Make Keval wish per', category: 'work', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
     { id: '3', title: 'Complete project UI', category: 'work', priority: 'high', is_completed: false, created_at: new Date().toISOString() },
     { id: '4', title: 'Read 10 pages', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() },
@@ -149,7 +149,10 @@
 
   function loadStorage(key, fallback) {
     try {
-      const data = localStorage.getItem(key);
+      let data = localStorage.getItem(key);
+      if ((data === null || data === undefined) && key.startsWith('synvy_')) {
+        data = localStorage.getItem(key.replace('synvy_', 'luphonix_'));
+      }
       if (data === null || data === undefined) return fallback;
       try {
         return JSON.parse(data);
@@ -234,7 +237,7 @@
     const icon = type === 'success' ? '✅' : type === 'water' ? '💧' : 'ℹ️';
     toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
     container.appendChild(toast);
-    recordAlert('Luphonix', message, type);
+    recordAlert('Synvy', message, type);
 
     setTimeout(() => {
       toast.style.opacity = '0';
@@ -682,7 +685,7 @@
 
       if (res.ok) {
         const json = await res.json();
-        resultEl.textContent = `✅ Connected to ${json.service || 'Luphonix API'} (${latency} ms)`;
+        resultEl.textContent = `✅ Connected to ${json.service || 'Synvy API'} (${latency} ms)`;
         resultEl.style.color = '#34D399';
         updateConnectionStatus(true);
       } else {
@@ -725,7 +728,7 @@
       updateApiKeyUI(state.token);
       return state.token;
     }
-    if (!forceRefresh && currentApiKey && currentApiKey !== 'luphonix-siri-master-key') {
+    if (!forceRefresh && currentApiKey && currentApiKey !== 'synvy-siri-master-key' && currentApiKey !== 'luphonix-siri-master-key') {
       updateApiKeyUI(currentApiKey);
       return currentApiKey;
     }
@@ -746,7 +749,7 @@
     }
 
     if (!currentApiKey) {
-      currentApiKey = 'luphonix-siri-master-key';
+      currentApiKey = 'synvy-siri-master-key';
       localStorage.setItem(STORAGE_KEY_API_KEY, currentApiKey);
     }
     updateApiKeyUI(currentApiKey);
@@ -943,7 +946,7 @@
       const initial = (state.user.name || state.user.email || 'U').charAt(0).toUpperCase();
       if (nameSpan) nameSpan.textContent = state.user.name ? state.user.name.split(' ')[0] : 'Account';
       if (avatarIcon) avatarIcon.textContent = initial;
-      if (accountName) accountName.textContent = state.user.name || 'Luphonix User';
+      if (accountName) accountName.textContent = state.user.name || 'Synvy User';
       if (accountEmail) accountEmail.textContent = state.user.email || '';
       if (accountId) accountId.textContent = state.user.id || '';
       if (accountAvatarChar) accountAvatarChar.textContent = initial;
@@ -952,7 +955,7 @@
       if (nameSpan) nameSpan.textContent = 'Sign In';
       if (avatarIcon) avatarIcon.textContent = '👤';
       if (accountName) accountName.textContent = 'Guest / Siri Default';
-      if (accountEmail) accountEmail.textContent = 'user@luphonix.local';
+      if (accountEmail) accountEmail.textContent = 'user@synvy.local';
       if (accountId) accountId.textContent = 'user_siri_default';
       if (accountAvatarChar) accountAvatarChar.textContent = 'G';
     }
@@ -1008,8 +1011,8 @@
     } finally {
       clearTimeout(timeoutTimer);
       if (submitBtn) submitBtn.disabled = false;
-      if (btnText) btnText.textContent = 'Sign In to Luphonix';
-      else if (submitBtn) submitBtn.textContent = 'Sign In to Luphonix';
+      if (btnText) btnText.textContent = 'Sign In to Synvy';
+      else if (submitBtn) submitBtn.textContent = 'Sign In to Synvy';
       if (btnSpinner) btnSpinner.classList.add('hidden');
     }
   }
@@ -1078,7 +1081,7 @@
     localStorage.removeItem(STORAGE_KEY_AUTH_USER);
     updateAuthUI();
     closeAllModals();
-    showToast('Signed out of Luphonix', 'info');
+    showToast('Signed out of Synvy', 'info');
     ensureApiKey(true);
     syncAllWithCloud();
   }
@@ -2432,7 +2435,7 @@
       }
     }
 
-    // Compact Central Luphonix Emblem - Opens Circular Radial Navigation Menu
+    // Compact Central Synvy Emblem - Opens Circular Radial Navigation Menu
     const centerEmblem = document.getElementById('nav-btn-center-emblem');
     if (centerEmblem) {
       centerEmblem.addEventListener('click', (e) => {
@@ -2846,7 +2849,7 @@
     if (btnSiriTest) {
       btnSiriTest.addEventListener('click', () => {
         playSound('water');
-        showToast('🎙️ Siri Voice Simulation: "Logged 250ml water in Luphonix!"', 'water');
+        showToast('🎙️ Siri Voice Simulation: "Logged 250ml water in Synvy!"', 'water');
         logWater(250);
       });
     }
@@ -2878,7 +2881,7 @@
         } else if (id === 'pill-cmd-add') {
           openModal('modal-task');
         } else if (id === 'pill-cmd-assign') {
-          showToast('Siri: "Hey Siri, assign task 2 to Alex in Luphonix"', 'info');
+          showToast('Siri: "Hey Siri, assign task 2 to Alex in Synvy"', 'info');
           const uncompleted = state.tasks.filter((t) => !t.is_completed);
           if (uncompleted.length >= 2) {
             assignTask(uncompleted[1].id, 'alex');
@@ -2887,7 +2890,7 @@
             showToast('Tip: Use Siri shortcut to assign task by number or name', 'info');
           }
         } else if (id === 'pill-cmd-reminder') {
-          showToast('Siri: "Hey Siri, remind me to drink water in Luphonix"', 'info');
+          showToast('Siri: "Hey Siri, remind me to drink water in Synvy"', 'info');
           switchView('reminders');
         }
       });
@@ -3187,14 +3190,14 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker
           .register('/sw.js')
-          .then(() => console.log('✅ Luphonix PWA Service Worker Registered'))
+          .then(() => console.log('✅ Synvy PWA Service Worker Registered'))
           .catch((err) => console.log('Service Worker registration skipped:', err));
       });
     }
   }
 
   // --- Notification Center (recent alerts + browser push permission) ---
-  const STORAGE_KEY_ALERTS = 'luphonix_alerts_v1';
+  const STORAGE_KEY_ALERTS = 'synvy_alerts_v1';
   let alertLog = loadStorage(STORAGE_KEY_ALERTS, []);
   if (!Array.isArray(alertLog)) alertLog = [];
 
@@ -3281,7 +3284,7 @@
     }
     if (test) {
       test.addEventListener('click', async () => {
-        const title = 'Luphonix: Phone Notification';
+        const title = 'Synvy: Phone Notification';
         const body = 'Test push — notifications are working.';
         if ('Notification' in window && Notification.permission === 'granted') {
           try {

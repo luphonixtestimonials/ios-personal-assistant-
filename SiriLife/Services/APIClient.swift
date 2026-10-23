@@ -31,14 +31,17 @@ public final class APIClient {
     // Configurable base URL; defaults to local or cloud, and persists user custom server
     public var baseURLString: String {
         get {
-            if let custom = UserDefaults.standard.string(forKey: "luphonix_backend_url"), !custom.isEmpty {
+            if let custom = UserDefaults.standard.string(forKey: "synvy_backend_url"), !custom.isEmpty {
                 return custom
+            }
+            if let legacy = UserDefaults.standard.string(forKey: "luphonix_backend_url"), !legacy.isEmpty {
+                return legacy
             }
             return _defaultBaseURL
         }
         set {
             _defaultBaseURL = newValue
-            UserDefaults.standard.set(newValue, forKey: "luphonix_backend_url")
+            UserDefaults.standard.set(newValue, forKey: "synvy_backend_url")
         }
     }
     private var _defaultBaseURL: String = "https://luphonix-web.vercel.app"

@@ -5,13 +5,13 @@ import UIKit
 public final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     public static let shared = NotificationManager()
     
-    public static let reminderCategoryIdentifier = "LUPHONIX_REMINDER_CATEGORY"
-    public static let hydrationCategoryIdentifier = "LUPHONIX_HYDRATION_CATEGORY"
+    public static let reminderCategoryIdentifier = "SYNVY_REMINDER_CATEGORY"
+    public static let hydrationCategoryIdentifier = "SYNVY_HYDRATION_CATEGORY"
     
-    public static let actionComplete = "LUPHONIX_ACTION_COMPLETE"
-    public static let actionSnooze = "LUPHONIX_ACTION_SNOOZE"
-    public static let actionLog250 = "LUPHONIX_ACTION_LOG_250"
-    public static let actionSnoozeWater = "LUPHONIX_ACTION_SNOOZE_WATER"
+    public static let actionComplete = "SYNVY_ACTION_COMPLETE"
+    public static let actionSnooze = "SYNVY_ACTION_SNOOZE"
+    public static let actionLog250 = "SYNVY_ACTION_LOG_250"
+    public static let actionSnoozeWater = "SYNVY_ACTION_SNOOZE_WATER"
     
     private let center = UNUserNotificationCenter.current()
     
@@ -245,7 +245,7 @@ public final class NotificationManager: NSObject, UNUserNotificationCenterDelega
         
         if let reminderId = userInfo["reminderId"] as? String {
             switch actionId {
-            case NotificationManager.actionComplete:
+            case NotificationManager.actionComplete, "LUPHONIX_ACTION_COMPLETE":
                 var reminders = StorageManager.shared.getReminders()
                 if let idx = reminders.firstIndex(where: { $0.id == reminderId }) {
                     reminders[idx].isCompleted = true
@@ -258,17 +258,17 @@ public final class NotificationManager: NSObject, UNUserNotificationCenterDelega
                     StorageManager.shared.saveReminders(reminders)
                     NotificationManager.shared.scheduleReminderNotification(for: reminders[idx])
                 }
-            case NotificationManager.actionSnooze:
+            case NotificationManager.actionSnooze, "LUPHONIX_ACTION_SNOOZE":
                 snoozeReminder(id: reminderId, minutes: 15)
             default:
                 break
             }
         } else if let type = userInfo["type"] as? String, type == "hydration" {
             switch actionId {
-            case NotificationManager.actionLog250:
+            case NotificationManager.actionLog250, "LUPHONIX_ACTION_LOG_250":
                 let log = HydrationLog(amountMl: 250)
                 StorageManager.shared.addHydrationLog(log)
-            case NotificationManager.actionSnoozeWater:
+            case NotificationManager.actionSnoozeWater, "LUPHONIX_ACTION_SNOOZE_WATER":
                 HydrationScheduler.shared.snoozeWaterReminder(minutes: 15)
             default:
                 break

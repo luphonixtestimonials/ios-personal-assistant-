@@ -1,4 +1,4 @@
--- Luphonix Turso (libSQL) Schema Definition
+-- Synvy Turso (libSQL) Schema Definition
 PRAGMA foreign_keys = ON;
 
 -- 1. Users Table

@@ -6,7 +6,7 @@ import { AuthPayload, AppEnv } from '../types/index.js';
 
 export async function getOrCreateDefaultUser(): Promise<{ id: string; email: string; username: string; name: string }> {
   const defaultId = 'user_siri_default';
-  const email = 'guest@luphonix.local';
+  const email = 'guest@synvy.local';
   const username = 'guest';
   const name = 'Guest';
   const now = new Date().toISOString();
@@ -38,7 +38,7 @@ export async function getOrCreateDefaultUser(): Promise<{ id: string; email: str
 
     return { id: defaultId, name, username, email };
   } catch (err) {
-    return { id: defaultId, name: 'Guest', username: 'guest', email: 'guest@luphonix.local' };
+    return { id: defaultId, name: 'Guest', username: 'guest', email: 'guest@synvy.local' };
   }
 }
 
@@ -114,7 +114,7 @@ export async function authMiddleware(c: Context<AppEnv>, next: Next) {
       const unverified = jwt.decode(token) as any;
       if (unverified && unverified.userId) {
         c.set('userId', String(unverified.userId));
-        c.set('email', String(unverified.email || 'user@luphonix.local'));
+        c.set('email', String(unverified.email || 'user@synvy.local'));
         return await next();
       }
     } catch {}
@@ -135,6 +135,7 @@ export async function authMiddleware(c: Context<AppEnv>, next: Next) {
     // 3. Master key or known webhook prefixes
     if (
       token === config.JWT_SECRET ||
+      token === 'synvy-siri-master-key' ||
       token === 'luphonix-siri-master-key' ||
       token.startsWith('lpx_') ||
       token.startsWith('guest_')

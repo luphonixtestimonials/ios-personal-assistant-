@@ -8,7 +8,7 @@ async function startServer() {
     // Automatically execute schema migrations on boot
     await runMigrations();
 
-    console.log(`🚀 Luphonix API Server listening on:`);
+    console.log(`🚀 Synvy API Server listening on:`);
     console.log(`   - Local:   http://localhost:${config.PORT}`);
     console.log(`   - Network: http://172.20.10.2:${config.PORT} (for iPhone Safari)`);
     serve({
@@ -17,7 +17,7 @@ async function startServer() {
       hostname: '0.0.0.0',
     });
   } catch (err) {
-    console.error('Failed to start Luphonix API Server:', err);
+    console.error('Failed to start Synvy API Server:', err);
     process.exit(1);
   }
 }

@@ -107,22 +107,22 @@ tasksApp.get('/', async (c) => {
       success: true,
       count: 0,
       data: [],
-      summary: 'You have no remaining tasks for today in Luphonix!',
-      message: 'You have no remaining tasks for today in Luphonix!',
-      speech: 'You have no remaining tasks for today in Luphonix!',
+      summary: 'You have no remaining tasks for today in Synvy!',
+      message: 'You have no remaining tasks for today in Synvy!',
+      speech: 'You have no remaining tasks for today in Synvy!',
     });
   }
 
   let summary = '';
   if (tasks.length === 0) {
     if (filter === 'assigned_to_me') {
-      summary = 'You have no tasks assigned to you in Luphonix.';
+      summary = 'You have no tasks assigned to you in Synvy.';
     } else if (filter === 'assigned_by_me') {
-      summary = 'You have not assigned any tasks in Luphonix.';
+      summary = 'You have not assigned any tasks in Synvy.';
     } else if (filter === 'today' || !filter) {
-      summary = 'You have no remaining tasks for today in Luphonix!';
+      summary = 'You have no remaining tasks for today in Synvy!';
     } else {
-      summary = 'You have no tasks in Luphonix.';
+      summary = 'You have no tasks in Synvy.';
     }
   } else {
     const prefix = filter === 'assigned_to_me' ? 'assigned task' : 'task';
@@ -253,7 +253,7 @@ async function resolveAssigneeUser(assigneeQuery: string) {
   // Demo user fallback / auto-provision
   const demoHandle = handle.toLowerCase();
   const demoId = `user_${demoHandle}_demo`;
-  const demoEmail = `${demoHandle}@luphonix.local`;
+  const demoEmail = `${demoHandle}@synvy.local`;
   const demoName = handle.charAt(0).toUpperCase() + handle.slice(1);
   const now = new Date().toISOString();
   try {
@@ -287,7 +287,7 @@ tasksApp.get('/complete', async (c) => {
   const isExplicitJson = format === 'json' || accept.includes('application/json');
 
   if (!queryParam || !queryParam.trim()) {
-    const errorMsg = 'Please provide the task number or title to mark as completed in Luphonix.';
+    const errorMsg = 'Please provide the task number or title to mark as completed in Synvy.';
     if (isExplicitJson) {
       return c.json({ success: false, error: errorMsg }, 400);
     }
@@ -299,7 +299,7 @@ tasksApp.get('/complete', async (c) => {
 
   const resolved = await resolveTaskFromQuery(userId, cleanQuery);
   if (!resolved) {
-    const notFoundMsg = `Could not find an uncompleted task matching '${cleanQuery}' in Luphonix.`;
+    const notFoundMsg = `Could not find an uncompleted task matching '${cleanQuery}' in Synvy.`;
     if (isExplicitJson) {
       return c.json({ success: false, message: notFoundMsg, error: 'Task not found' }, 404);
     }
@@ -317,7 +317,7 @@ tasksApp.get('/complete', async (c) => {
   });
 
   const label = resolved.index ? `task #${resolved.index} '${matchedTitle}'` : `'${matchedTitle}'`;
-  const successMsg = `Marked ${label} as completed in Luphonix. Good job!`;
+  const successMsg = `Marked ${label} as completed in Synvy. Good job!`;
 
   if (isExplicitJson) {
     return c.json({
@@ -375,7 +375,7 @@ async function handleAssignTask(c: any) {
 
   const resolved = await resolveTaskFromQuery(userId, taskQuery);
   if (!resolved) {
-    const notFoundMsg = `Could not find an uncompleted task matching '${taskQuery.trim()}' in Luphonix.`;
+    const notFoundMsg = `Could not find an uncompleted task matching '${taskQuery.trim()}' in Synvy.`;
     if (isExplicitJson) {
       return c.json({ success: false, error: notFoundMsg }, 404);
     }
@@ -409,7 +409,7 @@ async function handleAssignTask(c: any) {
   }
 
   const label = resolved.index ? `task #${resolved.index} '${matchedTitle}'` : `'${matchedTitle}'`;
-  const successMsg = `Assigned ${label} to @${assignee.username} in Luphonix.`;
+  const successMsg = `Assigned ${label} to @${assignee.username} in Synvy.`;
 
   if (isExplicitJson) {
     return c.json({
@@ -539,7 +539,7 @@ tasksApp.get('/add', async (c) => {
     args: [id, userId, taskTitle, now, priority, category, now, now],
   });
 
-  const msg = `Added "${taskTitle}" to your Luphonix tasks.`;
+  const msg = `Added "${taskTitle}" to your Synvy tasks.`;
   const format = c.req.query('format')?.toLowerCase();
   const accept = c.req.header('accept')?.toLowerCase() || '';
   if (format === 'json' || accept.includes('application/json')) {
@@ -621,7 +621,7 @@ tasksApp.post('/', async (c) => {
     } else {
       if (['keval', 'alex', 'sarah'].includes(cleanHandle.toLowerCase())) {
         const demoId = `user_${cleanHandle.toLowerCase()}_demo`;
-        const demoEmail = `${cleanHandle.toLowerCase()}@luphonix.local`;
+        const demoEmail = `${cleanHandle.toLowerCase()}@synvy.local`;
         const demoName = cleanHandle.charAt(0).toUpperCase() + cleanHandle.slice(1);
         const demoNow = new Date().toISOString();
         try {

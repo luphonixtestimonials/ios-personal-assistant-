@@ -114,7 +114,7 @@ notificationsApp.post('/test', async (c) => {
   const res = await notificationService.sendNotification(
     userId,
     {
-      title: '🔔 Luphonix Phone Notification',
+      title: '🔔 Synvy Phone Notification',
       body: 'Your phone notification system is active! You will be alerted when someone assigns you a task.',
       url: '/?view=tasks',
       tag: 'test-notification',

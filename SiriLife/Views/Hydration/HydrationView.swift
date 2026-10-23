@@ -187,7 +187,7 @@ public struct HydrationView: View {
         HStack(spacing: 12) {
             Image(systemName: "mic.fill")
                 .foregroundColor(.purple)
-            Text("Try: \"Siri, log 250 ml of water in Luphonix\"")
+            Text("Try: \"Siri, log 250 ml of water in Synvy\"")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

@@ -19,7 +19,7 @@ struct SiriLifeApp: App {
         if existingTasks.isEmpty {
             let demoTasks = [
                 TaskItem(
-                    title: "Review Luphonix Architecture Specs",
+                    title: "Review Synvy Architecture Specs",
                     description: "Verify App Intents and Turso libSQL schema",
                     dueAt: Calendar.current.date(bySettingHour: 20, minute: 0, second: 0, of: Date()),
                     priority: .high,

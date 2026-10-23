@@ -4,6 +4,7 @@
 <dict>
     <key>com.apple.security.application-groups</key>
     <array>
+        <string>group.com.synvy.app</string>
         <string>group.com.luphonix.app</string>
     </array>
     <key>aps-environment</key>

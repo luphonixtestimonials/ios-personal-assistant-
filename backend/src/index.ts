@@ -45,7 +45,7 @@ app.get('/health', async (c) => {
   }
   return c.json({
     status: 'healthy',
-    service: 'Luphonix Backend API',
+    service: 'Synvy Backend API',
     database: dbStatus,
     dbError,
     timestamp: new Date().toISOString(),

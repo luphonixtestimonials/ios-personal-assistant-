@@ -167,7 +167,7 @@ async function handleWaterLog(c: any) {
   const totalDrunk = Number(sumRes.rows[0]?.total || 0);
   const dailyGoal = Number(prefRes.rows[0]?.daily_water_goal_ml || 2000);
   const remaining = Math.max(0, dailyGoal - totalDrunk);
-  const msg = `Logged ${amount_ml} ml in Luphonix. Total today: ${totalDrunk} ml of ${dailyGoal} ml goal.`;
+  const msg = `Logged ${amount_ml} ml in Synvy. Total today: ${totalDrunk} ml of ${dailyGoal} ml goal.`;
 
   const format = c.req.query('format')?.toLowerCase();
   const accept = c.req.header('accept')?.toLowerCase() || '';

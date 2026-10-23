@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert';
 import app from '../src/index.js';
 
-test('Luphonix Notification & Task Assignment Alert Test', async (t) => {
+test('Synvy Notification & Task Assignment Alert Test', async (t) => {
   const time = Date.now();
 
   // 1. Check VAPID public key endpoint

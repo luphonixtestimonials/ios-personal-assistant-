@@ -1,7 +1,7 @@
 import Foundation
 import AppIntents
 
-public struct LuphonixShortcuts: AppShortcutsProvider {
+public struct SynvyShortcuts: AppShortcutsProvider {
     public static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: AddReminderIntent(),

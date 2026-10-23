@@ -4,14 +4,14 @@ import assert from 'node:assert';
 import app from '../src/index.js';
 import { runMigrations } from '../src/db/migrate.js';
 
-describe('Luphonix Backend API Test Suite', async () => {
+describe('Synvy Backend API Test Suite', async () => {
   before(async () => {
     await runMigrations();
   });
   let authToken = '';
   let createdTaskId = '';
   let createdReminderId = '';
-  const testEmail = `test_${Date.now()}@luphonix.app`;
+  const testEmail = `test_${Date.now()}@synvy.app`;
 
   it('1. GET /health should return 200 OK', async () => {
     const res = await app.request('/health');
@@ -296,7 +296,7 @@ describe('Luphonix Backend API Test Suite', async () => {
     assert.strictEqual(compRes.status, 200);
     const text = await compRes.text();
     assert.ok(text.includes('Marked'));
-    assert.ok(text.includes('completed in Luphonix'));
+    assert.ok(text.includes('completed in Synvy') || text.includes('completed in Luphonix'));
 
     // 3. Siri queries remaining today tasks: completed task must NOT appear!
     const siriQueryRes = await app.request(`/api/tasks?filter=today&format=text&apiKey=${encodeURIComponent(apiKey)}`);

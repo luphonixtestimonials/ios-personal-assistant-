@@ -2,7 +2,7 @@ import Foundation
 import AppIntents
 
 public struct GetTodayTasksIntent: AppIntent {
-    public static var title: LocalizedStringResource = "Get Today's Tasks in Luphonix"
+    public static var title: LocalizedStringResource = "Get Today's Tasks in Synvy"
     public static var description = IntentDescription("Reads your pending tasks scheduled for today.")
     
     public init() {}
@@ -24,12 +24,12 @@ public struct GetTodayTasksIntent: AppIntent {
         let dialogMessage: LocalizedStringResource
         
         if titles.isEmpty {
-            dialogMessage = "You have no pending tasks left for today in Luphonix. All clear!"
+            dialogMessage = "You have no pending tasks left for today in Synvy. All clear!"
         } else if titles.count == 1 {
-            dialogMessage = "You have 1 task today in Luphonix: \(titles[0])."
+            dialogMessage = "You have 1 task today in Synvy: \(titles[0])."
         } else {
             let taskListString = titles.prefix(4).joined(separator: ", ")
-            dialogMessage = "You have \(titles.count) tasks today in Luphonix: \(taskListString)."
+            dialogMessage = "You have \(titles.count) tasks today in Synvy: \(taskListString)."
         }
         
         return .result(value: titles, dialog: IntentDialog(dialogMessage))

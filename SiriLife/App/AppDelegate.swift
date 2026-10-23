@@ -46,7 +46,7 @@ public class AppDelegate: NSObject, UIApplicationDelegate {
     ) {
         if let aps = userInfo["aps"] as? [String: Any],
            let alert = aps["alert"] as? [String: Any] {
-            let title = alert["title"] as? String ?? "Luphonix Task Alert"
+            let title = alert["title"] as? String ?? "Synvy Task Alert"
             let body = alert["body"] as? String ?? "A task was assigned to you."
             NotificationManager.shared.showLocalAlert(title: title, body: body)
         }

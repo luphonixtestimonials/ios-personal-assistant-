@@ -30,12 +30,12 @@ const envSchema = z.object({
   NODE_ENV: z.preprocess(sanitizeEnvValue, z.enum(['development', 'production', 'test']).default('development')),
   TURSO_DATABASE_URL: z.preprocess(sanitizeEnvValue, z.string().default('file:./dev.db')),
   TURSO_AUTH_TOKEN: z.preprocess(sanitizeEnvValue, z.string().optional().default('')),
-  JWT_SECRET: z.preprocess(sanitizeEnvValue, z.string().min(16, 'JWT_SECRET must be at least 16 characters long').default('super-secret-luphonix-jwt-key-dev-only-32-chars-long')),
+  JWT_SECRET: z.preprocess(sanitizeEnvValue, z.string().min(16, 'JWT_SECRET must be at least 16 characters long').default('super-secret-synvy-jwt-key-dev-only-32-chars-long')),
   JWT_EXPIRES_IN: z.preprocess(sanitizeEnvValue, z.string().default('30d')),
   ALLOWED_ORIGIN: z.preprocess(sanitizeEnvValue, z.string().default('*')),
   VAPID_PUBLIC_KEY: z.preprocess(sanitizeEnvValue, z.string().default('BOboWTdA0w-wVfxtzPJ0J8TgHUIL2uU0P66wqeuaQGFTr_lClHcFw4VxjR7uk8HtLfY7mYDDZsDCCRSrSSKy_IU')),
   VAPID_PRIVATE_KEY: z.preprocess(sanitizeEnvValue, z.string().default('Rl8MaT7gssHdBfcldTrZoghcuXZAyHSQi9gkWhTk8Zk')),
-  VAPID_SUBJECT: z.preprocess(sanitizeEnvValue, z.string().default('mailto:support@luphonix.app')),
+  VAPID_SUBJECT: z.preprocess(sanitizeEnvValue, z.string().default('mailto:support@synvy.app')),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
