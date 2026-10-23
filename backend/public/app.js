@@ -3307,8 +3307,37 @@
     updatePushChip();
   }
 
+  // --- Dynamic Island & Safe Area Detection ---
+  function initSafeAreaInsets() {
+    try {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isStandalone = window.navigator.standalone === true || 
+        window.matchMedia('(display-mode: standalone)').matches;
+
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;top:0;left:0;height:env(safe-area-inset-top, 0px);visibility:hidden;pointer-events:none;z-index:-9999;';
+      document.body.appendChild(probe);
+      const measuredTop = probe.offsetHeight || 0;
+      document.body.removeChild(probe);
+
+      if (measuredTop > 0) {
+        document.documentElement.style.setProperty('--safe-top', `${measuredTop}px`);
+      } else if (isIOS) {
+        const isDynamicIsland = Math.max(window.screen.height, window.screen.width) >= 852;
+        const fallbackTop = isDynamicIsland ? 54 : (isStandalone ? 48 : 0);
+        if (fallbackTop > 0) {
+          document.documentElement.style.setProperty('--safe-top', `${fallbackTop}px`);
+        }
+      }
+    } catch (_) {}
+  }
+
   // --- App Initialization ---
   function init() {
+    initSafeAreaInsets();
+    window.addEventListener('resize', initSafeAreaInsets);
+    window.addEventListener('orientationchange', initSafeAreaInsets);
     updateGreeting();
     updateHydrationRings();
     renderTasks();
