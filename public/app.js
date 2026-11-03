@@ -2035,11 +2035,55 @@
       }
     };
 
+    // Water Amount Selector (Presets: 100ml, 200ml, 250ml, 500ml, or any custom x ml)
+    let siriWaterAmount = 250;
+    const phraseEl = document.getElementById('siri-water-phrase-text');
+    const labelEl = document.getElementById('siri-water-selected-label');
+    const btnAmtEl = document.getElementById('siri-water-btn-amt');
+    const customInputEl = document.getElementById('siri-water-custom-input');
+    const amtBtns = document.querySelectorAll('.siri-amt-btn');
+    const dynamicWaterBtn = document.getElementById('btn-copy-siri-water-dynamic');
+
+    function updateSiriWaterDisplay(amt) {
+      siriWaterAmount = Math.max(1, Math.min(5000, parseInt(amt, 10) || 250));
+      if (phraseEl) phraseEl.textContent = `"Hey Siri, log ${siriWaterAmount} ml in Synvy"`;
+      if (labelEl) labelEl.textContent = `${siriWaterAmount} ml`;
+      if (btnAmtEl) btnAmtEl.textContent = `${siriWaterAmount}ml`;
+    }
+
+    amtBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        amtBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (customInputEl) customInputEl.value = '';
+        updateSiriWaterDisplay(btn.dataset.amt);
+      });
+    });
+
+    if (customInputEl) {
+      customInputEl.addEventListener('input', () => {
+        const val = parseInt(customInputEl.value, 10);
+        if (val && val > 0) {
+          amtBtns.forEach((b) => b.classList.remove('active'));
+          updateSiriWaterDisplay(val);
+        }
+      });
+    }
+
     if (waterBtn) {
       waterBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
-        const url = `${base}/api/hydration?amount=250&format=text&apiKey=${encodeURIComponent(key)}`;
-        await copyUrlWithFeedback(url, 'Copied Water Webhook URL (with API key)!');
+        const url = `${base}/api/hydration?amount=${siriWaterAmount}&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, `Copied Water Webhook URL for ${siriWaterAmount} ml!`);
+      });
+    }
+
+    if (dynamicWaterBtn) {
+      dynamicWaterBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        // In Apple Shortcuts, [Shortcut Input] is replaced by user voice input
+        const dynamicUrl = `${base}/api/hydration?amount=[Shortcut Input]&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(dynamicUrl, 'Copied Dynamic Shortcut URL! In Shortcuts app, map [Shortcut Input] to "Ask for Number" for any voice amount.');
       });
     }
 

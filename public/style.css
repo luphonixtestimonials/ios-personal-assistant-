@@ -598,6 +598,29 @@ body:not([data-view="dashboard"]) main.app-main {
   border-color: #00D2FF;
   color: #FFFFFF;
 }
+.siri-amt-btn {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  color: #94A3B8;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 6px 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+}
+.siri-amt-btn:hover {
+  border-color: rgba(0, 210, 255, 0.5);
+  color: #F1F5F9;
+}
+.siri-amt-btn.active {
+  background: rgba(0, 210, 255, 0.15);
+  border-color: #00D2FF;
+  color: #00D2FF;
+  font-weight: 700;
+}
 
 /* ==========================================================================
    06 · NOTES (Matching Mockup Screenshot)
