@@ -213,6 +213,12 @@ authApp.post('/login', async (c) => {
     return c.json({ success: false, error: 'Invalid email or password' }, 401);
   }
 
+  // Claim any guest / Siri default records for this user
+  await db.batch([
+    { sql: "UPDATE hydration_logs SET user_id = ? WHERE user_id = 'user_siri_default'", args: [row.id] },
+    { sql: "UPDATE tasks SET user_id = ? WHERE user_id = 'user_siri_default'", args: [row.id] }
+  ]).catch(() => {});
+
   const token = jwt.sign(
     { userId: row.id as string, email: row.email as string },
     config.JWT_SECRET,

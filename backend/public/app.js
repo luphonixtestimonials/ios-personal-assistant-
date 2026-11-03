@@ -786,6 +786,75 @@
     }
   }
 
+  // --- Cloud Hydration Fetch Engine ---
+  async function fetchWaterFromCloud() {
+    const base = getBackendBaseUrl();
+    try {
+      let key = await ensureApiKey();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      let res = await fetch(`${base}/api/hydration/today?format=json`, {
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      }).catch(() => null);
+      clearTimeout(timeoutId);
+
+      if (res && res.status === 401) {
+        key = await ensureApiKey(true);
+        res = await fetch(`${base}/api/hydration/today?format=json`, {
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Accept': 'application/json'
+          }
+        }).catch(() => null);
+      }
+
+      if (res && res.ok) {
+        const body = await res.json().catch(() => null);
+        if (body && body.success && body.data) {
+          const cloudLogs = Array.isArray(body.data.logs) ? body.data.logs : [];
+          const today = new Date().toDateString();
+
+          if (body.data.daily_goal_ml && body.data.daily_goal_ml > 0) {
+            state.prefs.dailyWaterGoal = body.data.daily_goal_ml;
+            saveStorage(STORAGE_KEY_PREFS, state.prefs);
+          }
+
+          const pastDaysLogs = (state.waterLogs || []).filter(
+            (l) => new Date(l.timestamp || l.logged_at).toDateString() !== today
+          );
+
+          const formattedCloudToday = cloudLogs.map((l) => ({
+            id: l.id,
+            amount_ml: Number(l.amount_ml),
+            timestamp: l.logged_at || l.timestamp || new Date().toISOString()
+          }));
+
+          if (formattedCloudToday.length > 0) {
+            state.waterLogs = [...formattedCloudToday, ...pastDaysLogs];
+            saveStorage(STORAGE_KEY_WATER, state.waterLogs);
+            updateHydrationRings();
+          } else if (state.waterLogs && state.waterLogs.length > 0) {
+            const todayLocal = state.waterLogs.filter(
+              (l) => new Date(l.timestamp).toDateString() === today
+            );
+            for (const log of todayLocal) {
+              syncWaterToCloud(log).catch(() => {});
+            }
+            updateHydrationRings();
+          } else {
+            updateHydrationRings();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch water from cloud:', e);
+    }
+  }
+
   async function syncTaskToggleToCloud(task) {
     if (SAMPLE_TASK_IDS.has(task.id)) return;
     const base = getBackendBaseUrl();
@@ -920,6 +989,9 @@
 
       // 3. Fetch friends list
       fetchFriendsFromCloud().catch(() => {});
+
+      // 4. Fetch water logs from cloud (Siri & webhook sync)
+      fetchWaterFromCloud().catch(() => {});
     } catch (e) {
       console.warn('Cloud sync error:', e);
     }
@@ -1000,7 +1072,11 @@
       showToast(`Welcome back, ${state.user.name || 'User'}! 🎉`, 'success');
 
       // Refresh cloud data for logged-in user
+      currentApiKey = state.token;
+      localStorage.setItem(STORAGE_KEY_API_KEY, currentApiKey);
+      updateApiKeyUI(currentApiKey);
       syncAllWithCloud(true);
+      fetchWaterFromCloud();
     } catch (err) {
       clearTimeout(timeoutTimer);
       const msg = err.name === 'AbortError' ? 'Server timed out. Please try again.' : (err.message || 'Login failed.');
@@ -2221,6 +2297,10 @@
 
     if (viewName === 'notifications') renderNotifications();
 
+    if (viewName === 'hydration' || viewName === 'dashboard') {
+      fetchWaterFromCloud();
+    }
+
     if (viewName === 'notes') {
       showNotesListView();
       renderNotes();
@@ -3412,6 +3492,27 @@
 
     // Health ping test on load
     setTimeout(testBackendPing, 800);
+
+    // Initial water fetch from cloud
+    setTimeout(fetchWaterFromCloud, 250);
+
+    // Auto-refresh water & tasks when returning from Siri
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        syncAllWithCloud();
+        fetchWaterFromCloud();
+      }
+    });
+    window.addEventListener('focus', () => {
+      fetchWaterFromCloud();
+    });
+
+    // 10s auto-refresh interval when viewing water or dashboard
+    setInterval(() => {
+      if (!document.hidden && (state.activeView === 'dashboard' || state.activeView === 'hydration')) {
+        fetchWaterFromCloud();
+      }
+    }, 10000);
   }
 
 

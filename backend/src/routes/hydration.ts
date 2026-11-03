@@ -18,6 +18,14 @@ const logSchema = z.object({
 hydrationApp.get('/today', async (c) => {
   const userId = c.get('userId');
 
+  // If user is logged in, automatically claim any orphaned user_siri_default logs
+  if (userId && userId !== 'user_siri_default') {
+    await db.execute({
+      sql: "UPDATE hydration_logs SET user_id = ? WHERE user_id = 'user_siri_default'",
+      args: [userId],
+    }).catch(() => {});
+  }
+
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date();
@@ -116,6 +124,18 @@ hydrationApp.get('/history', async (c) => {
 async function handleWaterLog(c: any) {
   const userId = c.get('userId');
 
+  // If request uses user_siri_default key, auto-link to the registered user account
+  let targetUserId = userId;
+  if (targetUserId === 'user_siri_default') {
+    const regUsers = await db.execute({
+      sql: "SELECT id FROM users WHERE id != 'user_siri_default' ORDER BY created_at DESC LIMIT 1",
+      args: [],
+    }).catch(() => ({ rows: [] }));
+    if (regUsers.rows.length > 0 && regUsers.rows[0].id) {
+      targetUserId = String(regUsers.rows[0].id);
+    }
+  }
+
   let amount_ml = 250;
   let customId: string | undefined;
   let logged_at = new Date().toISOString();
@@ -149,7 +169,7 @@ async function handleWaterLog(c: any) {
 
   await db.execute({
     sql: 'INSERT INTO hydration_logs (id, user_id, amount_ml, logged_at) VALUES (?, ?, ?, ?)',
-    args: [id, userId, amount_ml, logged_at],
+    args: [id, targetUserId, amount_ml, logged_at],
   });
 
   // Recalculate today's summary
@@ -161,11 +181,11 @@ async function handleWaterLog(c: any) {
   const [sumRes, prefRes] = await Promise.all([
     db.execute({
       sql: 'SELECT COALESCE(SUM(amount_ml), 0) as total FROM hydration_logs WHERE user_id = ? AND logged_at >= ? AND logged_at <= ?',
-      args: [userId, todayStart.toISOString(), todayEnd.toISOString()],
+      args: [targetUserId, todayStart.toISOString(), todayEnd.toISOString()],
     }),
     db.execute({
       sql: 'SELECT daily_water_goal_ml FROM user_preferences WHERE user_id = ?',
-      args: [userId],
+      args: [targetUserId],
     }),
   ]);
 
@@ -195,7 +215,7 @@ async function handleWaterLog(c: any) {
       summary: msg,
       data: {
         id,
-        user_id: userId,
+        user_id: targetUserId,
         amount_ml,
         logged_at,
         today_total_ml: totalDrunk,
