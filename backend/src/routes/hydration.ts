@@ -134,10 +134,15 @@ async function handleWaterLog(c: any) {
   }
 
   // Check query params if body didn't specify amount
-  const qAmt = c.req.query('amount') || c.req.query('amount_ml');
+  const qAmt = c.req.query('amount') || c.req.query('amount_ml') || c.req.query('ml') || c.req.query('value') || c.req.query('input');
   if (qAmt) {
-    const parsed = parseInt(qAmt, 10);
-    if (!isNaN(parsed) && parsed > 0) amount_ml = parsed;
+    const match = String(qAmt).match(/\d+/);
+    if (match) {
+      const parsed = parseInt(match[0], 10);
+      if (!isNaN(parsed) && parsed > 0 && parsed <= 5000) {
+        amount_ml = parsed;
+      }
+    }
   }
 
   const id = customId || randomUUID();

@@ -2081,9 +2081,8 @@
     if (dynamicWaterBtn) {
       dynamicWaterBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
-        // In Apple Shortcuts, [Shortcut Input] is replaced by user voice input
-        const dynamicUrl = `${base}/api/hydration?amount=[Shortcut Input]&format=text&apiKey=${encodeURIComponent(key)}`;
-        await copyUrlWithFeedback(dynamicUrl, 'Copied Dynamic Shortcut URL! In Shortcuts app, map [Shortcut Input] to "Ask for Number" for any voice amount.');
+        const dynamicUrl = `${base}/api/hydration?amount=[Provided Input]&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(dynamicUrl, 'Copied! In Shortcuts: use the [Provided Input] variable (from "Ask for Number") after amount=');
       });
     }
 
