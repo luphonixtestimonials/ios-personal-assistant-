@@ -16,18 +16,25 @@ public struct AuthView: View {
                 VStack(spacing: 28) {
                     // Hero Branding
                     VStack(spacing: 12) {
-                        Image("LuphonixLogo")
+                        Image("SynvyLogo")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 96, height: 96)
-                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .clipShape(Circle())
                             .overlay(
-                                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                    .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                                Circle()
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [Color.white.opacity(0.8), Color.blue.opacity(0.4)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1.5
+                                    )
                             )
                             .shadow(color: Color.blue.opacity(0.5), radius: 16, x: 0, y: 8)
                         
-                        Text("Luphonix")
+                        Text("Synvy")
                             .font(.system(.largeTitle, design: .rounded).weight(.heavy))
                         
                         Text("Smart Daily Reminders & Personal Assistant")

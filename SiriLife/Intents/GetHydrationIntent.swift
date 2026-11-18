@@ -2,7 +2,7 @@ import Foundation
 import AppIntents
 
 public struct GetHydrationIntent: AppIntent {
-    public static var title: LocalizedStringResource = "Check Water Intake in Luphonix"
+    public static var title: LocalizedStringResource = "Check Water Intake in Synvy"
     public static var description = IntentDescription("Reports today's water intake and goal progress.")
     
     public init() {}
@@ -14,9 +14,9 @@ public struct GetHydrationIntent: AppIntent {
         
         let dialogMessage: LocalizedStringResource
         if remaining > 0 {
-            dialogMessage = "You've drunk \(total) ml of water today. You have \(remaining) ml remaining to reach your \(prefs.dailyWaterGoalMl) ml goal in Luphonix."
+            dialogMessage = "You've drunk \(total) ml of water today. You have \(remaining) ml remaining to reach your \(prefs.dailyWaterGoalMl) ml goal in Synvy."
         } else {
-            dialogMessage = "Great job! You've reached your water goal today with \(total) ml logged in Luphonix."
+            dialogMessage = "Great job! You've reached your water goal today with \(total) ml logged in Synvy."
         }
         
         return .result(value: total, dialog: IntentDialog(dialogMessage))

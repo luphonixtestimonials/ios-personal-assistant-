@@ -1,5 +1,5 @@
 /**
- * Luphonix — Progressive Web Application
+ * Synvy — Progressive Web Application
  * Complete Client State, Offline Storage, Cloud Sync, and Audio Engine
  */
 
@@ -7,14 +7,71 @@
   'use strict';
 
   // --- Initial State & Storage Keys ---
-  const STORAGE_KEY_TASKS = 'luphonix_tasks_v1';
-  const STORAGE_KEY_WATER = 'luphonix_water_logs_v1';
-  const STORAGE_KEY_REMINDERS = 'luphonix_reminders_v1';
-  const STORAGE_KEY_PREFS = 'luphonix_preferences_v1';
-  const STORAGE_KEY_API_KEY = 'luphonix_api_key_v1';
-  const STORAGE_KEY_AUTH_TOKEN = 'luphonix_auth_token_v1';
-  const STORAGE_KEY_AUTH_USER = 'luphonix_auth_user_v1';
-  const STORAGE_KEY_FRIENDS = 'luphonix_friends_v1';
+  const STORAGE_KEY_TASKS = 'synvy_tasks_v1';
+  const STORAGE_KEY_WATER = 'synvy_water_logs_v1';
+  const STORAGE_KEY_REMINDERS = 'synvy_reminders_v1';
+  const STORAGE_KEY_PREFS = 'synvy_preferences_v1';
+  const STORAGE_KEY_API_KEY = 'synvy_api_key_v1';
+  const STORAGE_KEY_AUTH_TOKEN = 'synvy_auth_token_v1';
+  const STORAGE_KEY_AUTH_USER = 'synvy_auth_user_v1';
+  const STORAGE_KEY_FRIENDS = 'synvy_friends_v1';
+  const STORAGE_KEY_NOTES = 'synvy_notes_v1';
+
+  // Default sample notes matching mockup screenshot
+  const DEFAULT_NOTES = [
+    {
+      id: 'note_1',
+      title: 'App Ideas',
+      content: 'Ideas for new features, UI improvements and seamless Siri workflows.\n\n- Add interactive widgets\n- Dark cosmic gradients\n- Real-time voice notes sync',
+      category: 'Study',
+      tags: ['#ideas', '#product'],
+      is_pinned: true,
+      color: 'blue',
+      icon: 'fa-lightbulb',
+      created_at: '2026-10-16T10:00:00Z',
+      updated_at: '2026-10-16T10:00:00Z',
+      date_display: 'Oct 16, 2026'
+    },
+    {
+      id: 'note_2',
+      title: 'Lecture Notes',
+      content: 'Important concepts from today\'s lecture on transformer architectures, attention mechanisms, and backpropagation.\n\nKey takeaways:\n1. Scaled dot-product attention\n2. Multi-head projection\n3. Positional encoding',
+      category: 'Study',
+      tags: ['#study', '#ai', '#important'],
+      is_pinned: false,
+      color: 'indigo',
+      icon: 'fa-book-open',
+      created_at: '2026-10-15T14:30:00Z',
+      updated_at: '2026-10-15T14:30:00Z',
+      date_display: 'Oct 15, 2026'
+    },
+    {
+      id: 'note_3',
+      title: 'Shopping List',
+      content: 'Protein, fruits, notebooks, headphones, water bottles, electrolyte powders.\n\n- [ ] Whey isolate\n- [ ] Fresh berries\n- [ ] Wireless earbuds\n- [ ] Grid notebook',
+      category: 'Personal',
+      tags: ['#personal'],
+      is_pinned: false,
+      color: 'emerald',
+      icon: 'fa-cart-shopping',
+      created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+      updated_at: new Date(Date.now() - 2 * 3600000).toISOString(),
+      date_display: '2h ago'
+    },
+    {
+      id: 'note_4',
+      title: 'Daily Reflection',
+      content: 'Today was productive. I completed my core tasks early, stayed hydrated with 2.5L water, and prepared the roadmap for tomorrow.\n\nGrateful for good health and steady progress.',
+      category: 'Personal',
+      tags: ['#journal', '#personal'],
+      is_pinned: false,
+      color: 'pink',
+      icon: 'fa-heart',
+      created_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+      updated_at: new Date(Date.now() - 5 * 3600000).toISOString(),
+      date_display: '5h ago'
+    }
+  ];
 
   // Default sample friends
   const DEFAULT_FRIENDS = [
@@ -25,7 +82,7 @@
 
   // Default sample data for instant wow effect matching mockup
   const DEFAULT_TASKS = [
-    { id: '1', title: 'Luphonix or...', category: 'work', priority: 'medium', is_completed: true, created_at: new Date().toISOString() },
+    { id: '1', title: 'Synvy onboarding', category: 'work', priority: 'medium', is_completed: true, created_at: new Date().toISOString() },
     { id: '2', title: 'Make Keval wish per', category: 'work', priority: 'medium', is_completed: false, created_at: new Date().toISOString() },
     { id: '3', title: 'Complete project UI', category: 'work', priority: 'high', is_completed: false, created_at: new Date().toISOString() },
     { id: '4', title: 'Read 10 pages', category: 'personal', priority: 'low', is_completed: false, created_at: new Date().toISOString() },
@@ -72,9 +129,18 @@
     token: loadStorage(STORAGE_KEY_AUTH_TOKEN, null),
     user: loadStorage(STORAGE_KEY_AUTH_USER, null),
     friends: loadStorage(STORAGE_KEY_FRIENDS, DEFAULT_FRIENDS),
+    notes: loadStorage(STORAGE_KEY_NOTES, DEFAULT_NOTES),
     currentFilter: 'all',
     currentRemFilter: 'all',
     currentReqFilter: 'all',
+    currentNoteCategory: 'all',
+    notesSearchQuery: '',
+    notesSortBy: 'updated',
+    editingNoteId: null,
+    editorTags: [],
+    selectedCategory: 'Personal',
+    selectedCategoryColor: '#EC4899',
+    isDictating: false,
     searchQuery: '',
     activeView: 'dashboard',
     isOnline: navigator.onLine,
@@ -83,7 +149,10 @@
 
   function loadStorage(key, fallback) {
     try {
-      const data = localStorage.getItem(key);
+      let data = localStorage.getItem(key);
+      if ((data === null || data === undefined) && key.startsWith('synvy_')) {
+        data = localStorage.getItem(key.replace('synvy_', 'luphonix_'));
+      }
       if (data === null || data === undefined) return fallback;
       try {
         return JSON.parse(data);
@@ -168,6 +237,7 @@
     const icon = type === 'success' ? '✅' : type === 'water' ? '💧' : 'ℹ️';
     toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
     container.appendChild(toast);
+    recordAlert('Synvy', message, type);
 
     setTimeout(() => {
       toast.style.opacity = '0';
@@ -189,10 +259,18 @@
     else if (hour >= 17 && hour < 22) timeText = 'Good Evening';
     else if (hour >= 22 || hour < 5) timeText = 'Good Night';
 
-    timeEl.textContent = timeText;
     const userName = (state.user && state.user.name) ? state.user.name.split(' ')[0] : 'Dhyey';
     const emoji = hour < 12 ? '🌤️' : hour < 18 ? '☀️' : '🌙';
-    titleEl.innerHTML = `${escapeHTML(userName)} <span class="greeting-emoji">${emoji}</span>`;
+    timeEl.innerHTML = `${timeText}, <span class="greeting-emoji">${emoji}</span>`;
+    titleEl.textContent = userName;
+
+    const dateEl = document.getElementById('hero-date');
+    if (dateEl) {
+      const now = new Date();
+      const mon = now.toLocaleDateString('en-US', { month: 'short' });
+      const wk = now.toLocaleDateString('en-US', { weekday: 'short' });
+      dateEl.innerHTML = `${mon} ${now.getDate()}<br>${now.getFullYear()}<br>${wk}`;
+    }
   }
 
   // --- Hydration Calculation & Ring Animation ---
@@ -607,7 +685,7 @@
 
       if (res.ok) {
         const json = await res.json();
-        resultEl.textContent = `✅ Connected to ${json.service || 'Luphonix API'} (${latency} ms)`;
+        resultEl.textContent = `✅ Connected to ${json.service || 'Synvy API'} (${latency} ms)`;
         resultEl.style.color = '#34D399';
         updateConnectionStatus(true);
       } else {
@@ -650,7 +728,7 @@
       updateApiKeyUI(state.token);
       return state.token;
     }
-    if (!forceRefresh && currentApiKey && currentApiKey !== 'luphonix-siri-master-key') {
+    if (!forceRefresh && currentApiKey && currentApiKey !== 'synvy-siri-master-key' && currentApiKey !== 'luphonix-siri-master-key') {
       updateApiKeyUI(currentApiKey);
       return currentApiKey;
     }
@@ -671,7 +749,7 @@
     }
 
     if (!currentApiKey) {
-      currentApiKey = 'luphonix-siri-master-key';
+      currentApiKey = 'synvy-siri-master-key';
       localStorage.setItem(STORAGE_KEY_API_KEY, currentApiKey);
     }
     updateApiKeyUI(currentApiKey);
@@ -705,6 +783,75 @@
       }
     } catch (e) {
       // Offline fallback silent catch
+    }
+  }
+
+  // --- Cloud Hydration Fetch Engine ---
+  async function fetchWaterFromCloud() {
+    const base = getBackendBaseUrl();
+    try {
+      let key = await ensureApiKey();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      let res = await fetch(`${base}/api/hydration/today?format=json`, {
+        headers: {
+          'Authorization': `Bearer ${key}`,
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      }).catch(() => null);
+      clearTimeout(timeoutId);
+
+      if (res && res.status === 401) {
+        key = await ensureApiKey(true);
+        res = await fetch(`${base}/api/hydration/today?format=json`, {
+          headers: {
+            'Authorization': `Bearer ${key}`,
+            'Accept': 'application/json'
+          }
+        }).catch(() => null);
+      }
+
+      if (res && res.ok) {
+        const body = await res.json().catch(() => null);
+        if (body && body.success && body.data) {
+          const cloudLogs = Array.isArray(body.data.logs) ? body.data.logs : [];
+          const today = new Date().toDateString();
+
+          if (body.data.daily_goal_ml && body.data.daily_goal_ml > 0) {
+            state.prefs.dailyWaterGoal = body.data.daily_goal_ml;
+            saveStorage(STORAGE_KEY_PREFS, state.prefs);
+          }
+
+          const pastDaysLogs = (state.waterLogs || []).filter(
+            (l) => new Date(l.timestamp || l.logged_at).toDateString() !== today
+          );
+
+          const formattedCloudToday = cloudLogs.map((l) => ({
+            id: l.id,
+            amount_ml: Number(l.amount_ml),
+            timestamp: l.logged_at || l.timestamp || new Date().toISOString()
+          }));
+
+          if (formattedCloudToday.length > 0) {
+            state.waterLogs = [...formattedCloudToday, ...pastDaysLogs];
+            saveStorage(STORAGE_KEY_WATER, state.waterLogs);
+            updateHydrationRings();
+          } else if (state.waterLogs && state.waterLogs.length > 0) {
+            const todayLocal = state.waterLogs.filter(
+              (l) => new Date(l.timestamp).toDateString() === today
+            );
+            for (const log of todayLocal) {
+              syncWaterToCloud(log).catch(() => {});
+            }
+            updateHydrationRings();
+          } else {
+            updateHydrationRings();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not fetch water from cloud:', e);
     }
   }
 
@@ -842,6 +989,9 @@
 
       // 3. Fetch friends list
       fetchFriendsFromCloud().catch(() => {});
+
+      // 4. Fetch water logs from cloud (Siri & webhook sync)
+      fetchWaterFromCloud().catch(() => {});
     } catch (e) {
       console.warn('Cloud sync error:', e);
     }
@@ -868,7 +1018,7 @@
       const initial = (state.user.name || state.user.email || 'U').charAt(0).toUpperCase();
       if (nameSpan) nameSpan.textContent = state.user.name ? state.user.name.split(' ')[0] : 'Account';
       if (avatarIcon) avatarIcon.textContent = initial;
-      if (accountName) accountName.textContent = state.user.name || 'Luphonix User';
+      if (accountName) accountName.textContent = state.user.name || 'Synvy User';
       if (accountEmail) accountEmail.textContent = state.user.email || '';
       if (accountId) accountId.textContent = state.user.id || '';
       if (accountAvatarChar) accountAvatarChar.textContent = initial;
@@ -877,7 +1027,7 @@
       if (nameSpan) nameSpan.textContent = 'Sign In';
       if (avatarIcon) avatarIcon.textContent = '👤';
       if (accountName) accountName.textContent = 'Guest / Siri Default';
-      if (accountEmail) accountEmail.textContent = 'user@luphonix.local';
+      if (accountEmail) accountEmail.textContent = 'user@synvy.local';
       if (accountId) accountId.textContent = 'user_siri_default';
       if (accountAvatarChar) accountAvatarChar.textContent = 'G';
     }
@@ -922,7 +1072,11 @@
       showToast(`Welcome back, ${state.user.name || 'User'}! 🎉`, 'success');
 
       // Refresh cloud data for logged-in user
+      currentApiKey = state.token;
+      localStorage.setItem(STORAGE_KEY_API_KEY, currentApiKey);
+      updateApiKeyUI(currentApiKey);
       syncAllWithCloud(true);
+      fetchWaterFromCloud();
     } catch (err) {
       clearTimeout(timeoutTimer);
       const msg = err.name === 'AbortError' ? 'Server timed out. Please try again.' : (err.message || 'Login failed.');
@@ -933,8 +1087,8 @@
     } finally {
       clearTimeout(timeoutTimer);
       if (submitBtn) submitBtn.disabled = false;
-      if (btnText) btnText.textContent = 'Sign In to Luphonix';
-      else if (submitBtn) submitBtn.textContent = 'Sign In to Luphonix';
+      if (btnText) btnText.textContent = 'Sign In to Synvy';
+      else if (submitBtn) submitBtn.textContent = 'Sign In to Synvy';
       if (btnSpinner) btnSpinner.classList.add('hidden');
     }
   }
@@ -1003,9 +1157,750 @@
     localStorage.removeItem(STORAGE_KEY_AUTH_USER);
     updateAuthUI();
     closeAllModals();
-    showToast('Signed out of Luphonix', 'info');
+    showToast('Signed out of Synvy', 'info');
     ensureApiKey(true);
     syncAllWithCloud();
+  }
+
+  // ==========================================================================
+  // --- Complete Notes Engine (Matching Screenshot Design & Color Palette) ---
+  // ==========================================================================
+
+  const CATEGORY_COLORS = {
+    Personal: '#EC4899',
+    Study: '#8B5CF6',
+    Work: '#3B82F6',
+    Ideas: '#06B6D4',
+    Health: '#10B981'
+  };
+
+  function getNoteIconAndColor(note) {
+    if (note.icon && note.color) {
+      return { icon: note.icon, color: note.color };
+    }
+    const cat = (note.category || 'Personal').toLowerCase();
+    const title = (note.title || '').toLowerCase();
+
+    if (title.includes('idea') || title.includes('brainstorm') || title.includes('app')) {
+      return { icon: 'fa-lightbulb', color: 'blue' };
+    }
+    if (title.includes('shop') || title.includes('buy') || title.includes('grocery') || title.includes('store')) {
+      return { icon: 'fa-cart-shopping', color: 'emerald' };
+    }
+    if (title.includes('reflect') || title.includes('journal') || title.includes('diary') || title.includes('gratitude')) {
+      return { icon: 'fa-heart', color: 'pink' };
+    }
+    if (cat === 'study' || title.includes('lecture') || title.includes('exam') || title.includes('book') || title.includes('course')) {
+      return { icon: 'fa-book-open', color: 'indigo' };
+    }
+    if (cat === 'work') {
+      return { icon: 'fa-briefcase', color: 'blue' };
+    }
+    if (cat === 'health') {
+      return { icon: 'fa-heart-pulse', color: 'emerald' };
+    }
+    return { icon: 'fa-note-sticky', color: 'purple' };
+  }
+
+  function formatNoteDate(dateStr, fallbackStr) {
+    if (fallbackStr) return fallbackStr;
+    if (!dateStr) return 'Just now';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return 'Recently';
+      const now = new Date();
+      const diffMs = now.getTime() - d.getTime();
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      const diffDays = Math.floor(diffHour / 24);
+
+      if (diffMin < 1) return 'Just now';
+      if (diffMin < 60) return `${diffMin}m ago`;
+      if (diffHour < 24) return `${diffHour}h ago`;
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays}d ago`;
+
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      return 'Recently';
+    }
+  }
+
+  function renderNotes() {
+    const container = document.getElementById('notes-cards-container');
+    const emptyState = document.getElementById('notes-empty-state');
+    if (!container) return;
+
+    let list = Array.isArray(state.notes) ? [...state.notes] : [];
+
+    // Filter by Category or Pinned
+    if (state.currentNoteCategory === 'pinned') {
+      list = list.filter((n) => Boolean(n.is_pinned));
+    } else if (state.currentNoteCategory && state.currentNoteCategory !== 'all') {
+      const targetCat = state.currentNoteCategory.toLowerCase();
+      list = list.filter((n) => (n.category || '').toLowerCase() === targetCat);
+    }
+
+    // Filter by Search Query
+    if (state.notesSearchQuery) {
+      const q = state.notesSearchQuery.toLowerCase().trim();
+      list = list.filter((n) => {
+        const titleMatch = (n.title || '').toLowerCase().includes(q);
+        const contentMatch = (n.content || '').toLowerCase().includes(q);
+        const tagsMatch = Array.isArray(n.tags) && n.tags.some((t) => String(t).toLowerCase().includes(q));
+        return titleMatch || contentMatch || tagsMatch;
+      });
+    }
+
+    // Sort Notes
+    list.sort((a, b) => {
+      if (state.notesSortBy === 'pinned') {
+        if (Boolean(a.is_pinned) !== Boolean(b.is_pinned)) {
+          return a.is_pinned ? -1 : 1;
+        }
+      }
+      if (state.notesSortBy === 'title') {
+        return (a.title || '').localeCompare(b.title || '');
+      }
+      // Default: pinned stick to the top, then newest
+      if (Boolean(a.is_pinned) !== Boolean(b.is_pinned)) {
+        return a.is_pinned ? -1 : 1;
+      }
+      const tA = new Date(a.updated_at || a.created_at || 0).getTime();
+      const tB = new Date(b.updated_at || b.created_at || 0).getTime();
+      return tB - tA;
+    });
+
+    if (list.length === 0) {
+      container.innerHTML = '';
+      if (emptyState) emptyState.classList.remove('hidden');
+      return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+
+    container.innerHTML = list.map((note) => {
+      const { icon, color } = getNoteIconAndColor(note);
+      const dateDisplay = note.date_display || formatNoteDate(note.updated_at || note.created_at);
+      const isPinned = Boolean(note.is_pinned);
+
+      // Clean snippet preview text
+      const previewText = (note.content || '').trim().replace(/[#*`_[\]]/g, '') || 'No additional text';
+
+      // Tags HTML
+      const tagsArr = Array.isArray(note.tags) ? note.tags : [];
+      const tagsHtml = tagsArr.map((t) => {
+        const cleanTag = String(t).startsWith('#') ? t : `#${t}`;
+        const catClass = (note.category || '').toLowerCase() === 'personal' ? 'tag-personal'
+          : (note.category || '').toLowerCase() === 'work' ? 'tag-work'
+          : (note.category || '').toLowerCase() === 'study' ? 'tag-study'
+          : '';
+        return `<span class="note-tag-chip ${catClass}">${escapeHTML(cleanTag)}</span>`;
+      }).join('');
+
+      return `
+        <div class="note-card" data-note-id="${escapeHTML(note.id)}">
+          <div class="note-card-icon-wrap color-${color}">
+            <i class="fa-solid ${icon}"></i>
+          </div>
+          <div class="note-card-body">
+            <div class="note-card-header-row">
+              <h4 class="note-card-title">${escapeHTML(note.title || 'Untitled Note')}</h4>
+              <div class="note-card-meta-right">
+                <span>${escapeHTML(dateDisplay)}</span>
+                ${isPinned ? '<span class="note-card-pin" title="Pinned Note"><i class="fa-solid fa-thumbtack"></i></span>' : ''}
+              </div>
+            </div>
+            <p class="note-card-preview">${escapeHTML(previewText)}</p>
+            <div class="note-card-footer-row">
+              <div class="note-card-tags">
+                ${tagsHtml}
+              </div>
+              <button type="button" class="note-card-dots-btn" data-action-note="${escapeHTML(note.id)}" title="More Options" aria-label="Note Options">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Attach click events on note cards
+    container.querySelectorAll('.note-card').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.note-card-dots-btn')) {
+          e.stopPropagation();
+          const noteId = card.dataset.noteId;
+          openNoteContextMenu(noteId, e.target.closest('.note-card-dots-btn'));
+          return;
+        }
+        const noteId = card.dataset.noteId;
+        openNoteEditor(noteId);
+      });
+    });
+  }
+
+  function showNotesListView() {
+    const listSub = document.getElementById('notes-subview-list');
+    const editorSub = document.getElementById('notes-subview-editor');
+    if (listSub) listSub.classList.remove('hidden');
+    if (editorSub) editorSub.classList.add('hidden');
+    stopVoiceDictation();
+    state.editingNoteId = null;
+  }
+
+  function openNoteEditor(noteId = null) {
+    playSound('click');
+    const listSub = document.getElementById('notes-subview-list');
+    const editorSub = document.getElementById('notes-subview-editor');
+    if (listSub) listSub.classList.add('hidden');
+    if (editorSub) editorSub.classList.remove('hidden');
+
+    state.editingNoteId = noteId;
+    const headingEl = document.getElementById('note-editor-heading');
+    const titleInput = document.getElementById('note-title-input');
+    const contentInput = document.getElementById('note-content-input');
+    const pinCheck = document.getElementById('note-pin-checkbox');
+    const deleteBtn = document.getElementById('btn-note-delete');
+
+    if (noteId) {
+      const note = state.notes.find((n) => n.id === noteId);
+      if (note) {
+        if (headingEl) headingEl.textContent = 'Edit Note';
+        if (titleInput) titleInput.value = note.title || '';
+        if (contentInput) contentInput.value = note.content || '';
+        if (pinCheck) pinCheck.checked = Boolean(note.is_pinned);
+        state.editorTags = Array.isArray(note.tags) ? [...note.tags] : [];
+        setEditorCategory(note.category || 'Personal');
+        if (deleteBtn) deleteBtn.classList.remove('hidden');
+      }
+    } else {
+      if (headingEl) headingEl.textContent = 'New Note';
+      if (titleInput) titleInput.value = '';
+      if (contentInput) contentInput.value = '';
+      if (pinCheck) pinCheck.checked = false;
+      state.editorTags = [];
+      setEditorCategory('Personal');
+      if (deleteBtn) deleteBtn.classList.add('hidden');
+    }
+
+    renderEditorTags();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (titleInput && !noteId) {
+      setTimeout(() => titleInput.focus(), 150);
+    }
+  }
+
+  function setEditorCategory(catName) {
+    state.selectedCategory = catName;
+    const color = CATEGORY_COLORS[catName] || '#EC4899';
+    state.selectedCategoryColor = color;
+
+    const nameEl = document.getElementById('category-selected-name');
+    const dotEl = document.getElementById('category-color-dot');
+    if (nameEl) nameEl.textContent = catName;
+    if (dotEl) dotEl.style.background = color;
+
+    const dropdown = document.getElementById('category-dropdown-menu');
+    if (dropdown) dropdown.classList.add('hidden');
+  }
+
+  function renderEditorTags() {
+    const wrap = document.getElementById('editor-tags-chips');
+    if (!wrap) return;
+    wrap.innerHTML = state.editorTags.map((tag, idx) => {
+      const cleanTag = tag.startsWith('#') ? tag : `#${tag}`;
+      return `
+        <span class="editor-tag-chip">
+          ${escapeHTML(cleanTag)}
+          <i class="fa-solid fa-xmark editor-tag-remove" data-remove-tag="${idx}"></i>
+        </span>
+      `;
+    }).join('');
+
+    wrap.querySelectorAll('.editor-tag-remove').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.removeTag, 10);
+        state.editorTags.splice(idx, 1);
+        renderEditorTags();
+      });
+    });
+  }
+
+  function addEditorTag(rawTag) {
+    if (!rawTag) return;
+    let clean = rawTag.trim().replace(/^#+/, '');
+    if (!clean) return;
+    clean = `#${clean}`;
+    if (!state.editorTags.includes(clean)) {
+      state.editorTags.push(clean);
+      renderEditorTags();
+    }
+    const input = document.getElementById('note-tag-add-input');
+    if (input) input.value = '';
+  }
+
+  async function saveCurrentNote() {
+    const titleInput = document.getElementById('note-title-input');
+    const contentInput = document.getElementById('note-content-input');
+    const pinCheck = document.getElementById('note-pin-checkbox');
+
+    let title = titleInput ? titleInput.value.trim() : '';
+    const content = contentInput ? contentInput.value : '';
+    const is_pinned = pinCheck ? pinCheck.checked : false;
+    const category = state.selectedCategory || 'Personal';
+    const tags = state.editorTags || [];
+
+    if (!title && !content) {
+      showToast('Please enter a note title or content', 'info');
+      if (titleInput) titleInput.focus();
+      return;
+    }
+
+    if (!title) {
+      title = content.split('\n')[0].slice(0, 40) || 'Untitled Note';
+    }
+
+    const now = new Date().toISOString();
+    const isEditing = Boolean(state.editingNoteId);
+    let noteObj;
+
+    if (isEditing) {
+      const idx = state.notes.findIndex((n) => n.id === state.editingNoteId);
+      if (idx !== -1) {
+        state.notes[idx] = {
+          ...state.notes[idx],
+          title,
+          content,
+          category,
+          tags,
+          is_pinned,
+          updated_at: now,
+          date_display: 'Just now'
+        };
+        noteObj = state.notes[idx];
+      }
+    } else {
+      noteObj = {
+        id: `note_${Date.now()}`,
+        title,
+        content,
+        category,
+        tags,
+        is_pinned,
+        created_at: now,
+        updated_at: now,
+        date_display: 'Just now'
+      };
+      state.notes.unshift(noteObj);
+    }
+
+    saveStorage(STORAGE_KEY_NOTES, state.notes);
+    playSound('success');
+    showToast(isEditing ? 'Note updated! 📝' : 'Note saved successfully! ✨', 'success');
+
+    showNotesListView();
+    renderNotes();
+
+    // Sync to backend in background
+    syncNoteToCloud(noteObj, isEditing);
+  }
+
+  async function deleteCurrentNote(noteId = null) {
+    const id = noteId || state.editingNoteId;
+    if (!id) return;
+
+    state.notes = state.notes.filter((n) => n.id !== id);
+    saveStorage(STORAGE_KEY_NOTES, state.notes);
+    playSound('click');
+    showToast('Note deleted', 'info');
+
+    showNotesListView();
+    renderNotes();
+
+    // Sync delete to backend
+    const base = getBackendBaseUrl();
+    try {
+      await fetch(`${base}/api/notes/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+    } catch (e) {
+      /* offline */
+    }
+  }
+
+  async function togglePinNote(noteId) {
+    const note = state.notes.find((n) => n.id === noteId);
+    if (!note) return;
+    note.is_pinned = !note.is_pinned;
+    note.updated_at = new Date().toISOString();
+    saveStorage(STORAGE_KEY_NOTES, state.notes);
+    playSound('check');
+    showToast(note.is_pinned ? 'Note pinned to top 📌' : 'Note unpinned', 'info');
+    renderNotes();
+
+    // Sync to cloud
+    const base = getBackendBaseUrl();
+    try {
+      await fetch(`${base}/api/notes/${noteId}/pin`, {
+        method: 'PATCH',
+        headers: getAuthHeaders()
+      });
+    } catch {}
+  }
+
+  function duplicateNote(noteId) {
+    const note = state.notes.find((n) => n.id === noteId);
+    if (!note) return;
+    const duplicated = {
+      ...note,
+      id: `note_${Date.now()}`,
+      title: `${note.title} (Copy)`,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      date_display: 'Just now'
+    };
+    state.notes.unshift(duplicated);
+    saveStorage(STORAGE_KEY_NOTES, state.notes);
+    playSound('success');
+    showToast('Note duplicated', 'success');
+    renderNotes();
+    syncNoteToCloud(duplicated, false);
+  }
+
+  function openNoteContextMenu(noteId, triggerBtn) {
+    const note = state.notes.find((n) => n.id === noteId);
+    if (!note) return;
+
+    document.querySelectorAll('.notes-context-menu').forEach((m) => m.remove());
+
+    const menu = document.createElement('div');
+    menu.className = 'notes-context-menu';
+    menu.style.cssText = `
+      position: absolute;
+      right: 14px;
+      margin-top: 4px;
+      background: #1C1F2E;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 6px;
+      z-index: 500;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 150px;
+      animation: sheetUp 0.18s ease both;
+    `;
+
+    menu.innerHTML = `
+      <button type="button" class="ctx-item" data-action="edit" style="display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:#F1F5F9;border-radius:6px;cursor:pointer;background:none;border:none;width:100%;text-align:left;">
+        <i class="fa-solid fa-pen" style="color:#A855F7;font-size:12px;"></i> Edit
+      </button>
+      <button type="button" class="ctx-item" data-action="pin" style="display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:#F1F5F9;border-radius:6px;cursor:pointer;background:none;border:none;width:100%;text-align:left;">
+        <i class="fa-solid fa-thumbtack" style="color:#C084FC;font-size:12px;"></i> ${note.is_pinned ? 'Unpin' : 'Pin to Top'}
+      </button>
+      <button type="button" class="ctx-item" data-action="duplicate" style="display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:#F1F5F9;border-radius:6px;cursor:pointer;background:none;border:none;width:100%;text-align:left;">
+        <i class="fa-regular fa-copy" style="color:#38BDF8;font-size:12px;"></i> Duplicate
+      </button>
+      <button type="button" class="ctx-item" data-action="delete" style="display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:#FB7185;border-radius:6px;cursor:pointer;background:none;border:none;width:100%;text-align:left;">
+        <i class="fa-solid fa-trash-can" style="color:#FB7185;font-size:12px;"></i> Delete
+      </button>
+    `;
+
+    menu.querySelectorAll('.ctx-item').forEach((item) => {
+      item.addEventListener('mouseenter', () => { item.style.background = 'rgba(255,255,255,0.08)'; });
+      item.addEventListener('mouseleave', () => { item.style.background = 'transparent'; });
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.remove();
+        const action = item.dataset.action;
+        if (action === 'edit') openNoteEditor(noteId);
+        else if (action === 'pin') togglePinNote(noteId);
+        else if (action === 'duplicate') duplicateNote(noteId);
+        else if (action === 'delete') deleteCurrentNote(noteId);
+      });
+    });
+
+    triggerBtn.parentElement.appendChild(menu);
+
+    const dismissMenu = (e) => {
+      if (!menu.contains(e.target)) {
+        menu.remove();
+        document.removeEventListener('click', dismissMenu);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', dismissMenu), 10);
+  }
+
+  async function syncNoteToCloud(note, isEditing) {
+    const base = getBackendBaseUrl();
+    try {
+      const url = isEditing ? `${base}/api/notes/${note.id}` : `${base}/api/notes`;
+      const method = isEditing ? 'PUT' : 'POST';
+      await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify(note)
+      });
+    } catch (e) {
+      /* offline */
+    }
+  }
+
+  async function fetchNotesFromCloud() {
+    const base = getBackendBaseUrl();
+    try {
+      const res = await fetch(`${base}/api/notes`, {
+        headers: getAuthHeaders()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          const cloudIds = new Set(data.data.map((n) => n.id));
+          const localOnly = state.notes.filter((n) => !cloudIds.has(n.id));
+          state.notes = [...data.data, ...localOnly];
+          saveStorage(STORAGE_KEY_NOTES, state.notes);
+          renderNotes();
+        }
+      }
+    } catch (e) {
+      /* offline */
+    }
+  }
+
+  function applyFormatting(format) {
+    const textarea = document.getElementById('note-content-input');
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = textarea.value.substring(start, end);
+    const before = textarea.value.substring(0, start);
+    const after = textarea.value.substring(end);
+
+    let replacement = '';
+    let newCursorPos = end;
+
+    switch (format) {
+      case 'bold':
+        replacement = `**${selected || 'bold text'}**`;
+        newCursorPos = selected ? end + 4 : start + 2;
+        break;
+      case 'italic':
+        replacement = `*${selected || 'italic text'}*`;
+        newCursorPos = selected ? end + 2 : start + 1;
+        break;
+      case 'underline':
+        replacement = `<u>${selected || 'underlined text'}</u>`;
+        newCursorPos = selected ? end + 7 : start + 3;
+        break;
+      case 'bullet':
+        replacement = before.endsWith('\n') || before === '' ? `- ${selected || 'Bullet item'}` : `\n- ${selected || 'Bullet item'}`;
+        break;
+      case 'checklist':
+        replacement = before.endsWith('\n') || before === '' ? `- [ ] ${selected || 'Task item'}` : `\n- [ ] ${selected || 'Task item'}`;
+        break;
+      case 'link':
+        replacement = `[${selected || 'link title'}](https://)`;
+        break;
+      case 'image':
+        replacement = `![${selected || 'image description'}](https://)`;
+        break;
+      default:
+        return;
+    }
+
+    textarea.value = before + replacement + after;
+    textarea.focus();
+    textarea.setSelectionRange(newCursorPos, newCursorPos);
+  }
+
+  let speechRecognitionObj = null;
+
+  function toggleVoiceDictation() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      showToast('Voice dictation is not supported by your browser', 'info');
+      return;
+    }
+
+    const voiceBtn = document.getElementById('btn-note-voice');
+    const banner = document.getElementById('voice-dictate-banner');
+    const contentInput = document.getElementById('note-content-input');
+
+    if (state.isDictating) {
+      stopVoiceDictation();
+      return;
+    }
+
+    try {
+      speechRecognitionObj = new SpeechRecognition();
+      speechRecognitionObj.continuous = true;
+      speechRecognitionObj.interimResults = true;
+      speechRecognitionObj.lang = 'en-US';
+
+      speechRecognitionObj.onstart = () => {
+        state.isDictating = true;
+        if (voiceBtn) voiceBtn.classList.add('recording');
+        if (banner) banner.classList.remove('hidden');
+        showToast('Listening... Speak now 🎙️', 'info');
+      };
+
+      speechRecognitionObj.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            transcript += event.results[i][0].transcript;
+          }
+        }
+        if (transcript && contentInput) {
+          const val = contentInput.value;
+          contentInput.value = val ? `${val.trimEnd()} ${transcript.trim()}` : transcript.trim();
+        }
+      };
+
+      speechRecognitionObj.onerror = () => {
+        stopVoiceDictation();
+      };
+
+      speechRecognitionObj.onend = () => {
+        stopVoiceDictation();
+      };
+
+      speechRecognitionObj.start();
+    } catch (e) {
+      stopVoiceDictation();
+      showToast('Microphone access unavailable', 'info');
+    }
+  }
+
+  function stopVoiceDictation() {
+    state.isDictating = false;
+    const voiceBtn = document.getElementById('btn-note-voice');
+    const banner = document.getElementById('voice-dictate-banner');
+    if (voiceBtn) voiceBtn.classList.remove('recording');
+    if (banner) banner.classList.add('hidden');
+    if (speechRecognitionObj) {
+      try { speechRecognitionObj.stop(); } catch {}
+      speechRecognitionObj = null;
+    }
+  }
+
+  function setupNotesEventListeners() {
+    const btnNew = document.getElementById('btn-notes-new');
+    if (btnNew) btnNew.addEventListener('click', () => openNoteEditor(null));
+
+    const btnEmptyCreate = document.getElementById('btn-empty-create-note');
+    if (btnEmptyCreate) btnEmptyCreate.addEventListener('click', () => openNoteEditor(null));
+
+    const btnEditorBack = document.getElementById('btn-note-editor-back');
+    if (btnEditorBack) btnEditorBack.addEventListener('click', showNotesListView);
+
+    const btnSave = document.getElementById('btn-note-save');
+    if (btnSave) btnSave.addEventListener('click', saveCurrentNote);
+
+    const btnDelete = document.getElementById('btn-note-delete');
+    if (btnDelete) btnDelete.addEventListener('click', () => deleteCurrentNote(null));
+
+    const catBar = document.getElementById('notes-categories-bar');
+    if (catBar) {
+      catBar.querySelectorAll('.notes-cat-pill').forEach((pill) => {
+        pill.addEventListener('click', () => {
+          catBar.querySelectorAll('.notes-cat-pill').forEach((p) => p.classList.remove('active'));
+          pill.classList.add('active');
+          state.currentNoteCategory = pill.dataset.category || 'all';
+          renderNotes();
+        });
+      });
+    }
+
+    const searchInput = document.getElementById('notes-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        state.notesSearchQuery = e.target.value;
+        renderNotes();
+      });
+    }
+
+    const sortToggle = document.getElementById('btn-notes-sort-toggle');
+    const sortBar = document.getElementById('notes-sort-bar');
+    if (sortToggle && sortBar) {
+      sortToggle.addEventListener('click', () => {
+        sortBar.classList.toggle('hidden');
+      });
+      sortBar.querySelectorAll('.notes-sort-chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          sortBar.querySelectorAll('.notes-sort-chip').forEach((c) => c.classList.remove('active'));
+          chip.classList.add('active');
+          state.notesSortBy = chip.dataset.sort || 'updated';
+          renderNotes();
+        });
+      });
+    }
+
+    const toolbar = document.getElementById('notes-editor-toolbar');
+    if (toolbar) {
+      toolbar.querySelectorAll('.toolbar-btn[data-format]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          applyFormatting(btn.dataset.format);
+        });
+      });
+    }
+
+    const voiceBtn = document.getElementById('btn-note-voice');
+    if (voiceBtn) voiceBtn.addEventListener('click', toggleVoiceDictation);
+
+    const stopVoiceBtn = document.getElementById('btn-stop-voice');
+    if (stopVoiceBtn) stopVoiceBtn.addEventListener('click', stopVoiceDictation);
+
+    const tagInput = document.getElementById('note-tag-add-input');
+    const addTagBtn = document.getElementById('btn-add-tag-chip');
+    if (tagInput) {
+      tagInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ',') {
+          e.preventDefault();
+          addEditorTag(tagInput.value);
+        }
+      });
+    }
+    if (addTagBtn && tagInput) {
+      addTagBtn.addEventListener('click', () => {
+        addEditorTag(tagInput.value);
+      });
+    }
+
+    const catTrigger = document.getElementById('btn-category-picker-trigger');
+    const catDropdown = document.getElementById('category-dropdown-menu');
+    if (catTrigger && catDropdown) {
+      catTrigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        catDropdown.classList.toggle('hidden');
+      });
+      catDropdown.querySelectorAll('.cat-drop-item').forEach((item) => {
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          setEditorCategory(item.dataset.cat);
+        });
+      });
+      document.addEventListener('click', () => {
+        catDropdown.classList.add('hidden');
+      });
+    }
+
+    const qaNote = document.getElementById('btn-qa-note');
+    if (qaNote) {
+      qaNote.addEventListener('click', () => {
+        switchView('notes');
+        openNoteEditor(null);
+      });
+    }
   }
 
   // --- Connected Devices & Live Request Feed Engine ---
@@ -1193,18 +2088,77 @@
     const waterBtn = document.getElementById('btn-copy-siri-water');
     const tasksBtn = document.getElementById('btn-copy-siri-tasks');
     const completeBtn = document.getElementById('btn-copy-siri-complete');
+    const addBtn = document.getElementById('btn-copy-siri-add');
+    const assignBtn = document.getElementById('btn-copy-siri-assign');
+    const assignedMeBtn = document.getElementById('btn-copy-siri-assigned-me');
+    const hydrationTodayBtn = document.getElementById('btn-copy-siri-hydration-today');
+    const quickReminderBtn = document.getElementById('btn-copy-siri-quick-reminder');
     const copyTokenBtn = document.getElementById('btn-copy-token');
     const refreshBtn = document.getElementById('btn-regenerate-token');
 
     const base = state.prefs.backendUrl || window.location.origin;
 
+    const copyUrlWithFeedback = async (url, successMsg) => {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(url);
+          showToast(successMsg, 'success');
+        } else {
+          prompt('Copy Webhook URL:', url);
+        }
+      } catch (err) {
+        prompt('Copy Webhook URL:', url);
+      }
+    };
+
+    // Water Amount Selector (Presets: 100ml, 200ml, 250ml, 500ml, or any custom x ml)
+    let siriWaterAmount = 250;
+    const phraseEl = document.getElementById('siri-water-phrase-text');
+    const labelEl = document.getElementById('siri-water-selected-label');
+    const btnAmtEl = document.getElementById('siri-water-btn-amt');
+    const customInputEl = document.getElementById('siri-water-custom-input');
+    const amtBtns = document.querySelectorAll('.siri-amt-btn');
+    const dynamicWaterBtn = document.getElementById('btn-copy-siri-water-dynamic');
+
+    function updateSiriWaterDisplay(amt) {
+      siriWaterAmount = Math.max(1, Math.min(5000, parseInt(amt, 10) || 250));
+      if (phraseEl) phraseEl.textContent = `"Hey Siri, log ${siriWaterAmount} ml in Synvy"`;
+      if (labelEl) labelEl.textContent = `${siriWaterAmount} ml`;
+      if (btnAmtEl) btnAmtEl.textContent = `${siriWaterAmount}ml`;
+    }
+
+    amtBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        amtBtns.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (customInputEl) customInputEl.value = '';
+        updateSiriWaterDisplay(btn.dataset.amt);
+      });
+    });
+
+    if (customInputEl) {
+      customInputEl.addEventListener('input', () => {
+        const val = parseInt(customInputEl.value, 10);
+        if (val && val > 0) {
+          amtBtns.forEach((b) => b.classList.remove('active'));
+          updateSiriWaterDisplay(val);
+        }
+      });
+    }
+
     if (waterBtn) {
       waterBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
-        const url = `${base}/api/hydration?amount=250&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Water Webhook URL (with API key)!', 'success');
-        });
+        const url = `${base}/api/hydration?amount=${siriWaterAmount}&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, `Copied Water Webhook URL for ${siriWaterAmount} ml!`);
+      });
+    }
+
+    if (dynamicWaterBtn) {
+      dynamicWaterBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const dynamicUrl = `${base}/api/hydration?amount=[Provided Input]&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(dynamicUrl, 'Copied! In Shortcuts: use the [Provided Input] variable (from "Ask for Number") after amount=');
       });
     }
 
@@ -1212,28 +2166,62 @@
       tasksBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
         const url = `${base}/api/tasks?filter=today&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Tasks Webhook URL (with API key)!', 'success');
-        });
+        await copyUrlWithFeedback(url, 'Copied Today\'s Tasks Webhook URL (with API key)!');
       });
     }
 
     if (completeBtn) {
       completeBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
-        const url = `${base}/api/tasks/complete?title=ShortcutInput&format=text&apiKey=${encodeURIComponent(key)}`;
-        navigator.clipboard.writeText(url).then(() => {
-          showToast('Copied Complete Task Webhook URL (with API key)!', 'success');
-        });
+        const url = `${base}/api/tasks/complete?task=1&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Complete Task Webhook URL (with API key)!');
+      });
+    }
+
+    if (addBtn) {
+      addBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/tasks/add?title=prepare%20presentation&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Add Task Webhook URL (with API key)!');
+      });
+    }
+
+    if (assignBtn) {
+      assignBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/tasks/assign?task=2&to=Alex&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Assign Task Webhook URL (with API key)!');
+      });
+    }
+
+    if (assignedMeBtn) {
+      assignedMeBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/tasks?filter=assigned_to_me&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Assigned Tasks Webhook URL (with API key)!');
+      });
+    }
+
+    if (hydrationTodayBtn) {
+      hydrationTodayBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/hydration/today?format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Hydration Progress Webhook URL (with API key)!');
+      });
+    }
+
+    if (quickReminderBtn) {
+      quickReminderBtn.addEventListener('click', async () => {
+        const key = await ensureApiKey();
+        const url = `${base}/api/reminders/quick?title=drink%20water&minutes=30&format=text&apiKey=${encodeURIComponent(key)}`;
+        await copyUrlWithFeedback(url, 'Copied Quick Reminder Webhook URL (with API key)!');
       });
     }
 
     if (copyTokenBtn) {
       copyTokenBtn.addEventListener('click', async () => {
         const key = await ensureApiKey();
-        navigator.clipboard.writeText(key).then(() => {
-          showToast('Copied API Key to clipboard!', 'success');
-        });
+        await copyUrlWithFeedback(key, 'Copied API Key to clipboard!');
       });
     }
 
@@ -1275,6 +2263,7 @@
   function switchView(viewName) {
     playSound('click');
     state.activeView = viewName;
+    document.body.dataset.view = viewName;
 
     // Toggle View Sections
     document.querySelectorAll('.view-section').forEach((sec) => {
@@ -1286,7 +2275,7 @@
     // Toggle Nav Icons & Circular Orbit Icons
     document.querySelectorAll('.nav-item').forEach((item) => {
       item.classList.remove('active');
-      if (item.dataset.view === viewName) {
+      if (item.dataset.view === (viewName === 'notifications' ? 'reminders' : viewName)) {
         item.classList.add('active');
       }
     });
@@ -1304,6 +2293,18 @@
       } else {
         headerSettingsBtn.classList.remove('active');
       }
+    }
+
+    if (viewName === 'notifications') renderNotifications();
+
+    if (viewName === 'hydration' || viewName === 'dashboard') {
+      fetchWaterFromCloud();
+    }
+
+    if (viewName === 'notes') {
+      showNotesListView();
+      renderNotes();
+      fetchNotesFromCloud();
     }
 
     if (viewName === 'devices') {
@@ -1557,7 +2558,7 @@
       }
     }
 
-    // Compact Central Luphonix Emblem - Opens Circular Radial Navigation Menu
+    // Compact Central Synvy Emblem - Opens Circular Radial Navigation Menu
     const centerEmblem = document.getElementById('nav-btn-center-emblem');
     if (centerEmblem) {
       centerEmblem.addEventListener('click', (e) => {
@@ -1905,7 +2906,7 @@
     if (headerBell) {
       headerBell.addEventListener('click', () => {
         playSound('check');
-        showToast('All notifications & habit schedules are active! 🔔', 'info');
+        switchView('notifications');
       });
     }
 
@@ -1971,7 +2972,7 @@
     if (btnSiriTest) {
       btnSiriTest.addEventListener('click', () => {
         playSound('water');
-        showToast('🎙️ Siri Voice Simulation: "Logged 250ml water in Luphonix!"', 'water');
+        showToast('🎙️ Siri Voice Simulation: "Logged 250ml water in Synvy!"', 'water');
         logWater(250);
       });
     }
@@ -2002,6 +3003,18 @@
           showToast('Siri: "Showing your today\'s progress"', 'info');
         } else if (id === 'pill-cmd-add') {
           openModal('modal-task');
+        } else if (id === 'pill-cmd-assign') {
+          showToast('Siri: "Hey Siri, assign task 2 to Alex in Synvy"', 'info');
+          const uncompleted = state.tasks.filter((t) => !t.is_completed);
+          if (uncompleted.length >= 2) {
+            assignTask(uncompleted[1].id, 'alex');
+          } else {
+            switchView('tasks');
+            showToast('Tip: Use Siri shortcut to assign task by number or name', 'info');
+          }
+        } else if (id === 'pill-cmd-reminder') {
+          showToast('Siri: "Hey Siri, remind me to drink water in Synvy"', 'info');
+          switchView('reminders');
         }
       });
     });
@@ -2139,6 +3152,11 @@
           openModal('modal-auth');
         }
       });
+    }
+
+    const settingsAccountRow = document.getElementById('settings-account-row');
+    if (settingsAccountRow && userAuthPill) {
+      settingsAccountRow.addEventListener('click', () => userAuthPill.click());
     }
 
     const tabBtnLogin = document.getElementById('tab-btn-login');
@@ -2295,27 +3313,176 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker
           .register('/sw.js')
-          .then(() => console.log('✅ Luphonix PWA Service Worker Registered'))
+          .then(() => console.log('✅ Synvy PWA Service Worker Registered'))
           .catch((err) => console.log('Service Worker registration skipped:', err));
       });
     }
   }
 
+  // --- Notification Center (recent alerts + browser push permission) ---
+  const STORAGE_KEY_ALERTS = 'synvy_alerts_v1';
+  let alertLog = loadStorage(STORAGE_KEY_ALERTS, []);
+  if (!Array.isArray(alertLog)) alertLog = [];
+
+  function recordAlert(title, body, type) {
+    alertLog.unshift({
+      id: 'a_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+      title,
+      body: String(body || '').replace(/<[^>]*>/g, ''),
+      type: type || 'info',
+      ts: new Date().toISOString(),
+      read: false
+    });
+    alertLog = alertLog.slice(0, 30);
+    saveStorage(STORAGE_KEY_ALERTS, alertLog);
+    updateNotifBadge();
+    if (state.activeView === 'notifications') renderNotifications();
+  }
+
+  function updateNotifBadge() {
+    const badge = document.getElementById('notif-badge');
+    if (!badge) return;
+    const unread = alertLog.filter((a) => !a.read).length;
+    badge.textContent = unread > 9 ? '9+' : unread ? String(unread) : '';
+  }
+
+  function updatePushChip() {
+    const chip = document.getElementById('notif-permission-chip');
+    if (!chip) return;
+    const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+    chip.className = 'notif-chip' + (perm === 'granted' ? ' ok' : perm === 'denied' ? ' blocked' : '');
+    chip.textContent = perm === 'granted' ? 'Enabled' : perm === 'denied' ? 'Blocked' : perm === 'unsupported' ? 'Unsupported' : 'Permission Required';
+  }
+
+  function alertTimeAgo(iso) {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return 'now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  function renderNotifications() {
+    const list = document.getElementById('notif-list');
+    const count = document.getElementById('notif-count');
+    if (count) count.textContent = alertLog.length;
+    updatePushChip();
+    if (!list) return;
+    if (!alertLog.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🔔</div><p>No alerts yet.</p></div>`;
+      return;
+    }
+    list.innerHTML = alertLog.map((a) => {
+      const icon = a.type === 'water' ? 'fa-droplet' : a.type === 'success' ? 'fa-circle-check' : 'fa-bell';
+      return `
+        <div class="alert-item ${a.read ? '' : 'unread'}">
+          <div class="alert-icon"><i class="fa-solid ${icon}"></i></div>
+          <div class="alert-body">
+            <div class="alert-title">${escapeHTML(a.title)}</div>
+            <div class="alert-text">${escapeHTML(a.body)}</div>
+          </div>
+          <div class="alert-time">${alertTimeAgo(a.ts)}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function initNotifications() {
+    const enable = document.getElementById('btn-enable-push');
+    const test = document.getElementById('btn-send-test-push');
+    const markAll = document.getElementById('btn-mark-all-read');
+    const toggle = document.getElementById('btn-notif-toggle');
+
+    if (enable) {
+      enable.addEventListener('click', async () => {
+        if (!('Notification' in window)) {
+          showToast('Push is not supported in this browser', 'info');
+          return;
+        }
+        try {
+          await Notification.requestPermission();
+        } catch (e) { /* ignore */ }
+        updatePushChip();
+        showToast(Notification.permission === 'granted' ? 'Phone push enabled!' : 'Push permission not granted', 'info');
+      });
+    }
+    if (test) {
+      test.addEventListener('click', async () => {
+        const title = 'Synvy: Phone Notification';
+        const body = 'Test push — notifications are working.';
+        if ('Notification' in window && Notification.permission === 'granted') {
+          try {
+            const reg = navigator.serviceWorker && await navigator.serviceWorker.getRegistration();
+            if (reg && reg.showNotification) reg.showNotification(title, { body, icon: '/icons/icon-192.png' });
+            else new Notification(title, { body, icon: '/icons/icon-192.png' });
+          } catch (e) { /* ignore */ }
+        }
+        recordAlert(title, body, 'info');
+        showToast('Test push sent', 'info');
+      });
+    }
+    if (markAll) {
+      markAll.addEventListener('click', () => {
+        alertLog.forEach((a) => { a.read = true; });
+        saveStorage(STORAGE_KEY_ALERTS, alertLog);
+        updateNotifBadge();
+        renderNotifications();
+      });
+    }
+    if (toggle) toggle.addEventListener('click', updatePushChip);
+    updateNotifBadge();
+    updatePushChip();
+  }
+
+  // --- Dynamic Island & Safe Area Detection ---
+  function initSafeAreaInsets() {
+    try {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isStandalone = window.navigator.standalone === true || 
+        window.matchMedia('(display-mode: standalone)').matches;
+
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;top:0;left:0;height:env(safe-area-inset-top, 0px);visibility:hidden;pointer-events:none;z-index:-9999;';
+      document.body.appendChild(probe);
+      const measuredTop = probe.offsetHeight || 0;
+      document.body.removeChild(probe);
+
+      if (measuredTop > 0) {
+        document.documentElement.style.setProperty('--safe-top', `${measuredTop}px`);
+      } else if (isIOS) {
+        const isDynamicIsland = Math.max(window.screen.height, window.screen.width) >= 852;
+        const fallbackTop = isDynamicIsland ? 54 : (isStandalone ? 48 : 0);
+        if (fallbackTop > 0) {
+          document.documentElement.style.setProperty('--safe-top', `${fallbackTop}px`);
+        }
+      }
+    } catch (_) {}
+  }
+
   // --- App Initialization ---
   function init() {
+    initSafeAreaInsets();
+    window.addEventListener('resize', initSafeAreaInsets);
+    window.addEventListener('orientationchange', initSafeAreaInsets);
     updateGreeting();
     updateHydrationRings();
     renderTasks();
     renderReminders();
+    renderNotes();
     renderFriendsList();
     populateAssignDropdown();
     initEvents();
+    setupNotesEventListeners();
+    initNotifications();
     updateAuthUI();
     ensureApiKey();
     registerServiceWorker();
 
     // Instant sync with cloud on load so Siri & terminal tasks show up right away
     setTimeout(syncAllWithCloud, 200);
+
+    // Initial notes fetch from cloud
+    setTimeout(fetchNotesFromCloud, 350);
 
     // Initial devices & requests pre-fetch
     setTimeout(fetchDevicesAndRequests, 400);
@@ -2325,6 +3492,27 @@
 
     // Health ping test on load
     setTimeout(testBackendPing, 800);
+
+    // Initial water fetch from cloud
+    setTimeout(fetchWaterFromCloud, 250);
+
+    // Auto-refresh water & tasks when returning from Siri
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        syncAllWithCloud();
+        fetchWaterFromCloud();
+      }
+    });
+    window.addEventListener('focus', () => {
+      fetchWaterFromCloud();
+    });
+
+    // 10s auto-refresh interval when viewing water or dashboard
+    setInterval(() => {
+      if (!document.hidden && (state.activeView === 'dashboard' || state.activeView === 'hydration')) {
+        fetchWaterFromCloud();
+      }
+    }, 10000);
   }
 
 

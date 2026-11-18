@@ -2,8 +2,8 @@ import Foundation
 import AppIntents
 
 public struct CompleteTaskIntent: AppIntent {
-    public static var title: LocalizedStringResource = "Mark Task as Completed in Luphonix"
-    public static var description = IntentDescription("Marks a specific task as completed in Luphonix.")
+    public static var title: LocalizedStringResource = "Mark Task as Completed in Synvy"
+    public static var description = IntentDescription("Marks a specific task as completed in Synvy.")
     
     @Parameter(title: "Task Title", requestValueDialog: "Which task would you like to mark as completed?")
     public var taskTitle: String
@@ -31,17 +31,17 @@ public struct CompleteTaskIntent: AppIntent {
                 _ = try? await APIClient.shared.updateTask(matchedTask)
             }
             
-            let dialogMessage: LocalizedStringResource = "Marked '\(matchedTitle)' as completed in Luphonix. Good job!"
+            let dialogMessage: LocalizedStringResource = "Marked '\(matchedTitle)' as completed in Synvy. Good job!"
             return .result(value: true, dialog: IntentDialog(dialogMessage))
         } else {
             // Also attempt completing via cloud API if task was created in cloud
             if let cloudTask = try? await APIClient.shared.completeTask(query: taskTitle) {
                 StorageManager.shared.updateTask(cloudTask)
-                let dialogMessage: LocalizedStringResource = "Marked '\(cloudTask.title)' as completed in Luphonix. Good job!"
+                let dialogMessage: LocalizedStringResource = "Marked '\(cloudTask.title)' as completed in Synvy. Good job!"
                 return .result(value: true, dialog: IntentDialog(dialogMessage))
             }
             
-            let dialogMessage: LocalizedStringResource = "Could not find an uncompleted task matching '\(taskTitle)' in Luphonix."
+            let dialogMessage: LocalizedStringResource = "Could not find an uncompleted task matching '\(taskTitle)' in Synvy."
             return .result(value: false, dialog: IntentDialog(dialogMessage))
         }
     }

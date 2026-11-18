@@ -86,7 +86,7 @@ friendsApp.post('/add', async (c) => {
     // Auto-create sample friend if testing with demo handles (@alex or @keval)
     if (!friendUser && (targetHandle.toLowerCase() === 'alex' || targetHandle.toLowerCase() === 'keval' || targetHandle.toLowerCase() === 'sarah')) {
       const demoId = `user_${targetHandle.toLowerCase()}_demo`;
-      const demoEmail = `${targetHandle.toLowerCase()}@luphonix.local`;
+      const demoEmail = `${targetHandle.toLowerCase()}@synvy.local`;
       const demoName = targetHandle.charAt(0).toUpperCase() + targetHandle.slice(1);
       const now = new Date().toISOString();
 

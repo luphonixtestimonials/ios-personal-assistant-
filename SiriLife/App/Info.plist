@@ -5,15 +5,15 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>Luphonix</string>
+    <string>Synvy</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
-    <string>com.luphonix.app</string>
+    <string>com.synvy.app</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Luphonix</string>
+    <string>Synvy</string>
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
@@ -23,9 +23,9 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSSiriUsageDescription</key>
-    <string>Luphonix uses Siri so you can add tasks, schedule smart reminders, and log water with natural voice commands.</string>
+    <string>Synvy uses Siri so you can add tasks, schedule smart reminders, and log water with natural voice commands.</string>
     <key>NSUserNotificationsUsageDescription</key>
-    <string>Luphonix delivers timely task reminders and hydration alerts.</string>
+    <string>Synvy delivers timely task reminders and hydration alerts.</string>
     <key>UIApplicationSceneManifest</key>
     <dict>
         <key>UIApplicationSupportsMultipleScenes</key>

@@ -1,7 +1,7 @@
 import Foundation
 import AppIntents
 
-public struct LuphonixShortcuts: AppShortcutsProvider {
+public struct SynvyShortcuts: AppShortcutsProvider {
     public static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: AddReminderIntent(),
@@ -68,6 +68,17 @@ public struct LuphonixShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Complete Task",
             systemImageName: "checkmark.circle.fill"
+        )
+        
+        AppShortcut(
+            intent: AssignTaskIntent(),
+            phrases: [
+                "Assign task \(\.$task) to \(\.$to) in \(.applicationName)",
+                "Assign \(\.$task) to \(\.$to) in \(.applicationName)",
+                "Delegate \(\.$task) to \(\.$to) in \(.applicationName)"
+            ],
+            shortTitle: "Assign Task to Person",
+            systemImageName: "person.badge.shield.checkmark.fill"
         )
         
         AppShortcut(

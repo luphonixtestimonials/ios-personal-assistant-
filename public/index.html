@@ -3,24 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Luphonix — Personal Assistant</title>
+  <title>Synvy — Personal Assistant</title>
   <meta name="description" content="Your personal assistant for daily tasks, hydration tracking, and Siri voice shortcuts with cloud sync.">
-  <meta name="theme-color" content="#08090E">
+  <meta name="theme-color" content="#0a0a0a">
 
   <!-- Apple iOS PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Luphonix">
-  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  <link rel="icon" type="image/png" href="/favicon.png">
-  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-title" content="Synvy">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png?v=2">
+  <link rel="icon" type="image/png" href="/favicon.png?v=2">
+  <link rel="manifest" href="/manifest.json?v=2">
 
   <!-- Styles & Font Awesome 6 -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="/style.css?v=13.1">
+  <link rel="stylesheet" href="/style.css?v=16.0">
 </head>
-<body>
+<body data-view="dashboard">
   <div id="app-container">
+    <!-- Fixed iOS Status Bar Shield -->
+    <div class="ios-status-shield" aria-hidden="true"></div>
+
     <!-- Ambient Background Branding & Cosmic Night Gradient -->
     <div class="ambient-bg-layer" aria-hidden="true">
       <div class="ambient-glow glow-1"></div>
@@ -50,8 +53,10 @@
     <header class="app-header" id="main-header">
       <div class="header-left-user">
         <div class="user-greeting-sub" id="greeting-time">Good Morning</div>
-        <div class="user-greeting-name" id="greeting-title">Dhyey <span class="greeting-emoji">🌤️</span></div>
+        <div class="user-greeting-name" id="greeting-title">Dhyey</div>
       </div>
+      <div class="hero-tagline">Small habits,<br>big changes.</div>
+      <div class="hero-date" id="hero-date" aria-label="Today's date"></div>
       <div class="header-actions">
         <div class="user-auth-pill" id="user-auth-pill" title="Account / Sign In">
           <span class="user-avatar-dot" id="user-avatar-icon"><i class="fa-solid fa-user"></i></span>
@@ -63,7 +68,7 @@
         </div>
         <button class="header-icon-btn notification-bell-btn" id="btn-header-bell" aria-label="Notifications" title="Notifications">
           <i class="fa-regular fa-bell"></i>
-          <span class="notification-indicator-dot"></span>
+          <span class="notification-indicator-dot" id="notif-badge"></span>
         </button>
         <button class="header-icon-btn" id="btn-header-settings" aria-label="Settings" title="Settings">
           <i class="fa-solid fa-gear"></i>
@@ -104,29 +109,24 @@
           </div>
 
           <div class="card-water-header">
-            <span class="water-header-title"><i class="fa-solid fa-droplet" style="color: #00D2FF; margin-right: 6px;"></i> Today's Water</span>
+            <span class="water-header-title"><i class="fa-solid fa-droplet"></i> Today's Water</span>
             <button class="btn-keep-going-pill" id="btn-keep-going" title="Quick log 250 ml">
-              Keep Going <i class="fa-solid fa-arrow-right" style="font-size: 11px; margin-left: 4px;"></i>
+              Keep Going <i class="fa-solid fa-arrow-right" style="font-size: 9px; margin-left: 2px;"></i>
             </button>
+          </div>
+
+          <div class="water-big">
+            <span class="water-big-num" id="dash-water-val">750</span>
+            <span class="water-big-goal">/ <span id="dash-water-goal">2,000</span> ml</span>
           </div>
 
           <div class="circular-ring-container">
             <svg class="ring-svg" viewBox="0 0 120 120">
-              <defs>
-                <linearGradient id="waterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#0066FF" />
-                  <stop offset="50%" stop-color="#008CFF" />
-                  <stop offset="100%" stop-color="#00D9FF" />
-                </linearGradient>
-              </defs>
-              <circle class="ring-bg-circle" cx="60" cy="60" r="52" stroke-width="9" fill="none" />
-              <circle class="ring-progress-circle" id="dash-ring-progress" cx="60" cy="60" r="52" stroke-width="9" fill="none"
+              <circle class="ring-bg-circle" cx="60" cy="60" r="52" stroke-width="12" fill="none" />
+              <circle class="ring-progress-circle" id="dash-ring-progress" cx="60" cy="60" r="52" stroke-width="12" fill="none"
                       stroke-dasharray="326.72" stroke-dashoffset="326.72" />
             </svg>
             <div class="ring-content">
-              <span class="ring-water-icon">💧</span>
-              <div class="ring-val-current" id="dash-water-val">750</div>
-              <div class="ring-val-goal">of <span id="dash-water-goal">2,000</span> ml</div>
               <span class="ring-percentage-pill" id="dash-water-percent">38%</span>
             </div>
           </div>
@@ -163,7 +163,7 @@
           </button>
           <button class="qa-item-btn" id="btn-qa-siri">
             <div class="qa-icon-box cyan"><i class="fa-solid fa-microphone-lines"></i></div>
-            <span class="qa-label">Siri Shortcuts</span>
+            <span class="qa-label">Siri</span>
           </button>
           <button class="qa-item-btn" id="btn-qa-note">
             <div class="qa-icon-box amber"><i class="fa-solid fa-pen-to-square"></i></div>
@@ -178,15 +178,15 @@
         </div>
         <div class="stats-row">
           <div class="stat-box">
-            <div class="stat-val" style="color: #00D2FF;" id="stat-tasks-pending">1</div>
+             <div class="stat-val" id="stat-tasks-pending">1</div>
             <div class="stat-label">Pending</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" style="color: #10B981;" id="stat-tasks-done">1</div>
+             <div class="stat-val" id="stat-tasks-done">1</div>
             <div class="stat-label">Completed</div>
           </div>
           <div class="stat-box">
-            <div class="stat-val" style="color: #F59E0B;" id="stat-streak-val"><i class="fa-solid fa-fire-flame-curved" style="color: #F97316; margin-right: 4px;"></i>1</div>
+             <div class="stat-val" id="stat-streak-val"><i class="fa-solid fa-fire-flame-curved"></i>1</div>
             <div class="stat-label">Day Streak</div>
           </div>
         </div>
@@ -204,11 +204,12 @@
 
       <!-- ================= VIEW 2: TASKS ================= -->
       <section class="view-section" id="view-tasks">
-        <div class="view-header-bar">
+        <div class="view-header-bar tall">
           <div class="view-title-wrap">
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Tasks</h2>
           </div>
+          <span class="view-sub">Tasks<br>for a better<br>tomorrow.</span>
           <div class="view-header-tools">
             <button class="header-icon-btn" id="btn-friends-modal" title="Friends & Task Assignment">
               <i class="fa-solid fa-user-group"></i>
@@ -244,16 +245,24 @@
         <div id="tasks-full-list">
           <!-- Dynamically populated -->
         </div>
+        <div class="deco-tagline" aria-hidden="true">
+          <div class="deco-lines">Organize<br>Execute<br>Grow<br>Repeat.</div>
+          <div class="deco-arrow"><i class="fa-solid fa-arrow-up-right-from-square" style="transform: rotate(0deg)"></i></div>
+        </div>
       </section>
 
       <!-- ================= VIEW 3: HYDRATION ================= -->
       <section class="view-section" id="view-hydration">
-        <div class="view-header-bar">
+        <div class="view-header-bar tall">
           <div class="view-title-wrap">
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Hydration</h2>
           </div>
-          <span class="section-link" id="link-edit-water-goal">Goal: <span id="hyd-goal-display">2,000</span> ml</span>
+          <span class="section-link" id="link-edit-water-goal">Goal<br><span id="hyd-goal-display">2,000</span> ml <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px"></i></span>
+        </div>
+        <div class="hydration-deco" aria-hidden="true">
+          <div class="deco-lines">Drink<br>Track<br>Stay<br>Healthy</div>
+          <div class="deco-barcode"></div>
         </div>
 
         <!-- Big Circular Widget -->
@@ -308,6 +317,7 @@
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Reminders</h2>
           </div>
+          <span class="view-sub">Stay<br>on track.</span>
           <button class="header-icon-btn" id="btn-add-reminder-modal" title="Add Reminder">
             <i class="fa-solid fa-plus"></i>
           </button>
@@ -333,6 +343,7 @@
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Siri</h2>
           </div>
+          <span class="view-sub">/ Your AI<br>assistant.<br>Always ready.</span>
           <button class="header-icon-btn" id="btn-siri-help" title="Siri Setup Guide">
             <i class="fa-solid fa-question"></i>
           </button>
@@ -345,7 +356,7 @@
               <i class="fa-solid fa-microphone"></i>
             </div>
           </div>
-          <h2 style="font-family: var(--font-heading); font-size: 22px; font-weight: 700; text-align: center;">Luphonix with Siri</h2>
+          <h2 style="font-family: var(--font-heading); font-size: 22px; font-weight: 700; text-align: center;">Synvy with Siri</h2>
           <p style="font-size: 13px; color: #CBD5E1; margin-top: 6px; line-height: 1.5; text-align: center;">
             Control your tasks, hydration and more using just your voice.
           </p>
@@ -408,37 +419,72 @@
             <span class="cmd-text">"Add a new task"</span>
             <span class="cmd-trailing-icon">➕</span>
           </div>
+          <div class="popular-cmd-bubble" id="pill-cmd-assign">
+            <span class="cmd-quote-icon">“</span>
+            <span class="cmd-text">"Assign task 2 to Alex"</span>
+            <span class="cmd-trailing-icon">👥</span>
+          </div>
+          <div class="popular-cmd-bubble" id="pill-cmd-reminder">
+            <span class="cmd-quote-icon">“</span>
+            <span class="cmd-text">"Remind me to drink water"</span>
+            <span class="cmd-trailing-icon">⏰</span>
+          </div>
         </div>
 
         <!-- Full Siri Webhook Cards (Intact Functionality) -->
         <div class="section-header" style="margin-top: 24px;">
-          <h3 class="section-title"><i class="fa-solid fa-code" style="color: #00D2FF; margin-right: 6px;"></i> Ready-To-Use Siri Shortcuts</h3>
+          <h3 class="section-title"><span style="color: #00D2FF; margin-right: 6px; font-weight: 800;">&gt;</span> Ready-To-Use Siri Shortcuts</h3>
         </div>
 
         <!-- Shortcut 1: Log Water -->
-        <div class="siri-shortcut-card">
+        <div class="siri-shortcut-card" id="siri-water-card">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-weight: 700; font-size: 15px;">1. Log Water by Voice</span>
-            <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 600;">Siri Voice</span>
+            <span style="font-size: 11px; color: #00D2FF; font-weight: 700; letter-spacing: 0.3px;">Any Amount (ml)</span>
           </div>
           <div class="siri-phrase-box">
             <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, log 250 ml in Luphonix"</span>
+            <span id="siri-water-phrase-text">"Hey Siri, log 250 ml in Synvy"</span>
           </div>
-          <button class="btn-secondary" id="btn-copy-siri-water" style="padding: 8px 12px; font-size: 13px;">
-            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
-          </button>
+
+          <!-- Amount Selection Row (100ml, 200ml, or any x value) -->
+          <div style="display: flex; flex-direction: column; gap: 6px; margin: 4px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #94A3B8;">
+              <span>Amount (x):</span>
+              <span id="siri-water-selected-label" style="color: #00D2FF; font-weight: 600; font-family: var(--font-mono);">250 ml</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr) 1.2fr; gap: 6px;">
+              <button type="button" class="siri-amt-btn" data-amt="100">100ml</button>
+              <button type="button" class="siri-amt-btn" data-amt="200">200ml</button>
+              <button type="button" class="siri-amt-btn active" data-amt="250">250ml</button>
+              <button type="button" class="siri-amt-btn" data-amt="500">500ml</button>
+              <div style="display: flex; align-items: center; background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(0, 210, 255, 0.25); border-radius: 6px; padding: 2px 6px;">
+                <input type="number" id="siri-water-custom-input" placeholder="Custom" min="10" max="5000" step="25" style="width: 100%; background: transparent; border: none; color: #F1F5F9; font-size: 12px; font-family: var(--font-mono); outline: none;" title="Enter custom amount in ml">
+                <span style="font-size: 10px; color: #64748B; margin-left: 2px;">ml</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="btn-secondary" id="btn-copy-siri-water" style="flex: 1; min-width: 140px; padding: 8px 12px; font-size: 13px;">
+              <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy Webhook (<span id="siri-water-btn-amt">250ml</span>)
+            </button>
+            <button class="btn-secondary" id="btn-copy-siri-water-dynamic" style="flex: 1; min-width: 140px; padding: 8px 12px; font-size: 13px; border-color: rgba(0, 210, 255, 0.35); color: #38BDF8;" title="Copies a dynamic URL for Apple Shortcuts to ask your voice for any amount">
+              <i class="fa-solid fa-wand-magic-sparkles" style="margin-right: 6px;"></i> Ask Voice (Any Amount)
+            </button>
+          </div>
         </div>
 
         <!-- Shortcut 2: Today's Tasks -->
         <div class="siri-shortcut-card">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="font-weight: 700; font-size: 15px;">2. Check Today's Tasks</span>
-            <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 600;">Siri Voice</span>
+            <span style="font-size: 11px; color: #00D2FF; font-weight: 700; letter-spacing: 0.3px;">Siri Voice</span>
           </div>
           <div class="siri-phrase-box">
             <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, what are my tasks in Luphonix?"</span>
+            <span>"Hey Siri, what are my tasks in Synvy?"</span>
           </div>
           <button class="btn-secondary" id="btn-copy-siri-tasks" style="padding: 8px 12px; font-size: 13px;">
             <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
@@ -448,14 +494,89 @@
         <!-- Shortcut 3: Complete Task -->
         <div class="siri-shortcut-card">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-weight: 700; font-size: 15px;">3. Complete a Task</span>
-            <span style="font-size: 11px; color: #10B981; font-weight: 600;">Siri Voice</span>
+            <span style="font-weight: 700; font-size: 15px;">3. Complete a Task (By Number or Title)</span>
+            <span style="font-size: 11px; color: #00D2FF; font-weight: 700; letter-spacing: 0.3px;">Siri Voice</span>
           </div>
           <div class="siri-phrase-box">
             <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
-            <span>"Hey Siri, mark study completed in Luphonix"</span>
+            <span>"Hey Siri, complete task 1 in Synvy"</span>
           </div>
           <button class="btn-secondary" id="btn-copy-siri-complete" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 4: Add a Task by Voice -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">4. Add a Task by Voice</span>
+            <span style="font-size: 11px; color: #00D2FF; font-weight: 700; letter-spacing: 0.3px;">Siri Voice</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, add prepare presentation in Synvy"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-add" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 5: Assign Task by Number to Person -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">5. Assign Task by Number to Person</span>
+            <span style="font-size: 11px; color: #F59E0B; font-weight: 700; letter-spacing: 0.3px;">Collaborative</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, assign task 2 to Alex in Synvy"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-assign" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 6: Check Tasks Assigned to Me -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">6. Check Tasks Assigned to Me</span>
+            <span style="font-size: 11px; color: #F59E0B; font-weight: 700; letter-spacing: 0.3px;">Collaborative</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, what tasks are assigned to me in Synvy?"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-assigned-me" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 7: Check Hydration Progress -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">7. Check Hydration Progress</span>
+            <span style="font-size: 11px; color: #10B981; font-weight: 700; letter-spacing: 0.3px;">Health &amp; Wellness</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, how much water did I drink in Synvy?"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-hydration-today" style="padding: 8px 12px; font-size: 13px;">
+            <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
+          </button>
+        </div>
+
+        <!-- Shortcut 8: Quick Voice Reminder -->
+        <div class="siri-shortcut-card">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 15px;">8. Quick Voice Reminder</span>
+            <span style="font-size: 11px; color: #EC4899; font-weight: 700; letter-spacing: 0.3px;">Reminders</span>
+          </div>
+          <div class="siri-phrase-box">
+            <span><i class="fa-solid fa-microphone-lines" style="color: #00D2FF;"></i></span>
+            <span>"Hey Siri, remind me to drink water in Synvy"</span>
+          </div>
+          <button class="btn-secondary" id="btn-copy-siri-quick-reminder" style="padding: 8px 12px; font-size: 13px;">
             <i class="fa-solid fa-copy" style="margin-right: 6px;"></i> Copy API Webhook URL
           </button>
         </div>
@@ -471,91 +592,182 @@
             <li>Paste your Webhook URL above (apiKey is included automatically).</li>
             <li>Say <em>"Hey Siri, [Shortcut Name]"</em> anytime!</li>
           </ol>
+          <div style="margin-top: 10px; padding: 10px 12px; background: rgba(0, 210, 255, 0.05); border-left: 3px solid #00D2FF; border-radius: 4px; font-size: 12px; color: #CBD5E1; line-height: 1.5;">
+            <strong style="color: #00D2FF;"><i class="fa-solid fa-circle-info" style="margin-right: 4px;"></i> Log Any Amount of Water (100ml, 200ml, etc.):</strong><br>
+            • <strong>Fixed Amount:</strong> Select 100ml, 200ml, 250ml, or enter custom above and click Copy.<br>
+            • <strong>Dynamic Voice Prompt:</strong> Click <em>"Ask Voice (Any Amount)"</em>. In Apple Shortcuts, add action <em>"Ask for Number"</em> first, then connect it to <code>...&amp;amount=<strong>[Provided Input]</strong></code>.<br>
+            • <strong>Native iOS App:</strong> Just say <em>"Hey Siri, log 100 ml of water in Synvy"</em> — works with any amount out of the box!
+          </div>
         </div>
       </section>
 
-      <!-- ================= VIEW 6: CONNECTED DEVICES & REQUEST MONITOR ================= -->
-      <section class="view-section" id="view-devices">
-        <div class="view-header-bar">
-          <div class="view-title-wrap">
-            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
-            <h2 class="view-screen-title">Devices</h2>
-          </div>
-          <div class="view-header-tools">
-            <button class="header-icon-btn" id="btn-add-device-modal" title="Add Device Session">
+      <!-- ================= VIEW 6: NOTES (Capture Ideas, Thoughts & More) ================= -->
+      <section class="view-section" id="view-notes">
+        
+        <!-- SUBVIEW A: Notes List Screen (Matching Left Screenshot) -->
+        <div class="notes-subview" id="notes-subview-list">
+          <!-- Top Header Bar -->
+          <div class="notes-header-bar">
+            <button class="view-back-btn notes-back-btn" data-back="dashboard" title="Back to Dashboard">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="notes-header-center">
+              <div class="notes-title-row">
+                <h2 class="notes-display-title">NOTES</h2>
+                <span class="notes-sparkle" aria-hidden="true">✦</span>
+              </div>
+              <p class="notes-header-sub">Capture ideas, thoughts and more.</p>
+            </div>
+            <button class="notes-top-add-btn" id="btn-notes-new" title="Create New Note" aria-label="New Note">
               <i class="fa-solid fa-plus"></i>
             </button>
-            <button class="header-icon-btn" id="btn-refresh-devices" title="Refresh Devices & Requests">
-              <i class="fa-solid fa-arrows-rotate"></i>
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div class="notes-search-wrapper">
+            <i class="fa-solid fa-magnifying-glass notes-search-icon" aria-hidden="true"></i>
+            <input type="text" id="notes-search-input" class="notes-search-input" placeholder="Search notes..." autocomplete="off">
+            <button type="button" class="notes-search-filter-btn" id="btn-notes-sort-toggle" title="Sort & Options" aria-label="Sort notes">
+              <i class="fa-solid fa-sliders"></i>
+            </button>
+          </div>
+
+          <!-- Collapsible Sort Options Menu -->
+          <div class="notes-sort-bar hidden" id="notes-sort-bar">
+            <span class="notes-sort-label">Sort:</span>
+            <button type="button" class="notes-sort-chip active" data-sort="updated">Recent</button>
+            <button type="button" class="notes-sort-chip" data-sort="pinned">Pinned</button>
+            <button type="button" class="notes-sort-chip" data-sort="title">Title (A-Z)</button>
+          </div>
+
+          <!-- Category Filter Pills Bar (Horizontal Scrollable) -->
+          <div class="notes-categories-bar" id="notes-categories-bar">
+            <button type="button" class="notes-cat-pill active" data-category="all">All</button>
+            <button type="button" class="notes-cat-pill" data-category="pinned">Pinned</button>
+            <button type="button" class="notes-cat-pill" data-category="study">Study</button>
+            <button type="button" class="notes-cat-pill" data-category="work">Work</button>
+            <button type="button" class="notes-cat-pill" data-category="personal">Personal</button>
+          </div>
+
+          <!-- Notes Cards Container -->
+          <div class="notes-cards-list" id="notes-cards-container">
+            <!-- Dynamically populated via app.js -->
+          </div>
+
+          <!-- Empty State (Shown when no notes match) -->
+          <div class="notes-empty-state hidden" id="notes-empty-state">
+            <div class="notes-empty-icon"><i class="fa-solid fa-note-sticky"></i></div>
+            <h4 class="notes-empty-title">No notes found</h4>
+            <p class="notes-empty-desc">Capture your first brilliant thought or study note.</p>
+            <button type="button" class="btn-primary" id="btn-empty-create-note" style="margin-top: 12px; width: auto; padding: 10px 24px; border-radius: 999px; background: #9333EA;">
+              <i class="fa-solid fa-plus" style="margin-right: 6px;"></i> Create Note
             </button>
           </div>
         </div>
 
-        <!-- 3 Quick Stats Overview -->
-        <div class="stats-row">
-          <div class="stat-box">
-            <div class="stat-val" style="color: #10B981;" id="stat-devices-online">1</div>
-            <div class="stat-label">Online</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-val" style="color: #00D2FF;" id="stat-requests-total">21</div>
-            <div class="stat-label">Requests</div>
-          </div>
-          <div class="stat-box">
-            <div class="stat-val" style="color: #F59E0B;" id="stat-db-tasks-count">2</div>
-            <div class="stat-label">In DB</div>
-          </div>
-        </div>
-
-        <!-- Active Connected Devices List -->
-        <div class="section-header">
-          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-mobile-screen-button" style="color: #00D2FF; margin-right: 6px;"></i> Active Sessions</h3>
-          <span class="section-link" id="btn-ping-device" style="font-size: 12px; cursor: pointer;"><i class="fa-solid fa-bolt" style="margin-right: 4px;"></i> Ping All</span>
-        </div>
-        <div id="devices-list-container">
-          <!-- Dynamically populated -->
-        </div>
-
-        <!-- Live Client Request Inspector -->
-        <div class="section-header" style="margin-top: 24px;">
-          <h3 class="section-title" style="font-size: 15px;"><i class="fa-solid fa-tower-broadcast" style="color: #00D2FF; margin-right: 6px;"></i> Live Request Inspector</h3>
-          <span style="font-size: 11px; color: var(--accent-emerald); font-weight: 600;">● Live Stream</span>
-        </div>
-
-        <!-- Diagnostic Alert Banner -->
-        <div class="diag-box diag-box-success" id="diag-banner-box">
-          <span style="font-size: 18px;"><i class="fa-solid fa-shield-halved" style="color: #34D399;"></i></span>
-          <div>
-            <div style="font-weight: 700; margin-bottom: 2px;">Continuous Loop Guard: Active</div>
-            <p style="font-size: 12px; opacity: 0.9;">
-              Client background sync protected. Duplicate tasks purged automatically.
-            </p>
-          </div>
-        </div>
-
-        <div class="request-feed-card">
-          <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-            <button class="btn-primary" id="btn-deduplicate-tasks" style="padding: 8px 12px; font-size: 12px; width: auto; background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
-              <i class="fa-solid fa-broom" style="margin-right: 6px;"></i> Clean Duplicates
+        <!-- SUBVIEW B: New Note / Edit Note Editor Screen (Matching Right Screenshot) -->
+        <div class="notes-subview hidden" id="notes-subview-editor">
+          <!-- Top Navigation Bar -->
+          <div class="notes-editor-header">
+            <button type="button" class="notes-editor-back-btn" id="btn-note-editor-back" title="Back to Notes" aria-label="Back">
+              <i class="fa-solid fa-arrow-left"></i>
             </button>
-            <button class="btn-secondary" id="btn-clear-request-logs" style="padding: 8px 12px; font-size: 12px; width: auto;">
-              <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Clear Feed
+            <h3 class="notes-editor-title" id="note-editor-heading">New Note</h3>
+            <button type="button" class="btn-note-save" id="btn-note-save">Save</button>
+          </div>
+
+          <!-- Note Title Input -->
+          <div class="note-input-group">
+            <input type="text" class="note-title-input" id="note-title-input" placeholder="Note Title" autocomplete="off">
+          </div>
+
+          <!-- Note Content Area -->
+          <div class="note-input-group">
+            <textarea class="note-content-input" id="note-content-input" placeholder="Start writing your note..." rows="10"></textarea>
+          </div>
+
+          <!-- Rich Formatting Toolbar -->
+          <div class="notes-editor-toolbar" id="notes-editor-toolbar">
+            <button type="button" class="toolbar-btn" data-format="bold" title="Bold"><b>B</b></button>
+            <button type="button" class="toolbar-btn" data-format="italic" title="Italic"><i>I</i></button>
+            <button type="button" class="toolbar-btn" data-format="underline" title="Underline"><u>U</u></button>
+            <button type="button" class="toolbar-btn" data-format="bullet" title="Bullet List"><i class="fa-solid fa-list-ul"></i></button>
+            <button type="button" class="toolbar-btn" data-format="checklist" title="Numbered / Checklist"><i class="fa-solid fa-list-check"></i></button>
+            <button type="button" class="toolbar-btn" data-format="link" title="Insert Link"><i class="fa-solid fa-link"></i></button>
+            <button type="button" class="toolbar-btn" data-format="image" title="Insert Image"><i class="fa-regular fa-image"></i></button>
+            <button type="button" class="toolbar-btn voice-dictate-btn" id="btn-note-voice" title="Voice Dictation (Speech to Text)">
+              <i class="fa-solid fa-microphone"></i>
             </button>
           </div>
 
-          <div class="filter-pills-bar" style="margin-bottom: 12px;" id="request-filter-bar">
-            <button class="filter-pill active" data-req-filter="all">All Traffic</button>
-            <button class="filter-pill" data-req-filter="tasks_add">Task Additions</button>
-            <button class="filter-pill" data-req-filter="sync">Sync &amp; Read</button>
-            <button class="filter-pill" data-req-filter="auth">Auth</button>
+          <!-- Voice Listening Status Banner -->
+          <div class="voice-listening-banner hidden" id="voice-dictate-banner">
+            <span class="voice-pulse-dot"></span>
+            <span>Listening... speak now to transcribe into note</span>
+            <button type="button" class="voice-stop-btn" id="btn-stop-voice"><i class="fa-solid fa-stop"></i></button>
           </div>
 
-          <div class="request-feed-list" id="requests-feed-container">
-            <div style="text-align: center; padding: 24px 10px; color: var(--text-sub);">
-              Listening for incoming client requests...
+          <!-- Metadata Rows -->
+          <div class="note-meta-cards-group">
+            <!-- 1. Add Tags Row -->
+            <div class="note-meta-row" id="note-tags-row">
+              <div class="note-meta-row-top">
+                <div class="note-meta-left">
+                  <i class="fa-regular fa-circle-plus note-meta-icon"></i>
+                  <span class="note-meta-label">Add Tags</span>
+                </div>
+              </div>
+              <div class="note-tags-chips-list" id="editor-tags-chips"></div>
+              <div class="note-tag-inline-input-wrap">
+                <span class="tag-hash-prefix">#</span>
+                <input type="text" class="note-tag-add-input" id="note-tag-add-input" placeholder="type tag & press enter (e.g. ideas, work)">
+                <button type="button" class="btn-tag-add-chip" id="btn-add-tag-chip" title="Add Tag"><i class="fa-solid fa-plus"></i></button>
+              </div>
+            </div>
+
+            <!-- 2. Category Row with Picker -->
+            <div class="note-meta-row" id="note-category-row">
+              <div class="note-meta-left">
+                <i class="fa-solid fa-tag note-meta-icon"></i>
+                <span class="note-meta-label">Category</span>
+              </div>
+              <div class="note-category-dropdown-wrap">
+                <button type="button" class="note-category-selector" id="btn-category-picker-trigger">
+                  <span class="category-color-dot" id="category-color-dot" style="background: #EC4899;"></span>
+                  <span class="category-selected-name" id="category-selected-name">Personal</span>
+                  <i class="fa-solid fa-chevron-down category-chevron"></i>
+                </button>
+                <div class="category-dropdown-menu hidden" id="category-dropdown-menu">
+                  <div class="cat-drop-item" data-cat="Personal" data-color="#EC4899"><span class="category-color-dot" style="background: #EC4899;"></span> Personal</div>
+                  <div class="cat-drop-item" data-cat="Study" data-color="#8B5CF6"><span class="category-color-dot" style="background: #8B5CF6;"></span> Study</div>
+                  <div class="cat-drop-item" data-cat="Work" data-color="#3B82F6"><span class="category-color-dot" style="background: #3B82F6;"></span> Work</div>
+                  <div class="cat-drop-item" data-cat="Ideas" data-color="#06B6D4"><span class="category-color-dot" style="background: #06B6D4;"></span> Ideas</div>
+                  <div class="cat-drop-item" data-cat="Health" data-color="#10B981"><span class="category-color-dot" style="background: #10B981;"></span> Health</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Pin to Top Row -->
+            <div class="note-meta-row" id="note-pin-row">
+              <div class="note-meta-left">
+                <i class="fa-solid fa-thumbtack note-meta-icon" style="color: #C084FC;"></i>
+                <span class="note-meta-label">Pin to Top</span>
+              </div>
+              <label class="note-toggle-switch">
+                <input type="checkbox" id="note-pin-checkbox">
+                <span class="note-switch-slider"></span>
+              </label>
             </div>
           </div>
+
+          <!-- Bottom Action Buttons (Delete / Cancel) -->
+          <div class="note-editor-bottom-actions">
+            <button type="button" class="btn-note-delete hidden" id="btn-note-delete">
+              <i class="fa-solid fa-trash-can" style="margin-right: 6px;"></i> Delete Note
+            </button>
+          </div>
         </div>
+
       </section>
 
       <!-- ================= VIEW 7: SETTINGS ================= -->
@@ -565,10 +777,20 @@
             <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
             <h2 class="view-screen-title">Settings</h2>
           </div>
+          <span class="view-sub">// Customize<br>your experience.</span>
         </div>
 
         <!-- iOS Grouped Menu Layout (Screen 7 of Mockup) -->
         <div class="ios-grouped-list">
+          <div class="ios-list-item" id="settings-account-row">
+            <div class="ios-item-icon emerald"><i class="fa-solid fa-user"></i></div>
+            <div class="ios-item-info">
+              <div class="ios-item-title">Account</div>
+              <div class="ios-item-sub">Sign in, profile &amp; sync</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ios-item-arrow"></i>
+          </div>
+
           <div class="ios-list-item" data-accordion="setting-card-install">
             <div class="ios-item-icon blue"><i class="fa-solid fa-mobile-screen-button"></i></div>
             <div class="ios-item-info">
@@ -716,7 +938,7 @@
           <!-- Card: About -->
           <div class="glass-card setting-expand-card" id="setting-card-about">
             <h3 style="font-family: var(--font-heading); font-size: 16px; font-weight: 700; margin-bottom: 8px;">
-              <i class="fa-solid fa-circle-info" style="color: #00D2FF; margin-right: 6px;"></i> Luphonix Assistant
+              <i class="fa-solid fa-circle-info" style="color: #00D2FF; margin-right: 6px;"></i> Synvy Assistant
             </h3>
             <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
               Version 1.0.0 (Production Release)<br>
@@ -724,6 +946,36 @@
             </p>
           </div>
         </div>
+      </section>
+
+      <!-- ================= VIEW 8: NOTIFICATION CENTER ================= -->
+      <section class="view-section" id="view-notifications">
+        <div class="view-header-bar">
+          <div class="view-title-wrap">
+            <button class="view-back-btn" data-back="dashboard" title="Back to Dashboard"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 class="view-screen-title">Notification Center</h2>
+          </div>
+          <button class="header-icon-btn" id="btn-notif-toggle" title="Notification status"><i class="fa-solid fa-bell"></i></button>
+        </div>
+
+        <div class="notif-card">
+          <div class="notif-card-head">
+            <i class="fa-solid fa-bell"></i>
+            <span>iPhone Push Notifications</span>
+            <span class="notif-chip" id="notif-permission-chip">Permission Required</span>
+          </div>
+          <p>When someone assigns you a task, your iPhone wakes up and notifies you whether your phone screen is off or on.</p>
+          <div class="notif-actions">
+            <button class="btn-primary" id="btn-enable-push"><i class="fa-solid fa-shield-halved"></i> Enable Phone Push</button>
+            <button class="btn-dark" id="btn-send-test-push"><i class="fa-solid fa-star"></i> Send Test Push</button>
+          </div>
+        </div>
+
+        <div class="notif-list-head">
+          <span>Recent Alerts (<span id="notif-count">0</span>)</span>
+          <button class="notif-markread" id="btn-mark-all-read">Mark all as read</button>
+        </div>
+        <div id="notif-list"></div>
       </section>
 
       <!-- Bottom Spacer to guarantee zero content blockage by the floating navbar -->
@@ -779,10 +1031,10 @@
       </button>
     </div>
 
-    <!-- Center Luphonix Orb Trigger (Dead-Center Geometric Alignment) -->
+    <!-- Center Synvy Orb Trigger (Dead-Center Geometric Alignment) -->
     <div class="nav-center-slot">
-      <button class="nav-center-emblem" id="nav-btn-center-emblem" title="Luphonix Navigation Menu" aria-label="Open Radial Navigation Menu">
-        <img src="/icons/apple-touch-icon.png" alt="Luphonix" class="nav-emblem-img">
+      <button class="nav-center-emblem" id="nav-btn-center-emblem" title="Synvy Navigation Menu" aria-label="Open Radial Navigation Menu">
+        <img src="/icons/apple-touch-icon.png" alt="Synvy" class="nav-emblem-img">
         <span class="nav-center-pulse"></span>
       </button>
     </div>
@@ -799,15 +1051,19 @@
         <span>Siri</span>
       </button>
 
-      <button class="nav-item" data-view="devices" id="nav-btn-devices" title="Connected Devices">
-        <i class="fa-solid fa-mobile-screen-button"></i>
-        <span>Devices</span>
+      <button class="nav-item" data-view="notes" id="nav-btn-notes" title="Notes">
+        <i class="fa-solid fa-note-sticky"></i>
+        <span>Notes</span>
       </button>
     </div>
   </nav>
 
-  <!-- Circular Radial Navigation Menu Modal (Luphonix Circular Dial) -->
+  <!-- Circular Radial Navigation Menu Modal (Synvy Circular Dial) -->
   <div class="circular-nav-overlay" id="circular-nav-overlay" aria-hidden="true">
+    <div class="hub-meta tl" aria-hidden="true">Synvy</div>
+    <div class="hub-meta tr" aria-hidden="true">Your<br>Personal<br>Control Hub.</div>
+    <div class="hub-meta bl" aria-hidden="true">Simple<br>Smart<br>Powerful</div>
+    <div class="hub-meta br" aria-hidden="true">2026<br>Version 1.0</div>
     <div class="circular-nav-portal" id="circular-nav-portal" role="dialog" aria-label="Circular Navigation Menu">
       <!-- Ambient Outer Liquid Halo -->
       <div class="circular-nav-halo" aria-hidden="true"></div>
@@ -844,9 +1100,9 @@
           <span class="orbit-label">Siri</span>
         </button>
 
-        <button class="circular-orbit-item" data-view="devices" title="Connected Devices">
-          <div class="orbit-icon-circle"><i class="fa-solid fa-mobile-screen-button"></i></div>
-          <span class="orbit-label">Devices</span>
+        <button class="circular-orbit-item" data-view="notes" title="Notes">
+          <div class="orbit-icon-circle"><i class="fa-solid fa-note-sticky"></i></div>
+          <span class="orbit-label">Notes</span>
         </button>
 
         <button class="circular-orbit-item" data-view="settings" title="Settings">
@@ -991,7 +1247,7 @@
         <div class="auth-header-badge">
           <span id="auth-header-icon">✨</span>
         </div>
-        <h3 class="auth-main-title" id="auth-modal-title">Welcome to Luphonix</h3>
+        <h3 class="auth-main-title" id="auth-modal-title">Welcome to Synvy</h3>
         <p class="auth-subtitle" id="auth-modal-subtitle">Sync your tasks, hydration, and Siri voice shortcuts across all devices.</p>
       </div>
 
@@ -1033,7 +1289,7 @@
           </div>
         </div>
         <button type="submit" class="btn-primary auth-submit-btn" id="btn-submit-login">
-          <span class="btn-text">Sign In to Luphonix</span>
+          <span class="btn-text">Sign In to Synvy</span>
           <span class="btn-spinner hidden"></span>
         </button>
         <div class="auth-switch-footer">
@@ -1102,7 +1358,7 @@
           <span id="account-avatar-char" style="font-size: 22px; font-weight: 800; color: #00D2FF;">D</span>
         </div>
         <h3 class="auth-main-title" id="account-name-val">Dhyey</h3>
-        <p class="auth-subtitle" id="account-email-val">dhyey@luphonix.local</p>
+        <p class="auth-subtitle" id="account-email-val">dhyey@synvy.local</p>
         <div style="font-size: 13px; color: var(--accent-cyan); font-weight: 700; font-family: monospace; margin-top: 4px;" id="account-handle-val">@dhyey</div>
       </div>
 
@@ -1210,6 +1466,6 @@
   <div id="toast-container"></div>
 
   <!-- Main JavaScript Logic -->
-  <script src="/app.js?v=8.0"></script>
+  <script src="/app.js?v=15.0"></script>
 </body>
 </html>

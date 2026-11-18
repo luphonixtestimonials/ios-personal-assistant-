@@ -2,8 +2,8 @@ import Foundation
 import AppIntents
 
 public struct LogWaterIntent: AppIntent {
-    public static var title: LocalizedStringResource = "Log Water in Luphonix"
-    public static var description = IntentDescription("Logs your water intake amount to Luphonix.")
+    public static var title: LocalizedStringResource = "Log Water in Synvy"
+    public static var description = IntentDescription("Logs your water intake amount to Synvy.")
     
     @Parameter(title: "Amount (ml)", default: 250, requestValueDialog: "How many milliliters of water did you drink?")
     public var amountMl: Int
@@ -21,7 +21,7 @@ public struct LogWaterIntent: AppIntent {
         let total = StorageManager.shared.getTodayHydrationTotal()
         let prefs = StorageManager.shared.getPreferences()
         
-        let dialogMessage: LocalizedStringResource = "Logged \(amountMl) ml in Luphonix. You have drunk \(total) ml out of your \(prefs.dailyWaterGoalMl) ml goal today."
+        let dialogMessage: LocalizedStringResource = "Logged \(amountMl) ml in Synvy. You have drunk \(total) ml out of your \(prefs.dailyWaterGoalMl) ml goal today."
         return .result(value: total, dialog: IntentDialog(dialogMessage))
     }
 }

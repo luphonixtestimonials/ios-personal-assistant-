@@ -31,14 +31,17 @@ public final class APIClient {
     // Configurable base URL; defaults to local or cloud, and persists user custom server
     public var baseURLString: String {
         get {
-            if let custom = UserDefaults.standard.string(forKey: "luphonix_backend_url"), !custom.isEmpty {
+            if let custom = UserDefaults.standard.string(forKey: "synvy_backend_url"), !custom.isEmpty {
                 return custom
+            }
+            if let legacy = UserDefaults.standard.string(forKey: "luphonix_backend_url"), !legacy.isEmpty {
+                return legacy
             }
             return _defaultBaseURL
         }
         set {
             _defaultBaseURL = newValue
-            UserDefaults.standard.set(newValue, forKey: "luphonix_backend_url")
+            UserDefaults.standard.set(newValue, forKey: "synvy_backend_url")
         }
     }
     private var _defaultBaseURL: String = "https://luphonix-web.vercel.app"
@@ -341,6 +344,17 @@ public final class APIClient {
         return task
     }
     
+    public func assignTask(task: String, to: String) async throws -> String {
+        let taskEncoded = task.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? task
+        let toEncoded = to.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? to
+        struct AssignTaskWrapper: Codable {
+            var success: Bool
+            var message: String
+        }
+        let res: AssignTaskWrapper = try await request(endpoint: "/api/tasks/assign?task=\(taskEncoded)&to=\(toEncoded)&format=json")
+        return res.message
+    }
+    
     public func deleteTask(id: String) async throws {
         StorageManager.shared.deleteTask(id: id)
         struct Res: Codable { var success: Bool }
@@ -568,5 +582,28 @@ public final class APIClient {
         let body = try JSONSerialization.data(withJSONObject: payload)
         struct Res: Codable { var success: Bool }
         let _: Res? = try? await request(endpoint: "/api/preferences", method: "PUT", body: body)
+    }
+    
+    // MARK: - Push Notifications
+    public func registerAPNsToken(_ token: String) async throws {
+        struct PushSubPayload: Codable {
+            var endpoint: String
+            var apnsToken: String
+            var deviceType: String
+            var keys: PushKeys
+        }
+        struct PushKeys: Codable {
+            var p256dh: String
+            var auth: String
+        }
+        let payload = PushSubPayload(
+            endpoint: "https://api.push.apple.com/3/device/\(token)",
+            apnsToken: token,
+            deviceType: "ios-native",
+            keys: PushKeys(p256dh: "apns_key", auth: "apns_auth")
+        )
+        let body = try JSONEncoder().encode(payload)
+        struct Res: Codable { var success: Bool }
+        let _: Res? = try? await request(endpoint: "/api/notifications/subscribe", method: "POST", body: body)
     }
 }

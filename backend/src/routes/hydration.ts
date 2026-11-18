@@ -18,6 +18,14 @@ const logSchema = z.object({
 hydrationApp.get('/today', async (c) => {
   const userId = c.get('userId');
 
+  // If user is logged in, automatically claim any orphaned user_siri_default logs
+  if (userId && userId !== 'user_siri_default') {
+    await db.execute({
+      sql: "UPDATE hydration_logs SET user_id = ? WHERE user_id = 'user_siri_default'",
+      args: [userId],
+    }).catch(() => {});
+  }
+
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date();
@@ -43,8 +51,24 @@ hydrationApp.get('/today', async (c) => {
   const remaining = Math.max(0, dailyGoal - totalDrunk);
   const progressPercentage = Math.min(100, Math.round((totalDrunk / dailyGoal) * 100));
 
+  const msg = `You have drunk ${totalDrunk} ml of water today, which is ${progressPercentage}% of your ${dailyGoal} ml goal (${remaining} ml remaining).`;
+  const format = c.req.query('format')?.toLowerCase();
+  const accept = c.req.header('accept')?.toLowerCase() || '';
+  const userAgent = c.req.header('user-agent')?.toLowerCase() || '';
+
+  const isExplicitJson = format === 'json' || accept.includes('application/json');
+  const isExplicitText = format === 'text' || c.req.query('text') === '1' || accept.includes('text/plain');
+  const isShortcut = userAgent.includes('shortcut') || userAgent.includes('cfnetwork') || userAgent.includes('darwin');
+
+  if (isExplicitText || (!isExplicitJson && isShortcut)) {
+    return c.text(msg);
+  }
+
   return c.json({
     success: true,
+    message: msg,
+    speech: msg,
+    summary: msg,
     data: {
       daily_goal_ml: dailyGoal,
       total_ml: totalDrunk,
@@ -100,6 +124,18 @@ hydrationApp.get('/history', async (c) => {
 async function handleWaterLog(c: any) {
   const userId = c.get('userId');
 
+  // If request uses user_siri_default key, auto-link to the registered user account
+  let targetUserId = userId;
+  if (targetUserId === 'user_siri_default') {
+    const regUsers = await db.execute({
+      sql: "SELECT id FROM users WHERE id != 'user_siri_default' ORDER BY created_at DESC LIMIT 1",
+      args: [],
+    }).catch(() => ({ rows: [] }));
+    if (regUsers.rows.length > 0 && regUsers.rows[0].id) {
+      targetUserId = String(regUsers.rows[0].id);
+    }
+  }
+
   let amount_ml = 250;
   let customId: string | undefined;
   let logged_at = new Date().toISOString();
@@ -118,17 +154,22 @@ async function handleWaterLog(c: any) {
   }
 
   // Check query params if body didn't specify amount
-  const qAmt = c.req.query('amount') || c.req.query('amount_ml');
+  const qAmt = c.req.query('amount') || c.req.query('amount_ml') || c.req.query('ml') || c.req.query('value') || c.req.query('input');
   if (qAmt) {
-    const parsed = parseInt(qAmt, 10);
-    if (!isNaN(parsed) && parsed > 0) amount_ml = parsed;
+    const match = String(qAmt).match(/\d+/);
+    if (match) {
+      const parsed = parseInt(match[0], 10);
+      if (!isNaN(parsed) && parsed > 0 && parsed <= 5000) {
+        amount_ml = parsed;
+      }
+    }
   }
 
   const id = customId || randomUUID();
 
   await db.execute({
     sql: 'INSERT INTO hydration_logs (id, user_id, amount_ml, logged_at) VALUES (?, ?, ?, ?)',
-    args: [id, userId, amount_ml, logged_at],
+    args: [id, targetUserId, amount_ml, logged_at],
   });
 
   // Recalculate today's summary
@@ -140,18 +181,18 @@ async function handleWaterLog(c: any) {
   const [sumRes, prefRes] = await Promise.all([
     db.execute({
       sql: 'SELECT COALESCE(SUM(amount_ml), 0) as total FROM hydration_logs WHERE user_id = ? AND logged_at >= ? AND logged_at <= ?',
-      args: [userId, todayStart.toISOString(), todayEnd.toISOString()],
+      args: [targetUserId, todayStart.toISOString(), todayEnd.toISOString()],
     }),
     db.execute({
       sql: 'SELECT daily_water_goal_ml FROM user_preferences WHERE user_id = ?',
-      args: [userId],
+      args: [targetUserId],
     }),
   ]);
 
   const totalDrunk = Number(sumRes.rows[0]?.total || 0);
   const dailyGoal = Number(prefRes.rows[0]?.daily_water_goal_ml || 2000);
   const remaining = Math.max(0, dailyGoal - totalDrunk);
-  const msg = `Logged ${amount_ml} ml in Luphonix. Total today: ${totalDrunk} ml of ${dailyGoal} ml goal.`;
+  const msg = `Logged ${amount_ml} ml in Synvy. Total today: ${totalDrunk} ml of ${dailyGoal} ml goal.`;
 
   const format = c.req.query('format')?.toLowerCase();
   const accept = c.req.header('accept')?.toLowerCase() || '';
@@ -174,7 +215,7 @@ async function handleWaterLog(c: any) {
       summary: msg,
       data: {
         id,
-        user_id: userId,
+        user_id: targetUserId,
         amount_ml,
         logged_at,
         today_total_ml: totalDrunk,

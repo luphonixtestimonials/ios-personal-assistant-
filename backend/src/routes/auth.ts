@@ -18,13 +18,13 @@ async function resolveUserFromContext(c: any): Promise<{ id: string; email: stri
     try {
       const decoded = jwt.verify(raw, config.JWT_SECRET) as any;
       if (decoded && decoded.userId) {
-        return { id: String(decoded.userId), email: String(decoded.email || 'user@luphonix.local') };
+        return { id: String(decoded.userId), email: String(decoded.email || 'user@synvy.local') };
       }
     } catch {
       try {
         const decoded = jwt.decode(raw) as any;
         if (decoded && decoded.userId) {
-          return { id: String(decoded.userId), email: String(decoded.email || 'user@luphonix.local') };
+          return { id: String(decoded.userId), email: String(decoded.email || 'user@synvy.local') };
         }
       } catch {}
     }
@@ -212,6 +212,12 @@ authApp.post('/login', async (c) => {
   if (!isValid) {
     return c.json({ success: false, error: 'Invalid email or password' }, 401);
   }
+
+  // Claim any guest / Siri default records for this user
+  await db.batch([
+    { sql: "UPDATE hydration_logs SET user_id = ? WHERE user_id = 'user_siri_default'", args: [row.id] },
+    { sql: "UPDATE tasks SET user_id = ? WHERE user_id = 'user_siri_default'", args: [row.id] }
+  ]).catch(() => {});
 
   const token = jwt.sign(
     { userId: row.id as string, email: row.email as string },

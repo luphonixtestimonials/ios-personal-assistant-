@@ -4,14 +4,14 @@ import assert from 'node:assert';
 import app from '../src/index.js';
 import { runMigrations } from '../src/db/migrate.js';
 
-describe('Luphonix Backend API Test Suite', async () => {
+describe('Synvy Backend API Test Suite', async () => {
   before(async () => {
     await runMigrations();
   });
   let authToken = '';
   let createdTaskId = '';
   let createdReminderId = '';
-  const testEmail = `test_${Date.now()}@luphonix.app`;
+  const testEmail = `test_${Date.now()}@synvy.app`;
 
   it('1. GET /health should return 200 OK', async () => {
     const res = await app.request('/health');
@@ -179,9 +179,9 @@ describe('Luphonix Backend API Test Suite', async () => {
     assert.strictEqual(res.status, 200);
     const body = await res.json();
     assert.strictEqual(body.success, true);
-    assert.strictEqual(body.data.total_ml, 350);
+    assert.ok(body.data.total_ml >= 350);
     assert.strictEqual(body.data.daily_goal_ml, 2000);
-    assert.strictEqual(body.data.remaining_ml, 1650);
+    assert.strictEqual(body.data.remaining_ml, Math.max(0, 2000 - body.data.total_ml));
   });
 
   it('11. PUT /api/preferences should update user preferences', async () => {
@@ -296,7 +296,7 @@ describe('Luphonix Backend API Test Suite', async () => {
     assert.strictEqual(compRes.status, 200);
     const text = await compRes.text();
     assert.ok(text.includes('Marked'));
-    assert.ok(text.includes('completed in Luphonix'));
+    assert.ok(text.includes('completed in Synvy') || text.includes('completed in Luphonix'));
 
     // 3. Siri queries remaining today tasks: completed task must NOT appear!
     const siriQueryRes = await app.request(`/api/tasks?filter=today&format=text&apiKey=${encodeURIComponent(apiKey)}`);
@@ -397,6 +397,156 @@ describe('Luphonix Backend API Test Suite', async () => {
     assert.strictEqual(delRes.status, 200);
     const delBody = await delRes.json();
     assert.strictEqual(delBody.success, true);
+  });
+
+  it('23. GET /api/tasks/assign should assign task by number or title to a person via Siri webhook', async () => {
+    const keyRes = await app.request('/api/auth/webhook-key');
+    const { apiKey } = await keyRes.json();
+
+    const titleToAssign = `Collaborative Siri Task ${Date.now()}`;
+    // Create the task first
+    const addRes = await app.request(`/api/tasks/add?title=${encodeURIComponent(titleToAssign)}&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(addRes.status, 200);
+
+    // Assign the task to Alex by title
+    const assignRes = await app.request(`/api/tasks/assign?task=${encodeURIComponent(titleToAssign)}&to=alex&format=text&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(assignRes.status, 200);
+    const assignText = await assignRes.text();
+    assert.ok(assignText.includes('Assigned'));
+    assert.ok(assignText.includes('@alex'));
+
+    // Verify task assignment in tasks list
+    const listRes = await app.request(`/api/tasks?filter=assigned_by_me&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(listRes.status, 200);
+    const listBody = await listRes.json();
+    const assignedTask = listBody.data.find((t: any) => t.title === titleToAssign);
+    assert.ok(assignedTask, 'Task must be listed in assigned_by_me');
+    assert.strictEqual(assignedTask.assigned_to_username, 'alex');
+  });
+
+  it('24. GET /api/tasks/complete should complete task by number (e.g. task 1)', async () => {
+    const keyRes = await app.request('/api/auth/webhook-key');
+    const { apiKey } = await keyRes.json();
+
+    // Query today tasks to get the current list
+    const todayRes = await app.request(`/api/tasks?filter=today&apiKey=${encodeURIComponent(apiKey)}`);
+    const todayBody = await todayRes.json();
+    assert.ok(todayBody.data.length >= 1, 'Should have at least 1 today task');
+    const firstTaskTitle = todayBody.data[0].title;
+
+    // Complete task #1 by number
+    const compRes = await app.request(`/api/tasks/complete?task=1&format=text&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(compRes.status, 200);
+    const compText = await compRes.text();
+    assert.ok(compText.includes('Marked task #1'));
+    assert.ok(compText.includes(firstTaskTitle));
+  });
+
+  it('25. GET /api/hydration/today with format=text should return spoken Siri summary', async () => {
+    const keyRes = await app.request('/api/auth/webhook-key');
+    const { apiKey } = await keyRes.json();
+
+    const res = await app.request(`/api/hydration/today?format=text&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(res.status, 200);
+    const text = await res.text();
+    assert.ok(text.includes('You have drunk'));
+    assert.ok(text.includes('goal'));
+  });
+
+  it('26. GET /api/reminders/quick should create a quick reminder with Siri text confirmation', async () => {
+    const keyRes = await app.request('/api/auth/webhook-key');
+    const { apiKey } = await keyRes.json();
+
+    const title = `Drink electrolytes ${Date.now()}`;
+    const res = await app.request(`/api/reminders/quick?title=${encodeURIComponent(title)}&minutes=45&format=text&apiKey=${encodeURIComponent(apiKey)}`);
+    assert.strictEqual(res.status, 200);
+    const text = await res.text();
+    assert.ok(text.includes('Set reminder for'));
+    assert.ok(text.includes('45 minutes from now'));
+  });
+
+  let createdNoteId = '';
+
+  it('27. POST /api/notes should create a new note with category, tags, and pin status', async () => {
+    const res = await app.request('/api/notes', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: 'App Ideas',
+        content: 'Ideas for new features, UI improvements...\n- Dark mode\n- Siri shortcuts',
+        category: 'Study',
+        tags: ['#ideas', '#product'],
+        is_pinned: true,
+        color: 'blue',
+      }),
+    });
+
+    assert.strictEqual(res.status, 201);
+    const body = await res.json();
+    assert.strictEqual(body.success, true);
+    assert.strictEqual(body.data.title, 'App Ideas');
+    assert.strictEqual(body.data.is_pinned, true);
+    assert.deepStrictEqual(body.data.tags, ['#ideas', '#product']);
+    createdNoteId = body.data.id;
+  });
+
+  it('28. GET /api/notes should list notes with filtering and search support', async () => {
+    const res = await app.request('/api/notes?category=study', {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+
+    assert.strictEqual(res.status, 200);
+    const body = await res.json();
+    assert.strictEqual(body.success, true);
+    assert.ok(body.data.length >= 1);
+    const found = body.data.find((n: any) => n.id === createdNoteId);
+    assert.ok(found);
+    assert.strictEqual(found.title, 'App Ideas');
+  });
+
+  it('29. PUT /api/notes/:id and PATCH /api/notes/:id/pin should update note and toggle pin', async () => {
+    // Update content
+    const putRes = await app.request(`/api/notes/${createdNoteId}`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: 'App Ideas (Updated)',
+        content: 'Updated content text here',
+      }),
+    });
+    assert.strictEqual(putRes.status, 200);
+    const putBody = await putRes.json();
+    assert.strictEqual(putBody.data.title, 'App Ideas (Updated)');
+
+    // Toggle Pin
+    const pinRes = await app.request(`/api/notes/${createdNoteId}/pin`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    assert.strictEqual(pinRes.status, 200);
+    const pinBody = await pinRes.json();
+    assert.strictEqual(pinBody.success, true);
+  });
+
+  it('30. DELETE /api/notes/:id should delete note', async () => {
+    const delRes = await app.request(`/api/notes/${createdNoteId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    assert.strictEqual(delRes.status, 200);
+    const delBody = await delRes.json();
+    assert.strictEqual(delBody.success, true);
+
+    const getRes = await app.request(`/api/notes/${createdNoteId}`, {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    assert.strictEqual(getRes.status, 404);
   });
 });
 

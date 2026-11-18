@@ -4,7 +4,7 @@ import UserNotifications
 public struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @ObservedObject private var authManager = AuthManager.shared
-    @AppStorage("luphonix_backend_url") private var backendUrl: String = ""
+    @AppStorage("synvy_backend_url") private var backendUrl: String = ""
     
     let intervals = [30, 60, 90, 120]
     
@@ -137,9 +137,9 @@ public struct SettingsView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(authManager.currentUser?.name ?? "Luphonix User")
+                    Text(authManager.currentUser?.name ?? "Synvy User")
                         .font(.headline)
-                    Text(authManager.currentUser?.email ?? "user@luphonix.app")
+                    Text(authManager.currentUser?.email ?? "user@synvy.app")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -246,13 +246,13 @@ public struct SettingsView: View {
     // MARK: - Siri Guide Section
     private var siriGuideSection: some View {
         Section(header: Text("Siri Voice Commands")) {
-            siriCommandRow(phrase: "\"Siri, add a reminder in Luphonix to study at 8 PM.\"")
-            siriCommandRow(phrase: "\"Siri, remind me to drink water every hour in Luphonix.\"")
-            siriCommandRow(phrase: "\"Siri, add a task to complete my project tomorrow in Luphonix.\"")
-            siriCommandRow(phrase: "\"Siri, what are my tasks for today in Luphonix?\"")
-            siriCommandRow(phrase: "\"Siri, mark my study task as completed in Luphonix.\"")
-            siriCommandRow(phrase: "\"Siri, log 250 ml of water in Luphonix.\"")
-            siriCommandRow(phrase: "\"Siri, how much water have I drunk today in Luphonix?\"")
+            siriCommandRow(phrase: "\"Siri, add a reminder in Synvy to study at 8 PM.\"")
+            siriCommandRow(phrase: "\"Siri, remind me to drink water every hour in Synvy.\"")
+            siriCommandRow(phrase: "\"Siri, add a task to complete my project tomorrow in Synvy.\"")
+            siriCommandRow(phrase: "\"Siri, what are my tasks for today in Synvy?\"")
+            siriCommandRow(phrase: "\"Siri, mark my study task as completed in Synvy.\"")
+            siriCommandRow(phrase: "\"Siri, log 250 ml of water in Synvy.\"")
+            siriCommandRow(phrase: "\"Siri, how much water have I drunk today in Synvy?\"")
         }
     }
     
